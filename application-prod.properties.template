@@ -1,0 +1,45 @@
+# ============================================================
+# Aragen Production Config — place this on the SERVER only
+# Path (Linux):   /opt/aragen/config/application-prod.properties
+# Path (Windows): C:\Aragen\config\application-prod.properties
+# NEVER commit this file to git
+# ============================================================
+
+# --- Database ---
+jdbc.url=jdbc:mysql://localhost:3306/aragen?autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=IST
+jdbc.user=root
+jdbc.pass=CHANGE_ME
+
+# --- SAP JCo (sap.properties values) ---
+sap.ashost=192.168.0.102
+sap.sysnr=20
+sap.client=600
+sap.user=EXT_PORTAL
+sap.passwd=CHANGE_ME
+sap.lang=EN
+
+# --- SAP JCo (jco2 values in application.properties) ---
+jco2.r3_no_of_conn=100
+jco2.r3_client=900
+jco2.r3_user_id=ATHINK
+jco2.r3_passwd=CHANGE_ME
+jco2.r3_host=10.1.2.155
+jco2.r3_sys_no=01
+
+# --- Mail ---
+spring.mail.host=smtp.office365.com
+spring.mail.port=587
+spring.mail.username=CHANGE_ME
+spring.mail.password=CHANGE_ME
+mail.fromaddress=CHANGE_ME
+mail.ccmail=CHANGE_ME
+
+# --- File Upload Paths ---
+upload.path=/opt/aragen/uploads
+app.file.upload-dir=/opt/aragen/uploads
+
+# --- App URL ---
+site.url=https://your-domain.com
+
+# --- Logging ---
+logging.file.path=/opt/aragen/logs

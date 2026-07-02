@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Service PR</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        /* --- Base Layout --- */
+        .content-wrapper { padding: 2px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { margin: 10px auto; padding: 20px; width: 100%; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .content-header { padding: 1px .5rem; }
+        h1 {
+            color: #033882;
+            font-weight: 700;
+        }
+
+        /* --- Filter Panel --- */
+        .filter-panel {
+            background: #DC402B;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+        .filter-header {
+            padding: 12px 20px;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(220, 64, 43, 0.9);
+        }
+        .filter-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-icon {
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+        .filter-icon:hover {
+            transform: scale(1.1);
+        }
+        .filter-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 0 0 8px 8px;
+            max-height: 500px;
+            overflow: hidden;
+            transition: all 0.4s ease-in-out;
+            opacity: 1;
+        }
+
+        /* Hide transition (collapsed state) */
+        .filter-content.hidden {
+            max-height: 0;
+            opacity: 0;
+            padding: 0 20px;
+            transition: all 0.4s ease-in-out;
+        }
+
+        /* --- Document Type Alignment --- */
+        .filter-header > div:last-of-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            justify-content: flex-end;
+        }
+        .filter-header label {
+            color: white;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        /* Smooth transitions for hover collapse/expand */
+        .filter-panel {
+            transition: all 0.4s ease;
+        }
+
+        /* Optional: Slight shadow pop on hover */
+        .filter-panel:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        /* Make the hidden state truly compact */
+        .filter-content.hidden {
+            max-height: 0 !important;
+            opacity: 0 !important;
+            padding: 0 20px !important;
+            overflow: hidden;
+        }
+
+        #docType {
+            width: 200px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* --- PR Header Form Controls Styling --- */
+        .filter-content .form-group {
+            margin-bottom: 0;
+        }
+
+        .filter-content .form-control,
+        .filter-content select {
+            height: 38px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            width: 100%;
+        }
+
+        .filter-content .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #033882;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .filter-content .row {
+            margin-bottom: 0;
+        }
+
+        .filter-content .row.mb-3 {
+            margin-bottom: 1rem !important;
+        }
+
+        /* --- Global Select2 styling for header/large dropdowns (match createServicePR) --- */
+        .select2-container--default .select2-selection--single {
+            height: 38px !important;
+            padding: 6px 10px !important;
+            border-radius: 6px !important;
+            font-size: 14px !important;
+            line-height: 1.2 !important;
+            box-sizing: border-box;
+            border: 1px solid #ced4da !important;
+            background: #fff;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            padding: 0 !important;
+            color: #495057;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 38px !important;
+        }
+
+        /* --- SELECT2 / STYLE-2 DROPDOWN STYLING FOR SERVICE TABLE ---
+           Copied from createServicePR to ensure "style 2" searchable dropdowns
+           match the rest of the UI (size, paddings, font, and arrow height).
+        */
+        /* Make select2 controls inside tables match native inputs */
+        .service-table .select2-container {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+        .service-table .select2-container--default .select2-selection--single {
+            height: 26px !important;
+            padding: 3px 6px !important;
+            border-radius: 3px !important;
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+            box-sizing: border-box;
+            border: 1px solid #ced4da !important;
+        }
+        .service-table .select2-selection__rendered {
+            padding: 0 !important;
+        }
+        .service-table .select2-selection__arrow {
+            height: 26px !important;
+        }
+        .service-table .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #495057;
+        }
+
+        /* Small select2 variant used via containerCssClass: 'select2-sm' */
+        .select2-sm .select2-selection--single { height: 26px !important; }
+        .select2-sm .select2-selection__rendered { padding-top: 0 !important; padding-bottom: 0 !important; }
+        .select2-sm .select2-selection__arrow { height: 26px !important; }
+
+        /* Ensure select2 dropdown inherits small font when used in compact rows */
+        .select2-sm .select2-results__option { font-size: 12px; }
+
+        /* Keep existing service-table input styles intact */
+        .service-table input, .service-table select { font-size: 11px !important; padding: 3px 4px !important; height: 26px !important; border: 1px solid #ced4da; border-radius: 3px; box-sizing: border-box; }
+        .service-table input:focus, .service-table select:focus { border-color: #007bff; outline: none; }
+        .service-table thead th { background-color: #033882 !important; color: #fff; text-align: center; font-weight: 600; font-size: 11px !important; padding: 4px !important; }
+
+        /* Column widths */
+        .service-table th:nth-child(1), .service-table td:nth-child(1) { width: 35px !important; max-width: 35px !important; padding: 2px !important; }
+        .service-table th:nth-child(2), .service-table td:nth-child(2) { width: 100px !important; min-width: 100px !important; }
+        .service-table th:nth-child(3), .service-table td:nth-child(3) { width: 100px !important; min-width: 100px !important; padding: 2px !important; }
+        .service-table th:nth-child(4), .service-table td:nth-child(4) { width: 40px !important; max-width: 40px !important; }
+        .service-table th:nth-child(5), .service-table td:nth-child(5) { width: 40px !important; max-width: 40px !important; }
+        .service-table th:nth-child(6), .service-table td:nth-child(6) { width: 40px !important; max-width: 40px !important; }
+        .service-table th:nth-child(7), .service-table td:nth-child(7) { width: 100px !important; min-width: 100px !important; }
+        .service-table th:nth-child(8), .service-table td:nth-child(8) { width: 100px !important; min-width: 100px !important; }
+        .service-table th:nth-child(9), .service-table td:nth-child(9) { width: 80px !important; max-width: 80px !important; }
+
+        /* Sub row card styling */
+        .sub-row .card { background: #ffffff; border: 1px solid #dee2e6; border-radius: 10px; padding: 20px 25px; margin-top: 10px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); transition: all 0.3s ease; }
+        .sub-row .card:hover { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); }
+        .sub-row td { padding: 15px 25px !important; background-color: #f8f9fb; }
+
+        /* Compact sync button style (match createServicePR) */
+        .btn-sync-sm {
+          font-size: 12px !important;
+          padding: 4px 8px !important;
+          border-radius: 6px !important;
+          line-height: 1 !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+        }
+        .btn-sync-sm i { font-size: 0.95rem !important; }
+        .btn-sync-sm.ms-2 { margin-left: 2px !important; }
+        /* Also reduce right gap in the sync container to keep buttons tight */
+        .container-fluid .d-flex .btn-sync-sm { margin: 0 2px !important; }
+
+        /* Compact action buttons: make toggle/down and delete buttons smaller and close together */
+        .btn-toggle-info, .btn-delete-item, .btn-delete-service, .btn-add-service {
+            padding: 2px 4px !important;
+            font-size: 10px !important;
+            line-height: 1 !important;
+            margin: 0 2px !important; /* very small gap between buttons */
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 2px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            border-radius: 3px !important;
+        }
+
+        /* Ensure icon sizes inside compact buttons remain readable */
+        .btn-toggle-info i, .btn-delete-item i, .btn-delete-service i { font-size: 11px !important; }
+
+        /* Make action column tighter to accommodate smaller buttons */
+        #itemTable th:last-child, #itemTable td:last-child {
+            width: 70px !important;
+            min-width: 70px !important;
+            padding: 2px 4px !important;
+        }
+
+        /* Centered primary Update PR button */
+        .bottom-actions { text-align: center; margin-top: 22px; }
+        .btn-create {
+            background-color: #0d6efd !important; /* Bootstrap primary blue */
+            color: #fff !important;
+            border: none !important;
+            padding: 10px 28px !important;
+            font-size: 16px !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            box-shadow: 0 6px 18px rgba(13,110,253,0.12) !important;
+            transition: transform 0.08s ease, box-shadow 0.12s ease, background-color 0.12s ease !important;
+            display: inline-block !important;
+        }
+        .btn-create:hover { background-color: #0b5ed7 !important; box-shadow: 0 8px 22px rgba(13,110,253,0.16) !important; }
+        .btn-create:active { transform: translateY(1px) !important; }
+
+    </style>
+</head>
+<body>
+
+<section layout:fragment="header">
+    <div class="container">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 style="display:flex; align-items:baseline; gap:12px;">
+                    <span>Edit PR</span>
+                    <span th:if="${prHeader != null and prHeader.reqNumber != null}" th:text="${prHeader.reqNumber}" style="font-weight:400; font-size:inherit; color:#333; opacity:0.95;"></span>
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">PR</a></li>
+                    <li class="breadcrumb-item active">Edit Service PR</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container" layout:fragment="content">
+    <div class="card">
+        <!-- PR Header Details -->
+        <div class="filter-panel mt-3">
+            <div class="filter-header">
+                <div class="filter-title">
+                    <i class="bi bi-funnel-fill"></i>
+                    <span>PR Header Details</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-center flex-grow-1">
+                    <label class="text-white mb-0 me-2">Document Type:</label>
+                    <select id="docType" class="form-control searchable-dropdown" style="width: 200px;">
+                        <option value="">-- Select Doc Type --</option>
+                        <option th:each="dt : ${docTypes}"
+                                th:value="${dt.emdValue1}"
+                                th:text="${dt.emdValue2 + ' (' + dt.emdValue1 + ')'}"
+                                th:selected="${prHeader != null && prHeader.docType == dt.emdValue1}">
+                        </option>
+                    </select>
+                </div>
+                <i id="toggleIcon" class="bi bi-chevron-up filter-icon" title="Collapse/Expand" onclick="toggleHeaderSection()"></i>
+            </div>
+
+            <div class="filter-content" id="headerContent">
+                <div class="row mb-3">
+                    <div class="form-group col-md-4">
+                        <label>Plant</label>
+                        <select class="form-control searchable-dropdown" id="plant" name="plant">
+                            <option value="">-- Select Plant --</option>
+                            <option th:each="pt : ${plants}"
+                                    th:value="${pt.emdValue1}"
+                                    th:text="${pt.emdValue2 + ' (' + pt.emdValue1 + ')'}"
+                                    th:selected="${prHeader != null && prHeader.plant == pt.emdValue1}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Purchase Group</label>
+                        <select class="form-control searchable-dropdown" id="purGrp" name="purGrp">
+                            <option value="">-- Select Purchase Group --</option>
+                            <option th:each="pg : ${purchaseGroups}"
+                                    th:value="${pg.emdValue1}"
+                                    th:text="${pg.emdValue2 + ' (' + pg.emdValue1 + ')'}"
+                                    th:selected="${prHeader != null && prHeader.purGrp == pg.emdValue1}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Account Assignment</label>
+                        <select class="form-control searchable-dropdown" id="accAsmt" name="accAsmt">
+                            <option value="">-- Select Account Assignment --</option>
+                            <option th:each="aa : ${accAssgs}"
+                                    th:value="${aa.emdValue1}"
+                                    th:text="${aa.emdValue2 + ' (' + aa.emdValue1 + ')'}"
+                                    th:selected="${prHeader != null && prHeader.accAsmt == aa.emdValue1}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="form-group col-md-4">
+                        <label>Item Category</label>
+                        <select class="form-control searchable-dropdown" id="itemCateg" name="itemCateg">
+                            <option value="">-- Select Item Category --</option>
+                            <option th:each="ic : ${itemCategs}"
+                                    th:value="${ic.emdValue1}"
+                                    th:text="${ic.emdValue2 + ' (' + ic.emdValue3 + ')'}"
+                                    th:selected="${prHeader != null && prHeader.itemCat != null && prHeader.itemCat.equals(ic.emdValue1)}">
+
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Division</label>
+                        <select class="form-control searchable-dropdown" id="headerDivision" name="division">
+                            <option value="">-- Select Division --</option>
+                            <option th:each="dv : ${divisions}"
+                                    th:value="${dv.emdValue1}"
+                                    th:text="${dv.emdValue2 + ' (' + dv.emdValue1 + ')'}"
+                                    th:selected="${prHeader != null && prHeader.division == dv.emdValue1}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Department</label>
+                        <select class="form-control searchable-dropdown" id="headerDepartment" name="department">
+                            <option value="">-- Select Department --</option>
+                            <option th:each="dp : ${departments}"
+                                    th:value="${dp.emdValue1}"
+                                    th:text="${dp.emdValue2 + ' (' + dp.emdValue1 + ')'}"
+                                    th:selected="${prHeader != null && prHeader.dept == dp.emdValue1}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Table with Add Item Button -->
+        <div class="custom-table-container mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-primary fw-semibold mb-0">Item Details</h4>
+                <button id="btnAddItem" class="btn btn-sm btn-primary" title="Add Item">
+                    <i class="bi bi-plus-circle"></i>&nbsp;Add Item
+                </button>
+            </div>
+
+            <div class="table-responsive item-table-wrapper">
+                <table id="itemTable" class="table table-bordered table-hover align-middle text-center mb-0">
+                    <thead class="custom-table-header">
+                    <tr>
+                        <th style="width: 60px;">Sr No.</th>
+                        <th style="min-width: 250px;">Description</th>
+                        <th style="min-width: 80px;">Currency</th>
+                        <th style="min-width: 80px;">Total Qty</th>
+                        <th style="min-width: 90px;">Gross Price</th>
+                        <th style="min-width: 100px;">Total Value</th>
+                        <th style="min-width: 120px;">Delivery Date</th>
+                        <th style="min-width: 120px;">Material Group</th>
+                        <th style="min-width: 120px;">Tracking Number</th>
+                        <th style="min-width: 90px;">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="itemsBody">
+                    <!-- Items populated from JSON -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="bottom-actions">
+            <button class="btn btn-create" id="btnSave">Update PR</button>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+
+    <script th:inline="javascript">
+        // ===== JSON DATA FROM CONTROLLER =====
+        /*<![CDATA[*/
+        const prHeaderJson = /*[[${prHeaderJson}]]*/ '{}';
+        console.log('Raw prHeaderJson string:', prHeaderJson);
+
+        let prData;
+        try {
+            prData = JSON.parse(prHeaderJson);
+            console.log('✅ Successfully parsed PR Data:', prData);
+        } catch (e) {
+            console.error('❌ Failed to parse prHeaderJson:', e);
+            prData = {};
+        }
+
+        // Additional master data from controller
+        const serviceCodes = /*[[${serviceCodes}]]*/ [];
+        const wbsElements = /*[[${wbsElements}]]*/ [];
+        const matGrpList = /*[[${matGrpList}]]*/ [];
+        const accAssgList = /*[[${accAssgs}]]*/ [];
+        const plantList = /*[[${plants}]]*/ [];
+        const itemCategList = /*[[${itemCategs}]]*/ [];
+        const divisionList = /*[[${divisions}]]*/ [];
+        const purchaseGroupList = /*[[${purchaseGroups}]]*/ [];
+        const storLocList = /*[[${storgLocs}]]*/ [];
+        const departments = /*[[${departments}]]*/ [];
+        /*]]>*/
+
+        console.log('Items in prData:', prData.items);
+        console.log('Items count:', prData.items ? prData.items.length : 0);
+        console.log('Service codes available:', serviceCodes.length);
+        console.log('Material groups available:', matGrpList.length);
+
+        // ===== HELPER FUNCTIONS =====
+        function calculateItemTotals(services) {
+            let totalQty = 0, totalGross = 0, totalValue = 0;
+            if (services && Array.isArray(services)) {
+                services.forEach(s => {
+                    // Handle both entity field names (servQty, servPrice) and form field names
+                    const qty = parseFloat(s.servQty || s.quantity || 0);
+                    const price = parseFloat(s.servPrice || s.grossPrice || 0);
+                    totalQty += qty;
+                    totalGross += price;
+                    totalValue += qty * price;
+                });
+            }
+            return { totalQty, totalGross, totalValue };
+        }
+
+        function addServiceRow(tbody, serviceData = {}, itemIndex, itemWbsElement = '', itemNetwork = '') {
+            console.log(`         🔹 addServiceRow called for item ${itemIndex}`, serviceData);
+            const rowCount = $(tbody).find('tr').length + 1;
+            const srNo = rowCount * 10;
+
+            // Handle entity field names from backend (servNo, servDesc, servQty, servPrice, servUnit)
+            const servNo = serviceData.servNo || serviceData.serviceNumber || '';
+            const servDesc = serviceData.servDesc || serviceData.shortText || '';
+            const servQty = serviceData.servQty || serviceData.quantity || '';
+            const servPrice = serviceData.servPrice || serviceData.grossPrice || '';
+            const servUnit = serviceData.servUnit || serviceData.unit || '';
+            // WBS and Network come from ITEM level, not service level
+            const wbs = itemWbsElement || serviceData.servWBS || serviceData.wbsElement || '';
+            const network = itemNetwork || serviceData.servNetwork || serviceData.network || '';
+            const internalOrder = serviceData.servInternalOrder || serviceData.internalOrder || '';
+            const costCenter = serviceData.servCostCenter || serviceData.costCenter || '';
+            const deleteIndicator = serviceData.deleteIndicator || '';
+
+            console.log(`         📝 Service: No=${servNo}, Desc=${servDesc}, Qty=${servQty}, Price=${servPrice}`);
+            console.log(`         📍 WBS: "${wbs}" (from item: "${itemWbsElement}"), Network: "${network}" (from item: "${itemNetwork}")`);
+
+            const $tr = $('<tr>');
+            $tr.append(`<td style="width:35px !important;">${srNo}</td>`);
+            $tr.append(`<td style="padding:2px 3px !important;">
+                <select class="form-control form-control-sm service-code" name="serviceName_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;">
+                    <option value="">-- Select Service --</option>
+                    ${serviceCodes && serviceCodes.length > 0 ? serviceCodes.map(sc =>
+                        `<option value="${sc.emdValue1 || ''}" ${servNo === sc.emdValue1 ? 'selected' : ''}>${sc.emdValue2 || sc.emdValue1 || ''}</option>`
+                    ).join('') : ''}
+                    ${servNo && (!serviceCodes || !serviceCodes.some(sc => sc.emdValue1 === servNo)) ?
+                        `<option value="${servNo}" selected>${servNo}</option>` : ''}
+                </select>
+            </td>`);
+            $tr.append(`<td style="width:50px !important; padding:2px !important;">
+                <input type="text" class="form-control form-control-sm short-text-input serv-desc" value="${servDesc}" placeholder="Description" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;">
+            </td>`);
+            $tr.append(`<td style="padding:2px 3px !important;">
+                <input type="number" class="form-control form-control-sm serv-qty" value="${servQty}" placeholder="Qty" min="0" step="0.01" onchange="updateItemTotals(${itemIndex})" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" ${!servNo && !servDesc ? 'disabled' : ''}>
+            </td>`);
+            $tr.append(`<td style="padding:2px 3px !important;">
+                <input type="number" class="form-control form-control-sm serv-price" value="${servPrice}" placeholder="Price" min="0" step="0.01" onchange="updateItemTotals(${itemIndex})" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" ${!servNo && !servDesc ? 'disabled' : ''}>
+            </td>`);
+            $tr.append(`<td style="padding:2px 3px !important;">
+                <input type="text" class="form-control form-control-sm serv-unit" value="${servUnit}" placeholder="UOM" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" ${!servNo && !servDesc ? 'disabled' : ''}>
+            </td>`);
+            $tr.append(`<td class="wbs-container" style="padding:2px 3px !important;">
+                <select class="form-select form-select-sm service-wbs" name="serviceWBS_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" ${!servNo && !servDesc ? 'disabled' : ''}>
+                    <option value="">-- WBS Element --</option>
+                    ${wbsElements && wbsElements.length > 0 ? wbsElements.map(w =>
+                        `<option value="${w.wbsElement || w.emdValue1 || ''}" ${wbs === (w.wbsElement || w.emdValue1) ? 'selected' : ''}>${w.wbsElement || w.emdValue2 || w.emdValue1 || ''}</option>`
+                    ).join('') : ''}
+                    ${wbs && (!wbsElements || !wbsElements.some(w => (w.wbsElement || w.emdValue1) === wbs)) ?
+                        `<option value="${wbs}" selected>${wbs}</option>` : ''}
+                </select>
+            </td>`);
+            $tr.append(`<td class="internalOrder-container" style="padding:2px 3px !important; display:none;">
+                <select class="form-select form-select-sm service-internalorder" name="serviceInternalOrder_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" ${!servNo && !servDesc ? 'disabled' : ''}>
+                    <option value="">-- Internal Order --</option>
+                    ${internalOrder ? `<option value="${internalOrder}" selected>${internalOrder}</option>` : ''}
+                </select>
+            </td>`);
+            $tr.append(`<td class="costCenter-container" style="padding:2px 3px !important; display:none;">
+                <select class="form-select form-select-sm service-costcenter" name="serviceCostCenter_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" ${!servNo && !servDesc ? 'disabled' : ''}>
+                    <option value="">-- Cost Center --</option>
+                    ${costCenter ? `<option value="${costCenter}" selected>${costCenter}</option>` : ''}
+                </select>
+            </td>`);
+            $tr.append(`<td class="network-container" style="padding:2px 3px !important;">
+                <select class="form-select form-select-sm service-network" name="serviceNetwork_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" ${!servNo && !servDesc ? 'disabled' : ''}>
+                    <option value="">-- Network --</option>
+                    ${network ? `<option value="${network}" selected>${network}</option>` : ''}
+                </select>
+            </td>`);
+            $tr.append(`<td style="padding:2px !important;">
+                <input type="hidden" class="service-delete-indicator" value="${deleteIndicator}">
+                <button type="button" class="btn btn-sm btn-danger btn-delete-service" style="padding:2px 5px !important; font-size:10px !important;">
+                    <i class="bi bi-trash" style="font-size:10px !important;"></i>
+                </button>
+            </td>`);
+
+            $(tbody).append($tr);
+
+            // Auto-calculate on qty/price change
+            $tr.find('.serv-qty, .serv-price').on('input', function() {
+                updateItemTotals(itemIndex);
+            });
+        }
+
+        function updateItemTotals(itemIndex) {
+            const $mainRow = $(`#itemsBody tr.main-row`).eq(itemIndex);
+            const $subRow = $mainRow.next('.sub-row');
+            const $serviceBody = $subRow.find('.serviceBody');
+
+            let totalQty = 0, totalGross = 0, totalValue = 0;
+            $serviceBody.find('tr').each(function() {
+                const qty = parseFloat($(this).find('.serv-qty').val() || 0);
+                const price = parseFloat($(this).find('.serv-price').val() || 0);
+                totalQty += qty;
+                totalGross += price;
+                totalValue += qty * price;
+            });
+
+            $mainRow.find('.total-qty').text(totalQty.toFixed(2));
+            $mainRow.find('.total-gross').text(totalGross.toFixed(2));
+            $mainRow.find('.total-value').text(totalValue.toFixed(2));
+        }
+
+        function updateMainRowTotals(tbodyId) {
+            const $tbody = $(`#${tbodyId}`);
+            const $subRow = $tbody.closest('tr.sub-row');
+            const $mainRow = $subRow.prev('tr.main-row');
+
+            let totalQty = 0, totalGross = 0, totalValue = 0;
+            $tbody.find('tr').each(function() {
+                const qty = parseFloat($(this).find('.serv-qty').val() || 0);
+                const price = parseFloat($(this).find('.serv-price').val() || 0);
+                totalQty += qty;
+                totalGross += price;
+                totalValue += qty * price;
+            });
+
+            $mainRow.find('.total-qty').text(totalQty.toFixed(2));
+            $mainRow.find('.total-gross').text(totalGross.toFixed(2));
+            $mainRow.find('.total-value').text(totalValue.toFixed(2));
+        }
+
+        function addItemRow(itemData = {}, index) {
+            console.log(`🔨 addItemRow called for index ${index}`, itemData);
+            const itemIndex = (itemData.itemNO ? parseInt(itemData.itemNO) : (index + 1) * 10);
+
+            // Handle entity field names from backend with null checks and multiple variations
+            const shortText = itemData.shortText || itemData.description || itemData.desc || '';
+            const currency = itemData.currency || 'INR';
+
+            // Handle date from backend (could be string or Date object)
+            let deliveryDate = '';
+            if (itemData.deliveryDate) {
+                try {
+                    deliveryDate = new Date(itemData.deliveryDate).toISOString().split('T')[0];
+                } catch (e) {
+                    console.warn('Could not parse deliveryDate:', itemData.deliveryDate);
+                }
+            }
+
+            const materialGroup = itemData.materialGroup || itemData.matGrp || itemData.materialGrp || '';
+            const passThrough = itemData.passThrough || 'NO';
+            const division = itemData.division || '';
+            const department = itemData.department || itemData.dept || '';
+            const trackNo = itemData.trackingNumber || itemData.trackNo || '';
+            const wbsElement = itemData.wbsElement || '';
+            const network = itemData.network || '';
+            const itemNO = itemData.itemNO || itemData.itemNumber || (index + 1) * 10;
+
+            console.log(`   📍 Item WBS Element: "${wbsElement}", Network: "${network}"`);
+
+            // Get services - services collection from backend
+            const services = itemData.services || [];
+            const totals = calculateItemTotals(services);
+
+            console.log(`   📋 Item details:`, {
+                itemNO,
+                shortText,
+                currency,
+                materialGroup,
+                division,
+                department,
+                servicesCount: services.length
+            });
+            console.log(`   💰 Totals: qty=${totals.totalQty}, gross=${totals.totalGross}, value=${totals.totalValue}`);
+
+            // Main row
+            const $mainRow = $('<tr class="main-row">');
+            $mainRow.append(`<td>${itemNO}</td>`);
+            $mainRow.append(`<td><input type="text" class="form-control form-control-sm item-desc" value="${shortText}" placeholder="Description"></td>`);
+            $mainRow.append(`<td>${currency}</td>`);
+            $mainRow.append(`<td class="total-qty">${totals.totalQty.toFixed(2)}</td>`);
+            $mainRow.append(`<td class="total-gross">${totals.totalGross.toFixed(2)}</td>`);
+            $mainRow.append(`<td class="total-value">${totals.totalValue.toFixed(2)}</td>`);
+            $mainRow.append(`<td><input type="date" class="form-control form-control-sm item-date" value="${deliveryDate}"></td>`);
+            $mainRow.append(`<td>
+                <select class="form-control form-control-sm searchable-dropdown item-matgroup material-group-dd">
+                    <option value="">-- Select Material Group --</option>
+                    ${matGrpList && matGrpList.length > 0 ? matGrpList.map(mg =>
+                        `<option value="${mg.emdValue1 || ''}" ${materialGroup === mg.emdValue1 ? 'selected' : ''}>${mg.emdValue2 || mg.emdValue1 || ''}</option>`
+                    ).join('') : ''}
+                    ${materialGroup && (!matGrpList || !matGrpList.some(mg => mg.emdValue1 === materialGroup)) ?
+                        `<option value="${materialGroup}" selected>${materialGroup}</option>` : ''}
+                </select>
+            </td>`);
+            $mainRow.append(`<td><input type="text" class="form-control form-control-sm item-trackno" value="${trackNo}" placeholder="Tracking No"></td>`);
+            $mainRow.append(`<td>
+                <button class="btn btn-sm btn-info btn-toggle-info" type="button" title="Show/Hide Details"><i class="bi bi-chevron-down"></i></button>
+                <button class="btn btn-sm btn-danger btn-delete-item" type="button" title="Delete Item"><i class="bi bi-trash"></i></button>
+            </td>`);
+
+            // Sub row
+            const headerDivision = document.getElementById("headerDivision")?.value || division || "";
+            const headerDept = document.getElementById("headerDepartment")?.value || department || "";
+            const uniqueId = Date.now() + '_' + index;
+
+            const $subRow = $('<tr class="sub-row">');
+            $subRow.append(`<td colspan="10">
+                <div class="card shadow-sm border rounded-3 p-3 bg-light mt-2">
+                    <!-- Additional Info Fields -->
+                    <div class="container-fluid mb-4">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Division</label>
+                                <input type="text" class="form-control form-control-sm item-division" name="diviItem"
+                                       value="${headerDivision}" readonly>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Department</label>
+                                <input type="text" class="form-control form-control-sm item-department" name="departItem"
+                                       value="${headerDept}" readonly>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Pass Through</label>
+                                <select class="form-control form-control-sm item-passthrough" name="passThrough">
+                                    <option value="">-- Select --</option>
+                                    <option value="YES" ${passThrough === 'YES' ? 'selected' : ''}>Yes</option>
+                                    <option value="NO" ${passThrough === 'NO' ? 'selected' : ''}>No</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <div class="d-flex align-items-center gap-1">
+                                  <button type="button" class="btn btn-primary btn-sync-sm" onclick="syncServiceData('${uniqueId}')" title="Sync Service Data to All Lines">
+                                    <i class="bi bi-gear-fill"></i> Sync Service
+                                  </button>
+                                  <button type="button" class="btn btn-primary btn-sync-sm" onclick="syncNetworkData('${uniqueId}')" title="Sync Network Data to All Lines">
+                                    <i class="bi bi-gear-fill"></i> Sync Network
+                                  </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Service Button -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0"><i class="bi bi-list-task"></i> Service Lines</h6>
+                        <button type="button" class="btn btn-sm btn-success btn-add-service" data-item-index="${index}">
+                            <i class="bi bi-plus-circle"></i> Add Service
+                        </button>
+                    </div>
+
+                    <!-- Service Line Table -->
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover align-middle text-center mb-0 service-table">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th style="width:35px !important; max-width:35px !important; padding:4px 2px !important; font-size:11px !important;">Sr No.</th>
+                                    <th style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important;">Service No.</th>
+                                    <th style="width:100px !important; min-width:100px !important; padding:4px 2px !important; font-size:11px !important;">Short Text</th>
+                                    <th style="width:40px !important; max-width:40px !important; padding:4px !important; font-size:11px !important;">Quantity</th>
+                                    <th style="width:40px !important; max-width:40px !important; padding:4px !important; font-size:11px !important;">Unit Price</th>
+                                    <th style="width:40px !important; max-width:40px !important; padding:4px !important; font-size:11px !important;">UOM</th>
+                                    <th class="wbs-container" style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important;">WBS Element</th>
+                                    <th class="internalOrder-container" style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important; display:none;">Internal Order</th>
+                                    <th class="costCenter-container" style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important; display:none;">Cost Center</th>
+                                    <th class="network-container" style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important;">Network</th>
+                                    <th style="width:80px !important; max-width:80px !important; padding:4px !important; font-size:11px !important;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="serviceBody_${uniqueId}" class="serviceBody">
+                                <!-- Service rows populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </td>`);
+
+            $('#itemsBody').append($mainRow).append($subRow);
+            console.log(`   ✅ Appended main row and sub row to itemsBody`);
+
+            // Show sub-row by default when loading existing items (not hidden)
+            $subRow.show();
+
+            // Initialize Select2 for material group dropdown
+            try {
+                $mainRow.find('.material-group-dd').select2({
+                    placeholder: "-- Select Material Group --",
+                    allowClear: true,
+                    width: 'resolve'
+                });
+                console.log(`   ✅ Select2 initialized for material group`);
+            } catch (e) {
+                console.error(`   ❌ Error initializing Select2:`, e);
+            }
+
+            // Populate services
+            const $serviceBody = $subRow.find('.serviceBody');
+            console.log(`   🔧 Service body found:`, $serviceBody.length > 0);
+            console.log(`   🔧 Service body selector:`, `#serviceBody_${uniqueId}`);
+
+            if (services && services.length > 0) {
+                console.log(`   📦 Adding ${services.length} service lines...`);
+                services.forEach((service, sIdx) => {
+                    console.log(`      - Service ${sIdx + 1}:`, service);
+                    try {
+                        addServiceRow($serviceBody[0], service, index, wbsElement, network);
+
+                        // Enable fields if service has data
+                        const $lastRow = $serviceBody.find('tr').last();
+                        toggleServiceRowFields($lastRow);
+                        console.log(`      ✅ Service ${sIdx + 1} added and fields toggled`);
+                    } catch (e) {
+                        console.error(`      ❌ Error adding service ${sIdx + 1}:`, e);
+                    }
+                });
+                console.log(`   ✅ All service lines added`);
+            } else {
+                console.warn(`   ⚠️ No services to add for this item`);
+            }
+
+            console.log(`✅ Item ${index + 1} added successfully`);
+        }
+
+        // ===== INITIALIZE PAGE =====
+        $(document).ready(function() {
+            console.log('========================================');
+            console.log('🚀 Initializing Edit Service PR...');
+            console.log('========================================');
+            console.log('PR Data object:', prData);
+            console.log('PR Data type:', typeof prData);
+            console.log('Has items property?', 'items' in prData);
+            console.log('Items value:', prData.items);
+            console.log('Items is array?', Array.isArray(prData.items));
+            console.log('Items length:', prData.items ? prData.items.length : 'undefined');
+
+            // Populate header - values are already selected via Thymeleaf th:selected
+            // Just trigger Select2 initialization
+            $('.searchable-dropdown').select2({
+                width: 'resolve',
+                placeholder: function() {
+                    return $(this).data('placeholder');
+                }
+            });
+            console.log('✅ Select2 initialized');
+
+            // Populate items from controller data
+            const $itemsBody = $('#itemsBody');
+            console.log('🔍 itemsBody element found:', $itemsBody.length > 0);
+            console.log('🔍 itemsBody is:', $itemsBody);
+
+            $itemsBody.empty();
+            console.log('🔍 Checking items data...');
+
+            if (!prData) {
+                console.error('❌ prData is null or undefined!');
+                alert('Error: No PR data received from server!');
+            } else if (!prData.items) {
+                console.error('❌ prData.items is null or undefined!');
+                console.log('Available prData keys:', Object.keys(prData));
+                alert('Error: No items found in PR data!');
+            } else if (!Array.isArray(prData.items)) {
+                console.error('❌ prData.items is not an array! Type:', typeof prData.items);
+                alert('Error: Items data is not in correct format!');
+            } else if (prData.items.length === 0) {
+                console.warn('⚠️ prData.items is empty array');
+                alert('Warning: No items to display in this PR.');
+            } else {
+                console.log('✅ Found', prData.items.length, 'items to load');
+                prData.items.forEach((item, idx) => {
+                    console.log(`📦 Adding item ${idx + 1}:`, item);
+                    console.log(`   - itemNO: ${item.itemNO}`);
+                    console.log(`   - shortText: ${item.shortText}`);
+                    console.log(`   - services: ${item.services ? item.services.length : 0}`);
+                    try {
+                        addItemRow(item, idx);
+                        console.log(`✅ Item ${idx + 1} added successfully`);
+                    } catch (e) {
+                        console.error(`❌ Error adding item ${idx + 1}:`, e);
+                        console.error('Stack trace:', e.stack);
+                    }
+                });
+                console.log('✅ All items loaded');
+                console.log(`📊 Total rows in itemsBody: ${$itemsBody.find('tr').length}`);
+            }
+
+            // Event handlers
+            $(document).on('click', '.btn-toggle-info', function() {
+                const $mainRow = $(this).closest('tr');
+                const $subRow = $mainRow.next('.sub-row');
+                $subRow.toggle();
+                $(this).find('i').toggleClass('bi-chevron-down bi-chevron-up');
+            });
+
+            $(document).on('click', '.btn-delete-item', function() {
+                const $mainRow = $(this).closest('tr');
+                const $subRow = $mainRow.next('.sub-row');
+                $subRow.remove();
+                $mainRow.remove();
+                // Renumber items
+                $('#itemsBody tr.main-row').each(function(idx) {
+                    $(this).find('td:first').text(idx + 1);
+                });
+            });
+
+            $(document).on('click', '.btn-add-service', function() {
+                const itemIndex = $(this).data('item-index');
+                const $tbody = $(this).closest('.sub-row').find('.serviceBody');
+
+                // Get WBS element and Network from the item data
+                let itemWbsElement = '';
+                let itemNetwork = '';
+                if (prData && prData.items && prData.items[itemIndex]) {
+                    itemWbsElement = prData.items[itemIndex].wbsElement || '';
+                    itemNetwork = prData.items[itemIndex].network || '';
+                }
+
+                console.log(`➕ Adding new service row - WBS: "${itemWbsElement}", Network: "${itemNetwork}"`);
+                addServiceRow($tbody[0], {}, itemIndex, itemWbsElement, itemNetwork);
+            });
+
+            $(document).on('click', '.btn-delete-service', function() {
+                const $row = $(this).closest('tr');
+                const $tbody = $row.closest('tbody');
+                const tbodyId = $tbody.attr('id');
+                $row.remove();
+
+                // Recalculate totals after deletion
+                if (tbodyId) {
+                    updateMainRowTotals(tbodyId);
+                }
+            });
+
+            $('#btnAddItem').on('click', function() {
+                const newIndex = $('#itemsBody tr.main-row').length;
+                const newItem = {
+                    shortText: 'New Service Item',
+                    currency: prData.currency || 'INR',
+                    deliveryDate: '',
+                    matGrp: '',
+                    materialGroup: '',
+                    passThrough: 'NO',
+                    division: prData.division || '',
+                    department: prData.department || '',
+                    trackingNumber: '',
+                    trackNo: '',
+                    wbsElement: '',
+                    services: []
+                };
+                addItemRow(newItem, newIndex);
+                console.log('Added new item at index', newIndex);
+            });
+
+            $('#btnSave').on('click', async function() {
+
+
+                // Collect items
+                const items = [];
+                $('#itemsBody tr.main-row').each(function(idx) {
+                    const $mainRow = $(this);
+                    const $subRow = $mainRow.next('.sub-row');
+
+                    // Get totals from the displayed columns
+                    const quantity = parseFloat($mainRow.find('.total-qty').text() || 0);
+                    const valPrice = parseFloat($mainRow.find('.total-gross').text() || 0);
+                    const total = parseFloat($mainRow.find('.total-value').text() || 0);
+
+                    // Collect service data first to get item-level account assignment
+                    let wbsForItem = '';
+                    let internalOr = '';
+                    let costCent = '';
+                    let netwk = '';
+
+                    const services = [];
+
+                    // Collect service lines for this item
+                    $subRow.find('.serviceBody tr').each(function(sIdx) {
+                        const servNoRaw = $(this).find('.service-code').val() || '';
+                        if (!servNoRaw) return; // skip empty service rows
+
+                        const servNo = servNoRaw.split("#")[0];
+                        const servDesc = $(this).find('.serv-desc').val() || '';
+                        const servQty = parseFloat($(this).find('.serv-qty').val() || 0);
+                        const servPrice = parseFloat($(this).find('.serv-price').val() || 0);
+                        const servUnit = $(this).find('.serv-unit').val() || '';
+                        const servWBS = $(this).find('.service-wbs').val() || '';
+                        const servInternalOrder = $(this).find('.service-internalorder').val() || '';
+                        const servCostCenter = $(this).find('.service-costcenter').val() || '';
+                        const servNetwork = $(this).find('.service-network').val() || '';
+                        const servNetPrice = (servQty * servPrice).toFixed(2);
+                        const deleteIndicator = $(this).find('.service-delete-indicator').val() || '';
+
+                        // Store for item level
+                        wbsForItem = servWBS;
+                        internalOr = servInternalOrder;
+                        costCent = servCostCenter;
+                        netwk = servNetwork;
+
+                        services.push({
+                            servLine: ((sIdx + 1) * 10).toString(),
+                            servNo,
+                            servDesc,
+                            servQty,
+                            servUnit,
+                            servPrice,
+                            servNetPrice,
+                            servWBS,
+                            servInternalOrder,
+                            servCostCenter,
+                            servNetwork,
+                            deleteIndicator
+                        });
+                    });
+
+                    const item = {
+                        itemNo: $mainRow.find('td').eq(0).text().trim() || ((idx + 1) * 10).toString(),
+                        shortText: $mainRow.find('.item-desc').val() || '',
+                        materialGroup: $mainRow.find('.item-matgroup').val() || '',
+                        valPrice,
+                        total,
+                        deliveryDate: $mainRow.find('.item-date').val() || null,
+                        trackNo: $mainRow.find('.item-trackno').val() || '',
+                        passThrough: $subRow.find('.item-passthrough').val() || 'NO',
+                        division: $subRow.find('.item-division').val() || '',
+                        department: $subRow.find('.item-department').val() || '',
+                        wbsElement: wbsForItem,
+                        network: netwk,
+                        costCenter: costCent,
+                        internalOrder: internalOr,
+                        quantity,
+                        services
+                    };
+
+
+
+                    items.push(item);
+                });
+
+                const payload = {
+                    reqNumber: prData.reqNumber || '',
+                    docType: $('#docType').val() || prData.docType || '',
+                    plant: $('#plant').val() || '',
+                    purGrp: $('#purGrp').val() || '',
+                    accAsmt: $('#accAsmt').val() || '',
+                    itemCateg: $('#itemCateg').val() || '',
+                    division: $('#headerDivision').val() || '',
+                    department: $('#headerDepartment').val() || '',
+                    items: items
+                };
+
+                console.log('Final PR Data for save:', payload);
+                console.log('Total items:', items.length);
+                items.forEach((item, idx) => {
+                    console.log(`Item ${idx + 1}: ${item.services.length} services`);
+                });
+
+                try {
+                    const response = await fetch('/prCreate/updateServicePR', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [document.querySelector('meta[name="_csrf_header"]').content]:
+                                document.querySelector('meta[name="_csrf"]').content
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: 'PR Updated Successfully!',
+                            html: `<b>SAP PR Number:</b> ${data.sapPrNumber || 'N/A'}<br>${data.message}`,
+                            icon: 'success',
+                            confirmButtonText: 'Go to PR List',
+                            confirmButtonColor: '#3085d6'
+                        }).then(() => window.location.href = '/prCreate/list');
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Unexpected response from server.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#d33'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error updating PR:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to update PR. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            });
+
+            console.log('Page initialized with', (prData && prData.items ? prData.items.length : 0), 'items');
+        });
+
+        // Sync Service Data - copies WBS Element to all service lines in the item
+        function syncServiceData(itemIndex) {
+            const $mainRow = $('#itemsBody tr.main-row').eq(itemIndex);
+            const $subRow = $mainRow.next('.sub-row');
+            const wbsElement = $subRow.find('.item-wbs').val();
+
+            if (!wbsElement) {
+                alert('Please enter WBS Element first!');
+                return;
+            }
+
+            $subRow.find('.service-wbs').val(wbsElement);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Synced!',
+                text: 'WBS Element synced to all service lines.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+
+        // Sync Network Data - copies Network to all service lines in the item
+        function syncNetworkData(uniqueId) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sync Network',
+                text: 'Network sync feature - coming soon!',
+                confirmButtonText: 'OK'
+            });
+        }
+
+
+        // Toggle header section
+        function toggleHeaderSection() {
+            const content = document.getElementById('headerContent');
+            const icon = document.getElementById('toggleIcon');
+            content.classList.toggle('hidden');
+            icon.classList.toggle('bi-chevron-up');
+            icon.classList.toggle('bi-chevron-down');
+        }
+
+        // ===== SERVICE FIELD ENABLE/DISABLE LOGIC =====
+        // Enable/disable fields based on service code or short text
+        function toggleServiceRowFields($row) {
+            const serviceCodeVal = $row.find('.service-code').val();
+            const shortTextVal = $row.find('.short-text-input').val();
+
+            // Enable fields only if either service code OR short text has a value
+            const shouldEnable = (serviceCodeVal && serviceCodeVal.trim() !== '') || (shortTextVal && shortTextVal.trim() !== '');
+
+            // Toggle quantity, unit price, UOM, WBS, Network, Internal Order, and Cost Center fields
+            $row.find('.serv-qty').prop('disabled', !shouldEnable);
+            $row.find('.serv-price').prop('disabled', !shouldEnable);
+            $row.find('.serv-unit').prop('disabled', !shouldEnable);
+            $row.find('.service-wbs').prop('disabled', !shouldEnable);
+            $row.find('.service-network').prop('disabled', !shouldEnable);
+            $row.find('.service-internalorder').prop('disabled', !shouldEnable);
+            $row.find('.service-costcenter').prop('disabled', !shouldEnable);
+        }
+
+        // Listen for service code changes
+        $(document).on('change', '.service-code', function () {
+            const $row = $(this).closest('tr');
+            toggleServiceRowFields($row);
+
+            // Trigger recalculation
+            const $tbody = $row.closest('tbody');
+            const tbodyId = $tbody.attr('id');
+            if (tbodyId) {
+                updateMainRowTotals(tbodyId);
+            }
+        });
+
+        // Listen for short text changes
+        $(document).on('input change', '.short-text-input', function () {
+            const $row = $(this).closest('tr');
+            toggleServiceRowFields($row);
+        });
+
+        // Listen for quantity/price changes to recalculate
+        $(document).on('input change', '.serv-qty, .serv-price', function () {
+            const $tbody = $(this).closest('tbody');
+            const tbodyId = $tbody.attr('id');
+            if (tbodyId) {
+                updateMainRowTotals(tbodyId);
+            }
+        });
+
+        // ===== SEARCHABLE DROPDOWNS FOR SERVICE, WBS, NETWORK =====
+        // Initialize Select2 on service code dropdowns (focus event) with search
+        $(document).on('focus', '.service-code', function () {
+            if (!$(this).data('select2')) {
+                $(this).select2({
+                    placeholder: "-- Type 3+ characters to search Service --",
+                    minimumInputLength: 3,
+                    width: '100%',
+                    allowClear: true,
+                    matcher: function(params, data) {
+                        // If there are no search terms, return all of the data
+                        if ($.trim(params.term) === '') {
+                            return data;
+                        }
+
+                        // Do not display the item if there is no 'text' property
+                        if (typeof data.text === 'undefined') {
+                            return null;
+                        }
+
+                        // `params.term` is the user's search term
+                        var term = params.term.toLowerCase();
+                        var text = data.text.toLowerCase();
+
+                        // Check if the text contains the term
+                        if (text.indexOf(term) > -1) {
+                            return data;
+                        }
+
+                        // Return `null` if the term should not be displayed
+                        return null;
+                    }
+                });
+            }
+        });
+
+        // WBS Element Dropdown AJAX (Search) - Type 3+ characters
+        $(document).on('focus', '.service-wbs', function () {
+            if (!$(this).data('select2')) {
+                const plant = $('#plant').val();
+                if (!plant) {
+                    alert("Please select a plant first!");
+                    return;
+                }
+                $(this).select2({
+                    placeholder: "-- Type to search WBS --",
+                    minimumInputLength: 3,
+                    width: '100%',
+                    dropdownAutoWidth: false,
+                    ajax: {
+                        url: `/getWBSElements`,
+                        dataType: 'json',
+                        delay: 300,
+                        data: function (params) {
+                            return { plant: plant, query: params.term };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: data.map(wbs => ({
+                                    id: wbs.wbsCode || wbs.wbsElement,
+                                    text: `${wbs.wbsCode || wbs.wbsElement} (${wbs.wbsCodeDesc || wbs.description || ''})`
+                                }))
+                            };
+                        },
+                        cache: true
+                    },
+                    containerCssClass: 'select2-sm',
+                    selectionCssClass: 'select2-sm-selection'
+                });
+            }
+        });
+
+        // Network Dropdown AJAX (Search) - Type 3+ characters
+        $(document).on('focus', '.service-network', function () {
+            if (!$(this).data('select2')) {
+                const plant = $('#plant').val();
+                if (!plant) {
+                    alert("Please select a plant first!");
+                    return;
+                }
+                $(this).select2({
+                    placeholder: "-- Type to search Network --",
+                    minimumInputLength: 3,
+                    width: '100%',
+                    dropdownAutoWidth: false,
+                    ajax: {
+                        url: `/getNetwork`,
+                        dataType: 'json',
+                        delay: 300,
+                        data: function (params) {
+                            return { plant: plant, query: params.term };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: data.map(net => ({
+                                    id: net.networkCode,
+                                    text: `${net.networkDesc || ''} (${net.networkCode})`
+                                }))
+                            };
+                        },
+                        cache: true
+                    },
+                    containerCssClass: 'select2-sm',
+                    selectionCssClass: 'select2-sm-selection'
+                });
+            }
+        });
+
+        // ===== DELETE SERVICE & ADD SERVICE HANDLERS =====
+        // Delete service button - sets delete indicator to 'X'
+        $(document).on('click', '.btn-delete-service', function() {
+            const $row = $(this).closest('tr');
+            const $deleteIndicator = $row.find('.service-delete-indicator');
+
+            // Mark for deletion
+            $deleteIndicator.val('X');
+
+            // Visually indicate deleted (optional - you can remove or hide the row)
+            $row.addClass('table-danger').find('input, select').prop('disabled', true);
+
+            // Update totals
+            const $tbody = $row.closest('tbody');
+            const itemIndex = $('#itemsBody tr.main-row').index($tbody.closest('tr.sub-row').prev('.main-row'));
+            if (itemIndex >= 0) {
+                updateItemTotals(itemIndex);
+            }
+        });
+
+        // Add service button
+        $(document).on('click', '.btn-add-service', function() {
+            const itemIndex = parseInt($(this).data('item-index'));
+            const $mainRow = $('#itemsBody tr.main-row').eq(itemIndex);
+            const $subRow = $mainRow.next('.sub-row');
+            const $serviceBody = $subRow.find('.serviceBody');
+
+            // Get WBS and Network from item level
+            const wbsElement = $subRow.find('.item-wbs').val() || '';
+            const network = $subRow.find('.item-network').val() || '';
+
+            // Add new service row
+            addServiceRow($serviceBody[0], {}, itemIndex, wbsElement, network);
+        });
+
+        // Delete item button
+        $(document).on('click', '.btn-delete-item', function() {
+            const $mainRow = $(this).closest('tr.main-row');
+            const $subRow = $mainRow.next('.sub-row');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you want to delete this item?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $mainRow.remove();
+                    $subRow.remove();
+                    Swal.fire('Deleted!', 'Item has been removed.', 'success');
+                }
+            });
+        });
+
+        // Toggle info button
+        $(document).on('click', '.btn-toggle-info', function() {
+            const $mainRow = $(this).closest('tr.main-row');
+            const $subRow = $mainRow.next('.sub-row');
+            const $icon = $(this).find('i');
+
+            $subRow.toggle();
+            $icon.toggleClass('bi-chevron-down bi-chevron-up');
+        });
+
+        // ===== AUTO-CLOSE SIDEBAR ON PAGE LOAD =====
+        function autoCloseSidebar() {
+            const btn = document.querySelector('a.nav-link[data-widget="pushmenu"]');
+            if (!btn) return;
+            // Only click if sidebar is not already collapsed
+            if (!document.body.classList.contains('sidebar-collapse')) {
+                btn.click();
+            }
+        }
+
+        function initAutoClose() {
+            if (document.readyState === 'complete') {
+                autoCloseSidebar();
+            } else {
+                window.addEventListener('load', autoCloseSidebar, { once: true });
+            }
+        }
+
+        // Initialize auto-close
+        document.addEventListener('DOMContentLoaded', initAutoClose, { once: true });
+
+    </script>
+</div>
+
+</body>
+</html>
+

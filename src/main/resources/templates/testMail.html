@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Test Mail</title>
+    <style>
+        body { font-family: Arial; background: #f4f6f8; }
+        .box {
+            width: 400px;
+            margin: 80px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input, textarea, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+        }
+        button {
+            background: #033882;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .msg {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h3>📧 Test Mail</h3>
+
+    <form action="/send-test-mail" method="post">
+        <input type="hidden"  th:name="${_csrf.parameterName}"  th:value="${_csrf.token}" />
+        <input type="email" name="to" placeholder="To Email" required />
+        <input type="text" name="subject" placeholder="Subject" required />
+        <textarea name="body" placeholder="Mail Body" rows="4" required></textarea>
+        <button type="submit">Send Mail</button>
+    </form>
+
+    <div class="msg" th:text="${msg}"></div>
+</div>
+
+</body>
+</html>

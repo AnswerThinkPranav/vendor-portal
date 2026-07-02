@@ -1,0 +1,2401 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Create PR</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+
+
+        /* --- Base Layout --- */
+    .content-wrapper { padding: 2px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .card { margin: 10px auto; padding: 20px; width: 100%; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .content-header { padding: 1px .5rem; }
+    h1 {
+    color: #033882;
+    font-weight: 700;
+    }
+
+ /* --- Filter Panel --- */
+ .filter-panel {
+   background: #DC402B;
+   border-radius: 10px;
+   overflow: hidden;
+   transition: all 0.3s ease-in-out;
+ }
+ .filter-header {
+   padding: 12px 20px;
+   color: white;
+   font-weight: bold;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   background-color: rgba(220, 64, 43, 0.9);
+ }
+ .filter-title {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+ }
+ .filter-icon {
+   cursor: pointer;
+   font-size: 1.3rem;
+   transition: transform 0.3s ease;
+ }
+ .filter-icon:hover {
+   transform: scale(1.1);
+ }
+ .filter-content {
+   background: rgba(255, 255, 255, 0.95);
+   padding: 15px 20px;
+   border-radius: 0 0 8px 8px;
+   max-height: 500px;
+   overflow: hidden;
+   transition: all 0.4s ease-in-out;
+   opacity: 1;
+ }
+
+ /* Hide transition (collapsed state) */
+ .filter-content.hidden {
+   max-height: 0;
+   opacity: 0;
+   padding: 0 20px;
+   transition: all 0.4s ease-in-out;
+ }
+
+ /* --- Document Type Alignment --- */
+ .filter-header > div:last-of-type {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   margin-left: auto;
+   justify-content: flex-end;
+ }
+ .filter-header label {
+   color: white;
+   margin-bottom: 0;
+   font-weight: 500;
+ }
+
+ /* Smooth transitions for hover collapse/expand */
+.filter-panel {
+  transition: all 0.4s ease;
+}
+
+/* Optional: Slight shadow pop on hover */
+.filter-panel:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+/* Make the hidden state truly compact */
+.filter-content.hidden {
+  max-height: 0 !important;
+  opacity: 0 !important;
+  padding: 0 20px !important;
+  overflow: hidden;
+}
+
+ #docType {
+   width: 200px;
+   border-radius: 6px;
+   font-size: 14px;
+ }
+
+ /* --- Table Styling --- */
+ .custom-table-header { background-color: #033882; color: #fff;padding: 10px;!important }
+ table th, table td { vertical-align: middle; padding: 6px; }
+ .btn-sm { font-size: 12px; padding: 3px 8px; }
+
+ .btn-addinfo { background-color: #0d6efd; color: #fff; }
+ .btn-addinfo:hover { background-color: #0b5ed7; }
+
+ .btn-delete { background-color: #dc3545; color: #fff; }
+ .btn-delete:hover { background-color: #bb2d3b; }
+
+ /* Compact sync buttons used in service sub-row (smaller footprint) */
+ .btn-sync-sm {
+   font-size: 12px !important;
+   padding: 4px 8px !important;
+   border-radius: 6px !important;
+   line-height: 1 !important;
+   display: inline-flex !important;
+   align-items: center !important;
+   gap: 6px !important;
+ }
+ .btn-sync-sm i { font-size: 0.95rem !important; }
+ .btn-sync-sm.ms-2 { margin-left: 8px !important; }
+
+ .sub-row { background-color: #f9f9f9; display: none; }
+ .sub-row td { text-align: left; padding: 10px 20px; }
+
+ /* --- Create PR Button --- */
+ .bottom-actions { text-align: center; margin-top: 30px; }
+ .btn-create {
+   background-color: #033882;
+   color: white;
+   font-size: 16px;
+   padding: 10px 25px;
+   border-radius: 6px;
+   border: none;
+   cursor: pointer;
+   transition: 0.3s;
+ }
+ .btn-create:hover { background-color: #022b65; }
+
+ /* Refresh Button */
+ .btn-refresh {
+     background-color: #033882;
+     color: white;
+     border: none;
+     border-radius: 4px;
+     padding: 4px 8px;
+     font-size: 14px;
+     cursor: pointer;
+     transition: all 0.3s ease;
+ }
+ .btn-refresh:hover {
+     background-color: #022b65;
+     transform: rotate(180deg);
+ }
+ .btn-refresh i {
+     transition: transform 0.3s ease;
+ }
+
+ /* --- Table Scrollable Section --- */
+ .custom-table-container {
+   position: relative;
+   border-radius: 10px;
+   overflow: hidden;
+   background: #fff;
+   box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+ }
+ .table-scroll-wrapper {
+   max-height: 350px;
+   overflow: hidden;
+ }
+ .table-scroll {
+   max-height: 350px;
+   overflow-y: auto;
+   overflow-x: auto;
+   scrollbar-width: thin;
+   scrollbar-color: #033882 #f0f0f0;
+ }
+ .table-scroll::-webkit-scrollbar {
+   height: 8px;
+   width: 8px;
+ }
+ .table-scroll::-webkit-scrollbar-thumb {
+   background-color: #033882;
+   border-radius: 4px;
+ }
+ .table-scroll::-webkit-scrollbar-track {
+   background-color: #f0f0f0;
+ }
+
+ /* --- Item Table Styling --- */
+.item-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  background: #fff;
+  position: relative;
+}
+
+/* Sticky table header */
+#itemTable thead th {
+
+  top: 0;
+  background-color: #033882 !important;
+  color: #fff;
+  z-index: 5;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Body cells */
+#itemTable td {
+  font-size: 14px;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-align: center;
+  background-color: #fff;
+}
+
+/* Fixed first column only (Sr No.) */
+#itemTable th:first-child,
+#itemTable td:first-child {
+
+  left: 0;
+  z-index: 6;
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+/* Scrollbar styling */
+.item-table-wrapper::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.item-table-wrapper::-webkit-scrollbar-thumb {
+  background-color: #033882;
+  border-radius: 4px;
+}
+.item-table-wrapper::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+/* Buttons inside table */
+.btn-sm {
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+}
+
+  /* --- Fix Service Line Table Layout --- */
+.service-table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse; /* removes gaps between cells */
+}
+
+.service-table th,
+.service-table td {
+  white-space: normal;
+  word-wrap: break-word;
+  text-align: center;
+  vertical-align: middle;
+  padding: 6px 8px; /* tighter cell spacing */
+}
+
+/* Make inputs larger and fill the cell properly */
+.service-table input,
+.service-table select {
+  width: 95%;
+  font-size: 14px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+/* Slight hover focus for usability */
+.service-table input:focus,
+.service-table select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Prevent horizontal scroll inside service tab */
+[id^="serviceBody_"] {
+  overflow-x: hidden !important;
+}
+
+/* Select2 styling: make Select2 controls inside the service table match native inputs */
+.service-table .select2-container {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+.service-table .select2-container--default .select2-selection--single {
+  height: 26px !important;
+  padding: 3px 6px !important;
+  border-radius: 3px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  box-sizing: border-box;
+  border: 1px solid #ced4da !important;
+}
+.service-table .select2-selection__rendered {
+  padding: 0 !important;
+}
+.service-table .select2-selection__arrow {
+  height: 26px !important;
+}
+.service-table .select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: #495057;
+}
+
+.card h6 i {
+  color: #0d6efd;
+}
+
+        /* ----------------------- */
+/* ?? Unified Card Styling */
+/* ----------------------- */
+.sub-row .card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 20px 25px;
+  margin-top: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.sub-row .card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* ----------------------- */
+/* ?? Tab Button Styling */
+/* ----------------------- */
+.sub-row .nav-tabs {
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.sub-row .nav-tabs .nav-link {
+  font-weight: 600;
+  color: #495057;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px 6px 0 0;
+  transition: 0.3s;
+}
+
+.sub-row .nav-tabs .nav-link.active {
+  background-color: #033882;
+  color: white;
+}
+
+/* ----------------------- */
+/* ?? Additional Info Layout */
+/* ----------------------- */
+.sub-row .tab-pane .form-control,
+.sub-row .tab-pane select {
+  border-radius: 6px;
+  font-size: 13px;
+  height: 34px;
+}
+
+.sub-row .tab-pane label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #033882;
+  margin-bottom: 4px;
+}
+
+.sub-row .tab-pane .row {
+  margin-bottom: 12px;
+}
+
+/* Make both cards same height */
+.sub-row .tab-pane {
+  min-height: 220px;
+}
+
+/* ----------------------- */
+/* ?? Service Line Styling */
+/* ----------------------- */
+.service-table {
+  width: 100%;
+  border: 1px solid #dee2e6;
+  table-layout: fixed;
+}
+<!--033882-->
+
+.service-table thead th {
+  top: 0;
+  z-index: 0;
+  background-color: #033882 !important;
+  color: #fff;
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Table look - Optimized for compact display */
+.service-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.service-table td, .service-table th {
+  vertical-align: middle;
+  text-align: center;
+  padding: 3px 4px !important; /* Much smaller padding */
+  background: #fff;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+/* Input consistency - smaller and more compact */
+.service-table input,
+.service-table select {
+  width: 100%;
+  font-size: 11px !important;
+  border-radius: 3px;
+  border: 1px solid #ced4da;
+  padding: 3px 4px !important;
+  height: 26px !important;
+  box-sizing: border-box;
+}
+
+/* Specific column widths for optimal display */
+.service-table th:nth-child(1), /* Sr No */
+.service-table td:nth-child(1) {
+  width: 35px !important;
+  max-width: 35px !important;
+  padding: 2px !important;
+}
+
+.service-table th:nth-child(2), /* Service No */
+.service-table td:nth-child(2) {
+  width: 35px !important;
+  min-width: 35px !important;
+}
+
+.service-table th:nth-child(3), /* Short Text */
+.service-table td:nth-child(3) {
+  width: 50px !important;
+  max-width: 50px !important;
+  padding: 2px !important;
+}
+
+.service-table th:nth-child(4), /* Quantity */
+.service-table td:nth-child(4) {
+  width: 50px !important;
+  max-width: 50px !important;
+}
+
+.service-table th:nth-child(5), /* Unit Price */
+.service-table td:nth-child(5) {
+  width: 40px !important;
+  max-width: 40px !important;
+}
+
+.service-table th:nth-child(6), /* UOM */
+.service-table td:nth-child(6) {
+  width: 40px !important;
+  max-width: 40px !important;
+}
+
+.service-table th:nth-child(7), /* WBS Element */
+.service-table td:nth-child(7) {
+  width: 70px !important;
+  min-width: 70px !important;
+}
+
+.service-table th:nth-child(8), /* Network */
+.service-table td:nth-child(8) {
+  width: 100px !important;
+  min-width: 100px !important;
+}
+
+.service-table th:nth-child(9), /* Action */
+.service-table td:nth-child(9) {
+  width: 80px !important;
+  max-width: 80px !important;
+}
+
+/* Make short text button smaller */
+.service-table .btn-sm {
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+}
+
+.service-table .btn-sm i {
+  font-size: 10px !important;
+}
+
+/* Hide scrollbar background */
+.service-table-wrapper::-webkit-scrollbar-track {
+  background: #f9f9f9;
+}
+/* Add Row Button (inside card bottom) */
+.service-add-btn {
+  text-align: right;
+  margin-top: 10px;
+}
+
+.service-add-btn button {
+  background-color: #033882;
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.service-add-btn button:hover {
+  background-color: #022b65;
+}
+
+/* ----------------------- */
+/* ?? Consistent Spacing */
+/* ----------------------- */
+.sub-row td {
+  padding: 15px 25px !important;
+  background-color: #f8f9fb;
+}
+
+.sub-row .container-fluid {
+  padding: 0 5px;
+}
+
+/* Prevent scrollbars in both tabs */
+.sub-row .card {
+  overflow-x: hidden;
+}
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+            // Detect if we’re on the Service PR page
+            if (document.querySelector(".container[layout\\:fragment='content']")) {
+                // Collapse sidebar
+                document.body.classList.add("sidebar-collapse");
+            }
+        });
+    </style>
+</head>
+
+<body>
+
+
+<section layout:fragment="header">
+    <div class="container">
+        <div class="row mb-2">
+            <div class="col-sm-6"><h1>Create Service PR</h1></div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">PR</a></li>
+                    <li class="breadcrumb-item active">Create Service PR</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container" layout:fragment="content">
+    <div class="card">
+        <!-- PR Header -->
+        <div class="filter-panel mt-3">
+            <div class="filter-header">
+                <div class="filter-title">
+                    <i class="bi bi-funnel-fill"></i>
+                    <span>PR Header Details</span>
+                    <button onclick="location.reload();" class="btn btn-sm btn-refresh" title="Refresh Page" style="margin-left: 12px;">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+
+                <!-- Centered Document Type section -->
+                <div class="d-flex align-items-center justify-content-center flex-grow-1">
+                    <label class="text-white mb-0 me-2">Document Type:</label>
+                    <select id="docType" class="form-control searchable-dropdown" style="width: 200px;">
+                        <option value="">-- Select Doc Type --</option>
+                        <option th:each="dt:${docTypes}"
+                                th:value="${dt.emdValue1}"
+                                th:text="${dt.emdValue2 + ' (' + dt.emdValue1 + ')'}">
+                        </option>
+                    </select>
+                </div>
+
+                <i id="toggleIcon" class="bi bi-chevron-up filter-icon" title="Collapse/Expand" onclick="toggleHeaderSection()"></i>
+            </div>
+
+            <div class="filter-content" id="headerContent">
+                <form th:action="@{/prCreate/postPR}" th:object="${prForm}" method="post" id="prForm">
+                    <div class="row mb-3">
+                        <div class="form-group col-md-4">
+                            <label>Plant</label>
+                            <select class="form-control searchable-dropdown" name ="plant" id="plant" onchange=" loadDepartments();">
+                                <option value="">--Select Plant--</option>
+                                <option th:each="pt:${plants}" th:value="${pt.emdValue1}" th:text="${pt.emdValue2+' (' +pt.emdValue1+ ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Purchase Group</label>
+                            <select class="form-control searchable-dropdown" name="purGrp" id="purGrp">
+                                <option value="">-- Select Purchase Group --</option>
+                                <option th:each="pg : ${purchaseGroups}" th:value="${pg.emdValue1}" th:text="${pg.emdValue2 +' (' +pg.emdValue1+ ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Account Assignment</label>
+                            <select class="form-control searchable-dropdown" name="accAsmt" id="accAsmt" onchange="toggleWbsInternalOrder()">
+                                <option value="">-- Select Account Assignment Group --</option>
+                                <option th:each="pg : ${accAssgs}" th:value="${pg.emdValue1}" th:text="${pg.emdValue2 +' (' +pg.emdValue1+ ')'}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="form-group col-md-4">
+                            <label>Item Category</label>
+                            <select class="form-control searchable-dropdown" name="itemCateg" id="itemCateg" onchange="toggleWbsInternalOrder()">
+                                <option value="">-- Select Item Category --</option>
+                                <option th:each="pg : ${itemCategs}" th:value="${pg.emdValue1}" th:text="${pg.emdValue2+' (' +pg.emdValue3+ ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Division</label>
+                            <select class="form-control searchable-dropdown" name="division" id="division" onchange="loadDepartments();">
+                                <option value="">-- Select Division --</option>
+                                <option th:each="pg : ${divisions}" th:value="${pg.emdValue1}" th:text="${pg.emdValue2+' (' +pg.emdValue1+ ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Department</label>
+                            <select id="department" name="department" class="form-control searchable-dropdown">
+                                <option value="">-- Select Department --</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Item Table -->
+        <div class="custom-table-container mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-primary fw-semibold mb-0">Item Details</h4>
+                <button class="btn btn-success btn-mb px-4 py-2" type="button" onclick="addItemRow()">
+                    <i class="bi bi-plus-circle me-2"></i> Add Item
+                </button>
+            </div>
+
+
+            <div class="table-responsive item-table-wrapper">
+                <table id="itemTable" class="table table-bordered table-hover align-middle text-center mb-0">
+                    <thead class="custom-table-header">
+                    <tr>
+                        <th style="width: 60px;">Item No.</th>
+                        <th style="min-width: 200px;">Description</th>
+                        <th style="min-width: 80px;">Currency</th>
+                        <th style="min-width: 80px;">Total Qty</th>
+                        <th style="min-width: 80px;">Gross Price</th>
+                        <th style="min-width: 100px;">Total Value</th>
+                        <th style="min-width: 120px;">Delivery Date</th>
+                        <th style="min-width: 120px;">Material Group</th>
+                        <th style="min-width: 120px;">Tracking Number</th>
+                        <th style="min-width: 90px;">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <div class="bottom-actions">
+            <button class="btn-create" type="button" onclick="submitPR()">
+                <i class="bi bi-check-circle me-1"></i> CREATE PR
+            </button>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script th:inline="javascript">
+        let serviceCodeList = [];
+
+
+	let INTERNAL_ORDER_CACHE = null;
+	let INTERNAL_ORDER_LOADING = false;
+
+	function loadInternalOrdersOnce() {
+	  if (INTERNAL_ORDER_CACHE) {
+	    return Promise.resolve(INTERNAL_ORDER_CACHE);
+	  }
+
+	  if (INTERNAL_ORDER_LOADING) {
+	    return new Promise(resolve => {
+	      const check = setInterval(() => {
+	        if (INTERNAL_ORDER_CACHE) {
+	          clearInterval(check);
+	          resolve(INTERNAL_ORDER_CACHE);
+	        }
+	      }, 100);
+	    });
+	  }
+
+	  INTERNAL_ORDER_LOADING = true;
+
+	  return fetch('/getInternalOrders')
+	    .then(res => res.json())
+	    .then(data => {
+	      INTERNAL_ORDER_CACHE = data || [];
+	      INTERNAL_ORDER_LOADING = false;
+	      return INTERNAL_ORDER_CACHE;
+	    })
+	    .catch(err => {
+	      INTERNAL_ORDER_LOADING = false;
+	      console.error("❌ Failed to load Internal Orders", err);
+	      return [];
+	    });
+	}
+
+
+
+    let currentShortTextInput = null;
+function openOnlyThisSubRow(mainRow, subRow) {
+  // Close all other sub-rows and reset their buttons
+  document.querySelectorAll(".sub-row").forEach(row => {
+    if (row !== subRow) {
+      row.style.display = "none";
+      const otherBtn = row.previousElementSibling?.querySelector(".btn-addinfo i");
+      if (otherBtn) {
+        otherBtn.classList.remove("bi-dash-circle");
+        otherBtn.classList.add("bi-plus-circle");
+        const parentBtn = row.previousElementSibling?.querySelector(".btn-addinfo");
+        if (parentBtn) parentBtn.title = "Add Info";
+      }
+    }
+  });
+
+  // Open the new subRow and set its main row button to "Hide Info"
+  subRow.style.display = "table-row";
+  const icon = mainRow.querySelector(".btn-addinfo i");
+  const parentBtn = mainRow.querySelector(".btn-addinfo");
+  if (icon) {
+    icon.classList.remove("bi-plus-circle");
+    icon.classList.add("bi-dash-circle");
+  }
+  if (parentBtn) parentBtn.title = "Hide Info";
+}
+
+
+ $(document).on('change', '.service-code', function () {
+  const selectedCode = $(this).val();
+  const row = $(this).closest('tr');
+  const service = serviceCodeList.find(s => s.servCode === selectedCode);
+
+  if (service) {
+    row.find('[name*="serviceDesc"]').val(service.servCodeDesc);
+  } else {
+    row.find('[name*="serviceDesc"]').val('');
+  }
+});
+$(document).on('input', '[name*="serviceQty"], [name*="servicePrice"]', function () {
+  const row = $(this).closest('tr');
+  const qty = parseFloat(row.find('[name*="serviceQty"]').val()) || 0;
+  const price = parseFloat(row.find('[name*="servicePrice"]').val()) || 0;
+
+  const serviceBodyId = $(this).closest('tbody[id^="serviceBody_"]').attr('id');
+  if (serviceBodyId) {
+    updateMainRowTotals(serviceBodyId);
+  }
+});
+<!--$(document).on('input', '[name*="serviceQty"], [name*="servicePrice"]', function () {-->
+<!--  const row = $(this).closest('tr');-->
+<!--  const qty = parseFloat(row.find('[name*="serviceQty"]').val()) || 0;-->
+<!--  const price = parseFloat(row.find('[name*="servicePrice"]').val()) || 0;-->
+<!--  row.find('[name*="serviceNet"]').val((qty * price).toFixed(2));-->
+<!--});-->
+
+                 let rowCount = 0;
+                 let materialList = [];
+                 let allMaterialsCache = { plant: null, data: [] };
+
+                 $(document).ready(function () {
+                   $('.searchable-dropdown').select2({
+                     placeholder: "-- Select Option --",
+                     allowClear: true,
+                     width: 'resolve'
+                   });
+
+                   // Initialize WBS and Network visibility on page load
+                   toggleWbsInternalOrder();
+
+                   // When Material Group changes in an item row
+$(document).on("change", ".material-group-dd", function () {
+
+  const matGroup = $(this).val();
+  const mainRow = this.closest("tr");
+
+  if (!matGroup) return;
+
+  console.log("Material Group selected:", matGroup);
+  loadServiceCode(mainRow, matGroup);
+});
+
+                 });
+
+                 /* ---------- Material Dropdown AJAX (Search) ---------- */
+                 $(document).on('focus', '.material-code, .material-desc, .glacct-dd', function () {
+                   if (!$(this).data('select2')) {
+                     const plant = $('#plant').val();
+                     if (!plant) {
+                       alert("Please select a plant first!");
+                       return;
+                     }
+                     const isCodeDropdown = $(this).hasClass('material-code');
+                     const searchField = isCodeDropdown ? 'matCode' : 'matDesc';
+                     $(this).select2({
+                       placeholder: "-- Type to search Material --",
+                       minimumInputLength: 3,
+                       ajax: {
+                         url: `/getMaterials`,
+                         dataType: 'json',
+                         delay: 300,
+                         data: function (params) {
+                           return { plant: plant, query: params.term, searchType: searchField };
+                         },
+                         processResults: function (data) {
+                           return {
+                             results: data.map(mat => ({
+                               id: mat.materialCode,
+                                text: `${mat.materialCode}`
+                              // text: `${mat.materialCode} - ${mat.description}`
+                             }))
+                           };
+                         },
+                         cache: true
+                       }
+                     });
+                   }
+                 });
+
+                 /* ---------- Service Code Dropdown AJAX (Search) ---------- */
+                 $(document).on('focus', '.service-code', function () {
+  const $this = $(this); // ? define $this
+
+  // Initialize Select2 only once per element
+  if (!$this.data('select2')) {
+    $this.select2({
+      placeholder: "-- Select Service Code --",
+      width: '100%',
+      allowClear: true
+    });
+  }
+});
+$(document).on('change', '.service-code', function () {
+  const selectedVal = $(this).val(); // e.g., "SRV001#EA"
+  const selectedText = $(this).find('option:selected').text(); // "Maintenance (SRV001)"
+  const $row = $(this).closest('tr');
+
+  if (selectedVal) {
+    const [servCode, uom] = selectedVal.split('#');
+
+    // ?? Fill fields in same sub-row or main row
+    $row.find('[name*="serviceDesc"]').val(selectedText.split('(')[0].trim()); // "Maintenance"
+    $row.find('[name*="serviceUOM"]').val(uom || '');
+  } else {
+    // ?? If cleared
+    $row.find('[name*="serviceDesc"]').val('');
+    $row.find('[name*="serviceUOM"]').val('');
+  }
+
+  // Check and toggle field states
+  toggleServiceRowFields($row);
+});
+
+// Function to enable/disable fields based on service code or short text
+function toggleServiceRowFields($row) {
+  const serviceCodeVal = $row.find('.service-code').val();
+  const shortTextVal = $row.find('.short-text-input').val();
+
+  // Enable fields only if either service code OR short text has a value
+  const shouldEnable = (serviceCodeVal && serviceCodeVal.trim() !== '') || (shortTextVal && shortTextVal.trim() !== '');
+
+  console.log("?? toggleServiceRowFields() called");
+  console.log("   - Service Code:", serviceCodeVal);
+  console.log("   - Short Text:", shortTextVal);
+  console.log("   - Should Enable:", shouldEnable);
+
+  // Toggle quantity, unit price, UOM fields
+  $row.find('[name*="serviceQty"]').prop('disabled', !shouldEnable);
+  $row.find('[name*="servicePrice"]').prop('disabled', !shouldEnable);
+  $row.find('[name*="serviceUOM"]').prop('disabled', !shouldEnable);
+
+  // Toggle WBS, Internal Order, Cost Center, and Network fields
+  $row.find('.service-wbs').prop('disabled', !shouldEnable);
+  $row.find('.service-internalOrder').prop('disabled', !shouldEnable);
+  $row.find('.service-costCenter').prop('disabled', !shouldEnable);
+  $row.find('.service-network').prop('disabled', !shouldEnable);
+
+  // If enabling, also trigger Select2 initialization if needed
+  if (shouldEnable) {
+    console.log("   ? Enabling dropdowns");
+  } else {
+    console.log("   ?? Disabling dropdowns");
+  }
+}
+
+// Listen for short text changes (from modal save)
+$(document).on('input change', '.short-text-input', function () {
+  const $row = $(this).closest('tr');
+  toggleServiceRowFields($row);
+});
+                 /* ---------- WBS Element Dropdown AJAX (Search) ---------- */
+                 $(document).on('focus', '.service-wbs', function () {
+                   if (!$(this).data('select2')) {
+                     const plant = $('#plant').val();
+                     if (!plant) {
+                       alert("Please select a plant first!");
+                       return;
+                     }
+                     $(this).select2({
+                       placeholder: "-- Type to search WBS --",
+                       minimumInputLength: 3,
+                       width: '100%',
+                       dropdownAutoWidth: false,
+                       ajax: {
+                         url: `/getWBSElements`,
+                         dataType: 'json',
+                         delay: 300,
+                         data: function (params) {
+                           return { plant: plant, query: params.term };
+                         },
+                         processResults: function (data) {
+                           return {
+                             results: data.map(wbs => ({
+                               id: wbs.wbsCode,
+                               text: `${wbs.wbsCode} (${wbs.wbsCodeDesc})`
+                             }))
+                           };
+                         },
+                         cache: true
+                       },
+                       containerCssClass: 'select2-sm',
+                       selectionCssClass: 'select2-sm-selection'
+                     });
+                   }
+                 });
+
+                 /* ---------- Network Dropdown AJAX (Search) ---------- */
+                 $(document).on('focus', '.service-network', function () {
+                   if (!$(this).data('select2')) {
+                     const plant = $('#plant').val();
+                     if (!plant) {
+                       alert("Please select a plant first!");
+                       return;
+                     }
+                     $(this).select2({
+                       placeholder: "-- Type to search Network --",
+                      // minimumInputLength: 3,
+                       width: '100%',
+                       dropdownAutoWidth: false,
+                       ajax: {
+                         url: `/getNetwork`,
+                         dataType: 'json',
+                         delay: 300,
+                         data: function (params) {
+                           return { plant: plant};
+                         },
+                         processResults: function (data) {
+                           return {
+                             results: data.map(net => ({
+                               id: net.emdValue1.split("#")[0],
+                               text: `${net.emdValue2} (${net.emdValue1.split("#")[0]})`
+                             }))
+                           };
+                         },
+                         cache: true
+                       },
+                       containerCssClass: 'select2-sm',
+                       selectionCssClass: 'select2-sm-selection'
+                     });
+                   }
+                 });
+
+
+                 /* ---------- UPDATED MATERIAL CHANGE HANDLER ---------- */
+                 $(document).on('change', '.material-select', function () {
+                   const row = $(this).closest('tr')[0];
+                   const materialCode = $(this).val();
+                   const plant = $("#plant").val();
+
+                   if (!plant) {
+                     alert("Please select a Plant first!");
+                     $(this).val('');
+                     return;
+                   }
+
+                   if (!materialCode) {
+                     alert("Please select a Material Code!");
+                     return;
+                   }
+
+                   console.log("Fetching details for:", materialCode, "Plant:", plant);
+
+                   fetch(`/getMaterialDetails?plant=${plant}&materialCode=${materialCode}`)
+                     .then(res => {
+                       if (!res.ok) throw new Error("Network error while fetching details.");
+                       return res.json();
+                     })
+                     .then(data => {
+                       console.log("Response Data:", data);
+
+                       // ? Data validation & alerts
+                       if (!data || data.length === 0) {
+                         alert("Material not found in selected Plant!");
+                         row.querySelector('[name="uom"]').value = "";
+                         row.querySelector('[name="casNoHid"]').value = "";
+                         row.querySelector('[name="materialGroup"]').value = "";
+                       //  row.querySelector('[name="unitPrice"]').value = "";
+                         row.querySelector('[name="matDesc"]').value = "";
+                         return;
+                       }
+
+                       const mat = data[0];
+                       //alert("? Material details fetched successfully!");
+
+                       // ? Populate fields safely
+                        const descSelect = row.querySelector('[name="matDesc"]');
+                       descSelect.innerHTML = `<option value="${mat.description}">${mat.description}</option>`;
+                       descSelect.value = mat.description || "";
+
+                       row.querySelector('[name="uom"]').value = mat.uom || "";
+                       row.querySelector('[name="casNoHid"]').value = mat.casNo || "";
+                       row.querySelector('[name="materialGroup"]').value = mat.materialGroup || "";
+                     //  row.querySelector('[name="unitPrice"]').value = mat.unitPrice || "";
+                     })
+                     .catch(err => {
+                       console.error("? Error fetching material details:", err);
+                       alert("Error fetching material details. Check console or backend logs.");
+                     });
+                 });
+
+                 function loadWBSElements(row, plant)
+                 {
+                     const dropdown = row.querySelector('.service-wbs');
+                     dropdown.innerHTML = `<option>Loading...</option>`;
+                     if (!plant) {
+                         dropdown.innerHTML = `<option value="">-- Select Wbs Element --</option>`;
+                         return;
+                     }
+
+
+                   fetch(`/getWBSElements?plant=${plant}`)
+                     .then(res => {
+                       if (!res.ok) throw new Error("Network error while fetching details.");
+                       return res.json();
+                     })
+                     .then(data => {
+                       console.log("Response Data:", data);
+
+
+                             const wbsSelect = row.querySelector('.service-wbs');
+                             wbsSelect.innerHTML = '<option value="">-- Select WBS --</option>';
+
+                             if (Array.isArray(data) && data.length > 0) {
+                                 data.forEach(wbs => {
+                                     const opt = document.createElement("option");
+                                     opt.value = wbs.wbsCode;
+                                     opt.textContent = `${wbs.wbsCode} - ${wbs.wbsCodeDesc}`;
+                                     wbsSelect.appendChild(opt);
+                                 });
+                             } else {
+
+                             }
+                         })
+                         .catch(err => {
+                             console.error("Error fetching WBS elements:", err);
+                             alert("Error while fetching WBS Elements!");
+                         });
+                 }
+function loadNetwork(row, plant)
+{
+    const dropdowns = row.querySelectorAll('.service-network');
+    dropdowns.forEach(dropdown => {
+        dropdown.innerHTML = `<option>Loading...</option>`;
+    });
+
+    if (!plant) {
+        dropdowns.forEach(dropdown => {
+            dropdown.innerHTML = `<option value="">-- Select Network --</option>`;
+        });
+        return;
+    }
+
+    fetch(`/getNetwork?plant=${plant}`)
+          .then(async res => {
+            if (!res.ok) throw new Error("Network error while fetching networks.");
+              const text = await res.text();
+    if (!text.trim()) return []; // return empty array safely
+            try {
+      return JSON.parse(text);
+    } catch (err) {
+      console.error("? Invalid JSON from backend:", text);
+      throw new Error("Invalid JSON response from backend.");
+    }
+        })
+        .then(data => {
+            if (!Array.isArray(data) || data.length === 0) {
+                dropdowns.forEach(dropdown => {
+                    dropdown.innerHTML = `<option value="">-- No Networks Found --</option>`;
+                });
+                return;
+            }
+
+            dropdowns.forEach(dropdown => {
+                dropdown.innerHTML = `<option value="">-- Select Network --</option>`;
+                data.forEach(net => {
+                    const opt = document.createElement('option');
+                    opt.value = net.emdValue1.split("#")[0];
+                    opt.textContent = `${net.emdValue2} (${net.emdValue1.split("#")[0]})`;
+                    dropdown.appendChild(opt);
+                });
+            });
+        })
+        .catch(err => {
+            console.error("? Error loading networks:", err);
+            dropdowns.forEach(dropdown => {
+                dropdown.innerHTML = `<option value="">-- Error loading Networks --</option>`;
+            });
+        });
+}
+
+
+function toggleWbsInternalOrder() {
+    const accAsmt = document.getElementById("accAsmt")?.value;
+    const itemCat = document.getElementById("itemCateg")?.value;
+    const wbsContainers = document.querySelectorAll(".wbs-container");
+    const internalOrderContainers = document.querySelectorAll(".internalOrder-container");
+    const costCenterContainers = document.querySelectorAll(".costCenter-container");
+    const networkContainers = document.querySelectorAll(".network-container");
+
+    console.log("?? ========== toggleWbsInternalOrder() CALLED ==========");
+    console.log("   ?? Account Assignment (accAsmt):", accAsmt);
+    console.log("   ?? Item Category (itemCat):", itemCat);
+    console.log("   ?? Found Elements:");
+    console.log("      - WBS containers:", wbsContainers.length);
+    console.log("      - Internal Order containers:", internalOrderContainers.length);
+    console.log("      - Cost Center containers:", costCenterContainers.length);
+    console.log("      - Network containers:", networkContainers.length);
+
+    // Show Internal Order when accAsmt is 'F' AND itemCat is 'D' or 'L'
+    if (accAsmt === 'F' && (itemCat == 9 || itemCat == 3)) {
+        console.log("   ? CONDITION MET: accAsmt='F' AND itemCat='D' or 'L'");
+        console.log("   ?? Action: HIDE WBS, SHOW Internal Order, HIDE Cost Center, HIDE Network");
+
+        wbsContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding WBS #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        internalOrderContainers.forEach((div, index) => {
+            console.log(`      ?? Showing Internal Order #${index}:`, div.tagName, div.className);
+            div.style.display = "table-cell";
+        });
+
+        costCenterContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding Cost Center #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        networkContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding Network #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        console.log("   ?? Internal Order data will load via Select2 AJAX when dropdown is opened");
+    }
+    // Show Cost Center when accAsmt is 'K' AND itemCat is 'D' or 'L'
+    else if (accAsmt === 'K' && (itemCat == 9 || itemCat == 3)) {
+        console.log("   ? CONDITION MET: accAsmt='K' AND itemCat='D' or 'L'");
+        console.log("   ?? Action: HIDE WBS, HIDE Internal Order, SHOW Cost Center, HIDE Network");
+
+        wbsContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding WBS #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        internalOrderContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding Internal Order #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        costCenterContainers.forEach((div, index) => {
+            console.log(`      ?? Showing Cost Center #${index}:`, div.tagName, div.className);
+            div.style.display = "table-cell";
+        });
+
+        networkContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding Network #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        console.log("   ?? Cost Center data will load via Select2 AJAX when dropdown is opened");
+    }
+    // Show Network when accAsmt is 'N' AND itemCat is 'D' or 'L'
+    else if (accAsmt === 'N' && (itemCat == 9 || itemCat == 3)) {
+        console.log("   ? CONDITION MET: accAsmt='N' AND itemCat='D' or 'L'");
+        console.log("   ?? Action: HIDE WBS, HIDE Internal Order, HIDE Cost Center, SHOW Network");
+
+        wbsContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding WBS #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        internalOrderContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding Internal Order #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        costCenterContainers.forEach((div, index) => {
+            console.log(`      ?? Hiding Cost Center #${index}:`, div.tagName, div.className);
+            div.style.display = "none";
+        });
+
+        networkContainers.forEach((div, index) => {
+            console.log(`      ?? Showing Network #${index}:`, div.tagName, div.className);
+            div.style.display = "table-cell";
+        });
+
+        console.log("   ?? Network data already loaded");
+    }
+    // Default: Show WBS and Network
+    else {
+        console.log("   ? DEFAULT CONDITION");
+        console.log("   ?? Action: SHOW WBS, HIDE Internal Order, HIDE Cost Center, SHOW Network");
+
+        wbsContainers.forEach(div => div.style.display = "table-cell");
+        internalOrderContainers.forEach(div => div.style.display = "none");
+        costCenterContainers.forEach(div => div.style.display = "none");
+        networkContainers.forEach(div => div.style.display = "table-cell");
+    }
+
+    console.log("?? ========== toggleWbsInternalOrder() COMPLETED ==========\n");
+}
+
+
+                      function toggleHeaderSection() {
+           const content = document.getElementById("headerContent");
+           const icon = document.getElementById("toggleIcon");
+           const isHidden = content.classList.contains("hidden");
+
+           if (isHidden) {
+             content.classList.remove("hidden");
+             icon.classList.remove("bi-chevron-down");
+             icon.classList.add("bi-chevron-up");
+           } else {
+             content.classList.add("hidden");
+             icon.classList.remove("bi-chevron-up");
+             icon.classList.add("bi-chevron-down");
+           }
+         }
+
+                         function addItemRow()
+                          {
+                           const plant = document.getElementById("plant")?.value;
+                           const purGrp = document.getElementById("purGrp")?.value;
+                           const accAsmt = document.getElementById("accAsmt")?.value;
+                           const itemCateg = document.getElementById("itemCateg")?.value;
+                           const division = document.getElementById("division")?.value;
+                           const department = $('#department').val();
+                           const docType = document.getElementById("docType")?.value;
+
+                           // Require all PR header fields before allowing adding an item
+                           if (!plant || !purGrp || !accAsmt || !itemCateg || !division || !department || !docType) {
+                             alert("Please select DocType,Plant, Purchase Group, Account Assignment, Item Category, Division, and Department before adding an item!");
+                             return;
+                           }
+
+                           // Disable header fields immediately (match createPR behavior)
+                           // Disable native selects/inputs inside the header content
+                           const headerFields = document.querySelectorAll("#headerContent select, #headerContent input, #docType");
+                           headerFields.forEach(f => f.setAttribute('disabled', true));
+                           // Note: Select2 containers will reflect disabled state because the underlying select is disabled
+
+                           actuallyAddItemRow();
+<!--                          fetch(`/checkReleaseStrategy?plant=${plant}&purGrp=${purGrp}&division=${division}&department=${department}`)-->
+<!--                             .then(res => res.json())-->
+<!--                             .then(isMaintained => {-->
+<!--                               if (isMaintained) {-->
+<!--                                 // ? Release Strategy Exists — proceed to add row-->
+<!--                                 console.log("Release Strategy found, adding item row...");-->
+<!--                                 actuallyAddItemRow(); // call your actual function that adds the HTML row-->
+<!--                               } else {-->
+<!--                                 // ? No release strategy maintained-->
+<!--                                 alert("Release Strategy not maintained for this Plant, Purchase Group, Division, or Department!");-->
+<!--                               }-->
+<!--                             })-->
+<!--                     .catch(err => {-->
+<!--                       console.error("Error checking release strategy:", err);-->
+<!--                       alert("Error checking release strategy. Please try again.");-->
+<!--                     });-->
+                  }
+                     function actuallyAddItemRow() {
+
+                             const tbody = document.querySelector("#itemTable tbody");
+                             const mainRow = document.createElement("tr");
+                             const subRow = document.createElement("tr");
+                             const headerDivision = document.getElementById("division").value || "";
+                             const headerDept = document.getElementById("department").value || "";
+                             mainRow.innerHTML = `
+                                <td>${(++rowCount) * 10}<input type="hidden" name="casNoHid" id="casNoHid" value=""></td>
+                                 <td style="width: 320px;"> <input type="text" class="form-control" name="Description" ></td>
+                                 <td>
+                                   <input type="text" class="form-control" name="currency" placeholder="Currency">
+                                 </td>
+                                 <td><input type="number" class="form-control" name="quantity" step="0.01"  readonly ></td>
+                                 <td><input type="number" class="form-control" name="price" step="0.01" oninput="calcTotal(this)" readonly ></td>
+                                 <td><input type="number" class="form-control" name="total" readonly></td>
+                                 <td><input type="date" class="form-control" name="deliveryDate"></td>
+                                 <td>
+                                   <select class="form-control searchable-dropdown material-group-dd" name="materialGrp">
+                                     <option value="">-- Material Group --</option>
+                                   </select>
+                                 </td>
+                                 <td><input type="text" class="form-control" name="TrackNo"></td>
+                                 <td>
+                                     <div class="btn-group">
+                                         <button class="btn btn-addinfo btn-sm" type="button" title="Add Info" onclick="toggleSubRow(this)">
+                                             <i class="bi bi-plus-circle"></i>
+                                         </button>
+                                         <button class="btn btn-delete btn-sm" type="button" title="Delete Row" onclick="deleteItemRow(this)">
+                                             <i class="bi bi-trash"></i>
+                                         </button>
+                                     </div>
+                                 </td>
+                             `;
+
+                             subRow.classList.add("sub-row");
+                             const uniqueId = Date.now();
+
+        subRow.innerHTML = `
+  <td colspan="10">
+    <div class="card shadow-sm border rounded-3 p-3 bg-light mt-2">
+
+
+            <!-- ?? Additional Info Fields -->
+      <div class="container-fluid mb-4">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Division</label>
+            <input type="text" class="form-control form-control-sm" name="diviItem"
+                   value="${headerDivision}" readonly>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Department</label>
+            <input type="text" class="form-control form-control-sm" name="departItem"
+                   value="${headerDept}" readonly>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Pass Through</label>
+            <select class="form-control form-control-sm" name="passThrough">
+              <option value="">-- Select --</option>
+              <option value="YES">Yes</option>
+              <option value="NO">No</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <div class="d-flex align-items-center">
+              <button type="button" class="btn btn-primary btn-sync-sm" onclick="syncSAPData('${uniqueId}','SERVICECD')" title="Sync Service Data">
+                <i class="bi bi-arrow-repeat"></i> Service
+              </button>
+              <button type="button" class="btn btn-primary btn-sync-sm ms-2" onclick="syncSAPData('${uniqueId}','NETWORK')" title="Sync Service Data">
+                <i class="bi bi-arrow-repeat"></i> Network
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ?? Service Line Table -->
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover align-middle text-center mb-0 service-table">
+          <thead class="table-primary">
+            <tr>
+              <th style="width:35px !important; max-width:35px !important; padding:4px 2px !important; font-size:11px !important;">Sr No.</th>
+              <th style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important;">Service No.</th>
+              <th style="width:100px !important; min-width:100px !important; padding:4px 2px !important; font-size:11px !important;">Short Text</th>
+              <th style="width:40px !important; max-width:40px !important; padding:4px !important; font-size:11px !important;">Quantity</th>
+              <th style="width:40px !important; max-width:40px !important; padding:4px !important; font-size:11px !important;">Unit Price</th>
+              <th style="width:40px !important; max-width:40px !important; padding:4px !important; font-size:11px !important;">UOM</th>
+              <th class="wbs-container" style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important;">WBS Element</th>
+              <th class="internalOrder-container" style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important; display:none;">Internal Order</th>
+              <th class="costCenter-container" style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important; display:none;">Cost Center</th>
+              <th class="network-container" style="width:100px !important; min-width:100px !important; padding:4px !important; font-size:11px !important; display:none;">Network</th>
+              <th style="width:80px !important; max-width:80px !important; padding:4px !important; font-size:11px !important;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="serviceBody_${uniqueId}">
+            ${Array.from({ length: 10 }).map((_, i) => `
+              <tr>
+                <td style="width:35px !important; max-width:35px !important; padding:2px !important; font-size:11px !important; text-align:center !important; line-height:1.2 !important;">${(i + 1) * 10}</td>
+                <td style="padding:2px 3px !important;">
+                  <select class="form-control form-control-sm service-code" name="serviceName_${i + 1}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;">
+                    <option value="">-- Select Service --</option>
+                  </select>
+                </td>
+                <td style="width:50px !important; max-width:50px !important; padding:2px !important;">
+                  <div class="d-flex align-items-center gap-1 justify-content-center">
+                    <input class="short-text-input" name="serviceDesc_${i + 1}" value="">
+                  </div>
+                </td>
+                <td style="padding:2px 3px !important;"><input type="number" class="form-control form-control-sm" name="serviceQty_${i + 1}" min="0" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled></td>
+                <td style="padding:2px 3px !important;"><input type="number" class="form-control form-control-sm" name="servicePrice_${i + 1}" min="0" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled></td>
+                <td style="padding:2px 3px !important;"><input type="text" class="form-control form-control-sm" name="serviceUOM_${i + 1}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled></td>
+                <td class="wbs-container" style="padding:2px 3px !important;">
+                  <select class="form-select form-select-sm service-wbs" name="serviceWBS_${i + 1}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled>
+                    <option value="">-- WBS Element --</option>
+                  </select>
+                </td>
+                <td class="internalOrder-container" style="padding:2px 3px !important; display:none;">
+                  <select class="form-select form-select-sm service-internalOrder" name="serviceInternalOrder_${i + 1}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled>
+                    <option value="">-- Internal Order --</option>
+                  </select>
+                </td>
+                <td class="costCenter-container" style="padding:2px 3px !important; display:none;">
+                  <select class="form-select form-select-sm service-costCenter" name="serviceCostCenter_${i + 1}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled>
+                    <option value="">-- Select Cost Center --</option>
+                  </select>
+                </td>
+                <td class="network-container" style="padding:2px 3px !important; display:none;">
+                  <select class="form-select form-select-sm service-network" name="serviceNetwork_${i + 1}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled>
+                    <option value="">-- Network --</option>
+                  </select>
+                </td>
+                <td style="padding:2px !important;">
+                  <button type="button" class="btn btn-sm btn-danger me-1" onclick="deleteServiceRow(this)" style="padding:2px 5px !important; font-size:10px !important;">
+                    <i class="bi bi-trash" style="font-size:10px !important;"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" onclick="addServiceRow('${uniqueId}', this)" style="padding:2px 5px !important; font-size:10px !important;">
+                    <i class="bi bi-plus-circle" style="font-size:10px !important;"></i>
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </td>
+`;
+
+         // Enable Bootstrap tab switching for this specific row
+         const tabTriggerList = subRow.querySelectorAll(`#itemTabs_${uniqueId} button[data-bs-toggle="tab"]`);
+         tabTriggerList.forEach(tab => {
+           tab.addEventListener("click", function (e) {
+             e.preventDefault();
+             const tabInstance = new bootstrap.Tab(tab);
+             tabInstance.show();
+           });
+         });
+
+                     tbody.append(mainRow, subRow);
+                     openOnlyThisSubRow(mainRow, subRow);
+                     afterItemRowAdded(uniqueId);
+
+             // Initialize Select2 for Material Group dropdown
+             $(mainRow).find('.material-group-dd').select2({
+                placeholder: "-- Select Material Group --",
+                allowClear: true,
+                width: 'resolve'
+             });
+
+
+
+             // Initialize Select2 for Cost Center dropdowns with searchable data (fetch once, filter on front-end)
+             console.log("?? Initializing Select2 for Cost Center dropdowns...");
+             $(subRow).find('.service-costCenter').each(function(index) {
+                 console.log(`   - Initializing Cost Center dropdown #${index}:`, this);
+                 const $dropdown = $(this);
+
+                 // Fetch data once and populate
+                 $.ajax({
+                     url: '/getCostCenter',
+                     dataType: 'json',
+                     success: function(data) {
+                         console.log(`   ? Received ${data.length} Cost Centers`);
+
+                         // Clear existing options
+                         $dropdown.empty();
+                         $dropdown.append('<option value="">-- Select Cost Center --</option>');
+
+                         // Add all options
+                         data.forEach(cc => {
+                             $dropdown.append(`<option value="${cc.emdValue1}">${cc.emdValue1} - ${cc.emdValue2}</option>`);
+                         });
+
+                         // Initialize Select2 with search
+                         $dropdown.select2({
+                             placeholder: "-- Type to search Cost Center --",
+                             allowClear: true,
+                             width: '100%',
+                             minimumInputLength: 0, // Allow search from first character
+                             matcher: function(params, data) {
+                                 // If there are no search terms, return all data
+                                 if ($.trim(params.term) === '') {
+                                     return data;
+                                 }
+
+                                 // Search in both ID and text
+                                 const searchTerm = params.term.toLowerCase();
+                                 const text = data.text.toLowerCase();
+
+                                 if (text.indexOf(searchTerm) > -1) {
+                                     return data;
+                                 }
+
+                                 // Return null if no match
+                                 return null;
+                             }
+                         });
+
+                         console.log(`   ? Select2 initialized with search for Cost Center dropdown #${index}`);
+                     },
+                     error: function(err) {
+                         console.error(`   ? Error loading Cost Centers:`, err);
+                         $dropdown.append('<option value="">Error loading</option>');
+                     }
+                 });
+             });
+
+                     // Service code, WBS, and Network will initialize via AJAX on focus
+                     // Currency and Material Group will also initialize via AJAX on focus
+
+                     const plant = document.getElementById("plant").value;
+                     if (plant) {
+                         loadMaterialGroup(mainRow, plant);
+                        // loadWBSElements(subRow, plant);
+                         loadServiceCode(subRow, plant);
+                     }
+
+                     // Apply visibility rules to newly added row
+                     console.log("?? Calling toggleWbsInternalOrder after adding item row");
+                     toggleWbsInternalOrder();
+                 }
+               function loadMaterialGroup(row, plant)
+               {
+                     const dropdown = row.querySelector('.material-group-dd');
+                     dropdown.innerHTML = `<option>Loading...</option>`;
+
+                     if (!plant) {
+                         dropdown.innerHTML = `<option value="">-- Select Material group --</option>`;
+                         return;
+                     }
+
+
+                     fetch(`/getMaterialGroup?plant=${plant}`)
+                         .then(res => res.json())
+                         .then(data => {
+                             dropdown.innerHTML = `<option value="">-- Select Material Group --</option>`;
+                             data.forEach(loc => {
+                                 const opt = document.createElement('option');
+                                 opt.value = loc.emdValue1;
+                                 opt.text = `${loc.emdValue2} (${loc.emdValue1})`;
+                                 dropdown.appendChild(opt);
+                             });
+                         })
+                         .catch(err => {
+                             console.error("? Error loading mterial group:", err);
+                             dropdown.innerHTML = `<option>Error loading</option>`;
+                         });
+                 }
+
+function loadServiceCode(mainRow, matGroup) {
+  const plant = document.getElementById("plant")?.value;
+  if (!plant || !matGroup) {
+    console.warn("Missing plant or material group for service code load.");
+    return;
+  }
+
+  const subRow = mainRow.nextElementSibling;
+  if (!subRow) return;
+
+  const serviceDropdowns = subRow.querySelectorAll(".service-code");
+
+  // Reset before loading
+  serviceDropdowns.forEach(sel => {
+    sel.innerHTML = '<option value="">-- Loading Service Codes --</option>';
+  });
+
+  fetch(`/getServiceCode?plant=${plant}&matGroup=${matGroup}`)
+    .then(res => {
+      if (!res.ok) throw new Error("Error fetching service codes");
+      return res.json();
+    })
+    .then(data => {
+      if (!Array.isArray(data) || data.length === 0) {
+        serviceDropdowns.forEach(sel => {
+          sel.innerHTML = '<option value="">-- No Service Codes Found --</option>';
+        });
+        return;
+      }
+
+      // Populate all service dropdowns for that item
+      serviceDropdowns.forEach(sel => {
+        sel.innerHTML = '<option value="">-- Select Service Code --</option>';
+        data.forEach(srv => {
+          const fullCode = srv.emdValue1.split("#")[0]; // full 18-digit
+          const trimmedCode = fullCode.replace(/^0+/, ''); // remove leading zeros for display only
+          const uom = srv.emdValue4 || '';
+          const opt = document.createElement("option");
+          opt.value = fullCode + "#" + uom;
+          opt.textContent = `${srv.emdValue2} (${trimmedCode}))`;
+          sel.appendChild(opt);
+        });
+      });
+
+      console.log(`? Loaded ${data.length} service codes for MatGroup: ${matGroup}`);
+    })
+    .catch(err => {
+      console.error("? Error loading service codes:", err);
+      serviceDropdowns.forEach(sel => {
+        sel.innerHTML = '<option value="">-- Error Loading Service Codes --</option>';
+      });
+    });
+}
+
+                  function loadStorageLocations(row, plant) {
+                     const dropdown = row.querySelector('.storageLoc-dropdown');
+                     dropdown.innerHTML = `<option>Loading...</option>`;
+
+                     if (!plant) {
+                         dropdown.innerHTML = `<option value="">-- Select Storage Loc --</option>`;
+                         return;
+                     }
+
+
+                     fetch(`/getStorageLocations?plant=${plant}`)
+                         .then(res => res.json())
+                         .then(data => {
+                             dropdown.innerHTML = `<option value="">-- Select Storage Loc --</option>`;
+                             data.forEach(loc => {
+                                 const opt = document.createElement('option');
+                                 opt.value = loc.emdValue1;
+                                 opt.text = `${loc.emdValue2} (${loc.emdValue1})`;
+                                 dropdown.appendChild(opt);
+                             });
+                         })
+                         .catch(err => {
+                             console.error("? Error loading storage locations:", err);
+                             dropdown.innerHTML = `<option>Error loading</option>`;
+                         });
+                 }
+
+                 /*function loadGlAccount(row, plant) {
+                     const dropdown = row.querySelector('.glacct-dd');
+                     dropdown.innerHTML = `<option>Loading...</option>`;
+
+                     if (!plant) {
+                         dropdown.innerHTML = `<option value="">-- Select GL Account --</option>`;
+                         return;
+                     }
+
+
+                     fetch(`/getGLAcct?plant=${plant}`)
+                         .then(res => res.json())
+                         .then(data => {
+                             dropdown.innerHTML = `<option value="">-- Select GL account --</option>`;
+                             data.forEach(loc => {
+                                 const opt = document.createElement('option');
+                                 opt.value = loc.glAcc;
+                                 opt.text = `${loc.glAccDesc} (${loc.glAcc})`;
+                                 dropdown.appendChild(opt);
+                             });
+                         })
+                         .catch(err => {
+                             console.error("? Error loading GL accoount", err);
+                             dropdown.innerHTML = `<option>Error loading</option>`;
+                         });
+                 }*/
+                 function loadProjCode(row, plant) {
+                     const dropdown = row.querySelector('.projCode-dd');
+                     dropdown.innerHTML = `<option>Loading...</option>`;
+
+                     if (!plant) {
+                         dropdown.innerHTML = `<option value="">-- Select Project Code --</option>`;
+                         return;
+                     }
+
+
+                     fetch(`/getProjCode?plant=${plant}`)
+                         .then(res => res.json())
+                         .then(data => {
+                             dropdown.innerHTML = `<option value="">-- Select Project Code --</option>`;
+                             data.forEach(loc => {
+                                 const opt = document.createElement('option');
+                                 opt.value = loc.projCode;
+                                 opt.text = `${loc.projCodeDesc} (${loc.projCode})`;
+                                 dropdown.appendChild(opt);
+                             });
+                         })
+                         .catch(err => {
+                             console.error("? Error loading Project code", err);
+                             dropdown.innerHTML = `<option>Error loading</option>`;
+                         });
+                 }
+                  function toggleSubRow(btn) {
+             const mainRow = btn.closest("tr");
+             const subRow = mainRow.nextElementSibling;
+             const icon = btn.querySelector("i");
+             const isOpening = subRow.style.display === "none" || subRow.style.display === "";
+
+             // ?? Close all other sub-rows before opening the new one
+             document.querySelectorAll(".sub-row").forEach(row => {
+                 if (row !== subRow) {
+                     row.style.display = "none";
+                     const otherBtn = row.previousElementSibling?.querySelector(".btn-addinfo i");
+                     if (otherBtn) {
+                         otherBtn.classList.remove("bi-dash-circle");
+                         otherBtn.classList.add("bi-plus-circle");
+                         const parentBtn = row.previousElementSibling?.querySelector(".btn-addinfo");
+                         if (parentBtn) parentBtn.title = "Add Info";
+                     }
+                 }
+             });
+
+             // ?? Toggle current sub-row visibility
+             subRow.style.display = isOpening ? "table-row" : "none";
+
+             //  Toggle icon
+             icon.classList.toggle("bi-plus-circle", !isOpening);
+             icon.classList.toggle("bi-dash-circle", isOpening);
+             btn.title = isOpening ? "Hide Info" : "Add Info";
+
+             //  Preserve your existing logic
+             const casNoHidden = mainRow.querySelector('[name="casNoHid"]').value;
+             const casInput = subRow.querySelector('[name="casNo"]');
+             if (casInput) {
+                 casInput.value = casNoHidden;
+             }
+
+             // ?? Load WBS only when opening
+             if (isOpening) {
+                 const plant = document.getElementById("plant").value;
+                 loadWBSElements(subRow, plant);   // ? Load WBS dropdown
+                 loadNetwork(subRow, plant);
+
+               //  const pass = subRow.querySelector('[name="passThrough"]');
+                 //if (pass) pass.setAttribute('required', 'required');
+             }
+         }
+
+                 function renumberItems() {
+                     let itemRows = document.querySelectorAll(".itemRow");
+                     let counter = 1;
+
+                     itemRows.forEach(row => {
+                         row.querySelector('[name="itemNo"]').value = counter;
+                         counter += 1;
+                     });
+                 }
+
+                         function deleteItemRow(btn) {
+                             const mainRow = btn.closest("tr");
+                             const subRow = mainRow.nextElementSibling;
+                             mainRow.remove();
+                             if (subRow && subRow.classList.contains("sub-row")) subRow.remove();
+                             renumberItems();
+                         }
+
+                         function calcTotal(input) {
+                             const row = input.closest("tr");
+                             const qty = parseFloat(row.querySelector('[name="quantity"]').value) || 0;
+                             const price = parseFloat(row.querySelector('[name="unitPrice"]').value) || 0;
+                             row.querySelector('[name="total"]').value = (qty * price).toFixed(2);
+                         }
+
+                         function loadDepartments() {
+                             const plant = document.getElementById("plant").value;
+                             const division = document.getElementById("division").value;
+                             const departmentDropdown = document.getElementById("department");
+                             departmentDropdown.innerHTML = `<option>Loading...</option>`;
+
+                             if (plant && division) {
+                                 fetch(`/getDepartments?plant=${plant}&division=${division}`)
+                                     .then(res => res.json())
+                                     .then(data => {
+                                         departmentDropdown.innerHTML = `<option value="">-- Select Department --</option>`;
+                                         data.forEach(d => {
+                                             const opt = document.createElement("option");
+                                             opt.value = d.emdValue1;
+                                             opt.text = `${d.emdValue1} ? ${d.emdValue2}`;
+                                             departmentDropdown.appendChild(opt);
+                                         });
+                                     })
+                                     .catch(() => {
+                                         departmentDropdown.innerHTML = `<option>Error loading</option>`;
+                                     });
+                             } else {
+                                 departmentDropdown.innerHTML = `<option value="">-- Select Department --</option>`;
+                             }
+                         }
+async function submitPR() {
+    // ?? Header Fields
+    const plant = document.getElementById("plant").value.trim();
+    const purGrp = document.getElementById("purGrp").value.trim();
+    const accAsmt = document.getElementById("accAsmt").value.trim();
+    const itemCateg = document.getElementById("itemCateg").value.trim();
+    const division = document.getElementById("division").value.trim();
+    const department = document.getElementById("department").value.trim();
+    const docType = document.getElementById("docType").value.trim();
+
+    // ?? Basic Header Validation
+    if (!plant || !purGrp || !division || !department) {
+        Swal.fire({
+            icon: "warning",
+            title: "Validation Error",
+            text: "Please select Plant, Purchase Group, Division, and Department."
+        });
+        return;
+    }
+
+    if (!docType) {
+        Swal.fire({
+            icon: "warning",
+            title: "Validation Error",
+            text: "Please select a Document Type before creating PR!"
+        });
+        return;
+    }
+
+    // ?? Check Release Strategy
+    try {
+        const res = await fetch(`/checkReleaseStrategy?plant=${plant}&purGrp=${purGrp}&division=${division}&department=${department}`);
+        const isMaintained = await res.json();
+        if (!isMaintained) {
+            Swal.fire({
+                icon: "warning",
+                title: "Release Strategy Missing",
+                text: "Release Strategy not maintained for this Plant, Purchase Group, Division, or Department!"
+            });
+            return;
+        }
+    } catch (err) {
+        console.error("Error checking release strategy:", err);
+        Swal.fire({ icon: "error", title: "Error", text: "Error checking release strategy. Please try again." });
+        return;
+    }
+
+    // ?? Validate & Prepare Items
+
+    const itemRows = Array.from(document.querySelectorAll("#itemTable > tbody > tr")).filter(tr => !tr.classList.contains("sub-row"));
+    const items = [];
+    const errors = [];
+
+    itemRows.forEach((itemRow, index) => {
+        const rowNum = index + 1;
+        const subRow = itemRow.nextElementSibling;
+        let wbsForItem;
+        let internalOr;
+        let costCent;
+        let netwk;
+        if (!subRow || !subRow.classList.contains("sub-row")) {
+            errors.push(`Row ${rowNum}: Missing sub-row (service section).`);
+            return;
+        }
+
+        // ?? Main row values
+        const quantity= parseFloat(itemRow.querySelector('[name="quantity"]')?.value || "0");
+        const valPrice = parseFloat(itemRow.querySelector('[name="price"]')?.value || "0");
+        const total = parseFloat(itemRow.querySelector('[name="total"]')?.value || "0");
+        const shortText = itemRow.querySelector('[name="Description"]')?.value?.trim() || "";
+        const deliveryDate = itemRow.querySelector('[name="deliveryDate"]')?.value || "";
+        const materialGroup = itemRow.querySelector('[name="materialGrp"]')?.value?.trim() || "";
+        const trackNo = itemRow.querySelector('[name="TrackNo"]')?.value?.trim() || "";
+
+        // ?? Validate item values
+        if (!valPrice || valPrice <= 0) errors.push(`Row ${rowNum}: Gross Price is required and must be greater than 0`);
+        if (!total || total <= 0) errors.push(`Row ${rowNum}: Total Value is required and must be greater than 0`);
+
+        // ?? Sub-row fields
+        const passThrough = subRow.querySelector('[name="passThrough"]')?.value?.trim() || "";
+        const division = subRow.querySelector('[name="diviItem"]')?.value?.trim() || "";
+        const department = subRow.querySelector('[name="departItem"]')?.value?.trim() || "";
+
+        if (!passThrough) errors.push(`Row ${rowNum}: Pass Through is mandatory.`);
+
+        // ?? Service table inside sub-row
+        const serviceBody = subRow.querySelector(`[id^="serviceBody_"]`);
+        const services = [];
+
+        if (serviceBody) {
+            const serviceRows = serviceBody.querySelectorAll("tr");
+            serviceRows.forEach((srvRow, i) => {
+                const servNoRaw = srvRow.querySelector('[name^="serviceName_"]')?.value || "";
+                if (!servNoRaw) return; // skip empty service rows
+                const servNo = servNoRaw.split("#")[0];
+               // const servNo = servNoRaw.replace(/^0+/, ""); // remove leading zeros
+                const servDesc = srvRow.querySelector('[name^="serviceDesc_"]')?.value?.trim() || "";
+                const servQty = parseFloat(srvRow.querySelector('[name^="serviceQty_"]')?.value || "0");
+                const servPrice = parseFloat(srvRow.querySelector('[name^="servicePrice_"]')?.value || "0");
+                const servUnit = srvRow.querySelector('[name^="serviceUOM_"]')?.value?.trim() || "";
+                const servWBS = srvRow.querySelector('[name^="serviceWBS_"]')?.value?.trim() || "";
+                const servInternalOrder = srvRow.querySelector('[name^="serviceInternalOrder_"]')?.value?.trim() || "";
+                const servCostCenter = srvRow.querySelector('[name^="serviceCostCenter_"]')?.value?.trim() || "";
+                const servNetwork = srvRow.querySelector('[name^="serviceNetwork_"]')?.value?.trim() || "";
+                const servNetPrice = (servQty * servPrice).toFixed(2);
+                wbsForItem=servWBS;
+                internalOr=servInternalOrder;
+                costCent=servCostCenter;
+                netwk=servNetwork;
+                services.push({
+                    servLine: (i + 1).toString(),
+                    servNo,
+                    servDesc,
+                    servQty,
+                    servUnit,
+                    servPrice,
+                    servNetPrice,
+                    servWBS,
+                    servInternalOrder,
+                    servCostCenter,
+                    servNetwork
+                });
+            });
+        }
+    const wbsElement=wbsForItem;
+    const internalOrder=internalOr;
+    const network=netwk;
+    const costCenter=costCent;
+        // ?? Combine item object
+        items.push({
+            itemNo: itemRow.querySelector("td:first-child")?.innerText.trim() || "",
+            shortText,
+            materialGroup,
+            valPrice,
+            total,
+            deliveryDate,
+            trackNo,
+            passThrough,
+            division,
+            department,
+            wbsElement,
+            network,
+            costCenter,
+            internalOrder,
+            quantity,
+            services
+        });
+    });
+
+    // ?? Show validation errors if any
+    if (errors.length > 0) {
+        Swal.fire({
+            icon: "warning",
+            title: "Validation Errors",
+            html: errors.join("<br>")
+        });
+        return;
+    }
+
+    // ?? Prepare final payload
+    const payload = { docType, plant, purGrp, accAsmt, itemCateg, division, department, items };
+    console.log("?? Final PR Payload:", payload);
+
+    // ?? Submit to backend
+    try {
+        const response = await fetch('/prCreate/postServicePR', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [document.querySelector('meta[name="_csrf_header"]').content]:
+                    document.querySelector('meta[name="_csrf"]').content
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            Swal.fire({
+                title: 'PR Created Successfully!',
+                html: `<b>SAP PR Number:</b> ${data.sapPrNumber}<br>${data.message}`,
+                icon: 'success',
+                confirmButtonText: 'Go to PR List',
+                confirmButtonColor: '#3085d6'
+            }).then(() => window.location.href = '/prCreate/list');
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: data.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#d33'
+            });
+        }
+
+    } catch (err) {
+        console.error("Error submitting PR:", err);
+        Swal.fire({
+            title: 'Submission Failed',
+            text: 'Unexpected error. Please check logs.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+        });
+    }
+}
+
+
+         // Fiter
+
+         document.addEventListener("DOMContentLoaded", function () {
+           const filterPanel = document.querySelector(".filter-panel");
+           const filterContent = document.getElementById("headerContent");
+           const toggleIcon = document.getElementById("toggleIcon");
+
+           // ?? Initially closed
+           filterContent.classList.add("hidden");
+           toggleIcon.classList.remove("bi-chevron-up");
+           toggleIcon.classList.add("bi-chevron-down");
+
+           // ?? Open on hover in
+           filterPanel.addEventListener("mouseenter", () => {
+             filterContent.classList.remove("hidden");
+             toggleIcon.classList.remove("bi-chevron-down");
+             toggleIcon.classList.add("bi-chevron-up");
+           });
+
+           // ?? Close on hover out (only if not focused inside)
+           filterPanel.addEventListener("mouseleave", (e) => {
+             // Check if focus is inside the panel (e.g., dropdowns, inputs)
+             if (!filterPanel.contains(document.activeElement)) {
+               filterContent.classList.add("hidden");
+               toggleIcon.classList.remove("bi-chevron-up");
+               toggleIcon.classList.add("bi-chevron-down");
+             }
+
+           });
+
+           // ?? Optional: close when chevron is clicked
+           window.toggleHeaderSection = function () {
+             filterContent.classList.toggle("hidden");
+             toggleIcon.classList.toggle("bi-chevron-up");
+             toggleIcon.classList.toggle("bi-chevron-down");
+           };
+         });
+
+           // Sync Service Data Function
+           function syncSAPData(uniqueId,key) {
+             const serviceBody = document.getElementById(`serviceBody_${uniqueId}`);
+             if (!serviceBody) {
+               alert("Service table not found!");
+               return;
+             }
+
+             Swal.fire({
+               icon: 'info',
+               title: 'Syncing Service Data',
+             //  text: 'Service data synchronization feature coming soon!',
+               showConfirmButton: true
+             });
+             console.log("Syncing service data for table:", uniqueId+","+key);
+                fetch(`/master/sync/${key}`)
+        .then(response => response.json())
+        .then(result => {
+            console.log(`? Sync complete: ${result.length} records updated.`);
+        })
+        .catch(err => {
+            console.error(`? Error syncing from SAP:`, err);
+        });
+
+           }
+
+           function addServiceRow(uniqueId, btn)
+           {
+
+           const tbody = document.getElementById(`serviceBody_${uniqueId}`);
+           const newRow = document.createElement("tr");
+           const rowCount = tbody.querySelectorAll('tr').length + 1;
+           newRow.innerHTML = `
+             <td style="width:35px !important; max-width:35px !important; padding:2px !important; font-size:11px !important; text-align:center !important; line-height:1.2 !important;">${rowCount * 10}</td>
+             <td style="padding:2px 3px !important;">
+               <select class="form-control form-control-sm service-code" name="serviceName_new_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;">
+                 <option value="">-- Select Service --</option>
+               </select>
+             </td>
+             <td style="width:50px !important; max-width:50px !important; padding:2px !important;">
+               <div class="d-flex align-items-center gap-1 justify-content-center">
+                 <input class="short-text-input" name="serviceDesc_new_${rowCount}" value="">
+                   <i class="bi bi-plus" style="font-size:10px !important;"></i>
+                 </button>
+               </div>
+             </td>
+             <td style="padding:2px 3px !important;"><input type="number" class="form-control form-control-sm" name="serviceQty_new_${rowCount}" min="0" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled></td>
+             <td style="padding:2px 3px !important;"><input type="number" class="form-control form-control-sm" name="servicePrice_new_${rowCount}" min="0" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled></td>
+             <td style="padding:2px 3px !important;"><input type="text" class="form-control form-control-sm" name="serviceUOM_new_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled></td>
+             <td class="wbs-container" style="padding:2px 3px !important;">
+               <select class="form-select form-select-sm service-wbs" name="serviceWBS_new_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled>
+                 <option value="">-- WBS Element --</option>
+               </select>
+             </td>
+             <td class="internalOrder-container" style="padding:2px 3px !important; display:none;">
+               <select class="form-select form-select-sm service-internalOrder" name="serviceInternalOrder_new_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled>
+                 <option value="">-- Select Internal Order --</option>
+               </select>
+             </td>
+             <td class="costCenter-container" style="padding:2px 3px !important; display:none;">
+               <select class="form-select form-select-sm service-costCenter" name="serviceCostCenter_new_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled>
+                 <option value="">-- Select Cost Center --</option>
+               </select>
+             </td>
+             <td class="network-container" style="padding:2px 3px !important; display:none;">
+               <select class="form-select form-select-sm service-network" name="serviceNetwork_new_${rowCount}" style="font-size:11px !important; padding:2px 4px !important; height:24px !important;" disabled>
+                 <option value="">-- Network --</option>
+               </select>
+             </td>
+             <td style="padding:2px !important;">
+               <button type="button" class="btn btn-sm btn-danger me-1" onclick="deleteServiceRow(this)" style="padding:2px 5px !important; font-size:10px !important;">
+                 <i class="bi bi-trash" style="font-size:10px !important;"></i>
+               </button>
+               <button class="btn btn-sm btn-outline-primary" type="button" onclick="addServiceRow('${uniqueId}', this)" style="padding:2px 5px !important; font-size:10px !important;">
+                 <i class="bi bi-plus-circle" style="font-size:10px !important;"></i>
+               </button>
+             </td>
+           `;
+
+           tbody.appendChild(newRow);
+           console.log("? Added new service row #" + rowCount);
+
+           // Initialize Select2 for the newly added Internal Order dropdown with searchable data
+           console.log("?? Initializing Select2 for new Internal Order dropdown...");
+           const $newInternalOrderDropdown = $(newRow).find('.service-internalOrder');
+
+
+           // Initialize Select2 for the newly added Cost Center dropdown with searchable data
+           console.log("?? Initializing Select2 for new Cost Center dropdown...");
+           const $newCostCenterDropdown = $(newRow).find('.service-costCenter');
+
+           $.ajax({
+               url: '/getCostCenter',
+               dataType: 'json',
+               success: function(data) {
+                   console.log(`   ? Received ${data.length} Cost Centers for new row`);
+
+                   // Clear and populate options
+                   $newCostCenterDropdown.empty();
+                   $newCostCenterDropdown.append('<option value="">-- Select Cost Center --</option>');
+
+                   data.forEach(cc => {
+                       $newCostCenterDropdown.append(`<option value="${cc.emdValue1}">${cc.emdValue1} - ${cc.emdValue2}</option>`);
+                   });
+
+                   // Initialize Select2 with search
+                   $newCostCenterDropdown.select2({
+                       placeholder: "-- Type to search Cost Center --",
+                       allowClear: true,
+                       width: '100%',
+                       minimumInputLength: 0,
+                       matcher: function(params, data) {
+                           if ($.trim(params.term) === '') {
+                               return data;
+                           }
+                           const searchTerm = params.term.toLowerCase();
+                           const text = data.text.toLowerCase();
+                           if (text.indexOf(searchTerm) > -1) {
+                               return data;
+                           }
+                           return null;
+                       }
+                   });
+
+                   console.log("   ? Select2 initialized with search for new Cost Center dropdown");
+               },
+               error: function(err) {
+                   console.error(`   ? Error loading Cost Centers:`, err);
+                   $newCostCenterDropdown.append('<option value="">Error loading</option>');
+               }
+           });
+
+           // Apply visibility rules
+           console.log("?? Calling toggleWbsInternalOrder after adding service row");
+           toggleWbsInternalOrder();
+         }
+/*document.addEventListener("DOMContentLoaded", async function () {
+  await loadServiceCodes();
+});*/
+function afterItemRowAdded(uniqueId) {
+  const subRow = document.getElementById(`serviceBody_${uniqueId}`)?.closest('tr');
+  if (subRow) {
+   populateServiceDropdowns(subRow);
+  }
+}
+function populateServiceDropdowns(subRow) {
+  const plant = document.getElementById("plant")?.value;
+  if (!plant) return;
+
+  const mainRow = subRow.previousElementSibling;
+  const matGroup = mainRow?.querySelector(".material-group-dd")?.value;
+
+  // Load Service Codes for selected Material Group
+  if (matGroup) {
+    loadServiceCode(mainRow, matGroup);
+  }
+
+  // Load WBS & Network
+  loadWBSElements(subRow, plant);
+  loadNetwork(subRow, plant);
+}
+function openShortTextModal(button) {
+  console.log("openShortTextModal called");
+
+  // Navigate up to the parent div, then find the hidden input
+  const container = button.closest('.d-flex');
+
+  if (!container) {
+    console.error("Could not find container div");
+    alert("Error: Could not find container div. Please refresh the page.");
+    return;
+  }
+
+  currentShortTextInput = container.querySelector('.short-text-input');
+
+  if (!currentShortTextInput) {
+    console.error("Short text input not found! Container HTML:", container.innerHTML);
+    alert("Error: Short text input not found. Please refresh the page.");
+    return;
+  }
+
+  // Populate modal with current value
+  const modalInput = document.getElementById('shortTextModalInput');
+  if (!modalInput) {
+    console.error("Modal textarea #shortTextModalInput not found!");
+    alert("Error: Modal input field not found. Please refresh the page.");
+    return;
+  }
+
+  modalInput.value = currentShortTextInput.value || '';
+
+  // Show the modal
+  const modalEl = document.getElementById('shortTextModal');
+  if (!modalEl) {
+    console.error("Modal element #shortTextModal not found!");
+    alert("Error: Modal element not found. Please refresh the page.");
+    return;
+  }
+
+  try {
+    // Use jQuery if available, otherwise use Bootstrap 5 constructor
+    if (typeof $ !== 'undefined' && $.fn.modal) {
+      $('#shortTextModal').modal('show');
+      console.log("Modal opened successfully using jQuery");
+    } else if (typeof bootstrap !== 'undefined') {
+      let modalInstance = bootstrap.Modal.getInstance(modalEl);
+      if (!modalInstance) {
+        modalInstance = new bootstrap.Modal(modalEl);
+      }
+      modalInstance.show();
+      console.log("Modal opened successfully using Bootstrap");
+    } else {
+      throw new Error("Bootstrap or jQuery not loaded");
+    }
+  } catch (error) {
+    console.error("Error opening modal:", error);
+    alert("Error opening modal: " + error.message);
+  }
+}
+
+
+
+
+function updateMainRowTotals(serviceBodyId) {
+  const serviceBody = document.getElementById(serviceBodyId);
+  if (!serviceBody) return;
+
+  const mainRow = serviceBody.closest('.sub-row').previousElementSibling;
+  if (!mainRow) return;
+
+  let totalGrossPrice = 0;
+  let totalValue = 0;
+  let totalQty = 0;
+
+  // Loop through all service rows
+  const serviceRows = serviceBody.querySelectorAll('tr');
+  serviceRows.forEach(row => {
+    const qty = parseFloat(row.querySelector('[name*="serviceQty"]')?.value) || 0;
+    const price = parseFloat(row.querySelector('[name*="servicePrice"]')?.value) || 0;
+
+    totalQty += qty;
+    totalGrossPrice += price;
+    totalValue += (qty * price);
+  });
+
+  // Update main row fields
+  mainRow.querySelector('[name="quantity"]').value = totalQty.toFixed(2);
+  mainRow.querySelector('[name="price"]').value = totalGrossPrice.toFixed(2);
+  mainRow.querySelector('[name="total"]').value = totalValue.toFixed(2);
+}
+
+// Remove a service row and recalculate totals
+function deleteServiceRow(btn) {
+  const tr = btn.closest('tr');
+  if (!tr) return;
+
+  const tbody = tr.closest('tbody[id^="serviceBody_"]');
+  tr.remove();
+
+  if (tbody && tbody.id) {
+    updateMainRowTotals(tbody.id);
+  }
+}
+
+ function autoCloseSidebar() {
+  const btn = document.querySelector('a.nav-link[data-widget="pushmenu"]');
+  if (!btn) return;
+  // Only click if sidebar is not already collapsed
+  if (!document.body.classList.contains('sidebar-collapse')) {
+    btn.click();
+  }
+}
+
+$(document).on('focus', '.service-internalOrder', async function () {
+  const $dropdown = $(this);
+
+  // Prevent duplicate initialization
+  if ($dropdown.data('select2')) return;
+
+  const data = await loadInternalOrdersOnce();
+
+  // Populate only once
+  $dropdown.empty().append('<option value="">-- Select Internal Order --</option>');
+
+  data.forEach(io => {
+    $dropdown.append(
+      `<option value="${io.emdValue1}">
+        ${io.emdValue1} - ${io.emdValue2}
+      </option>`
+    );
+  });
+
+  $dropdown.select2({
+    placeholder: "-- Type to search Internal Order --",
+    allowClear: true,
+    width: '100%',
+    minimumInputLength: 0,
+    matcher: function (params, data) {
+      if ($.trim(params.term) === '') return data;
+      return data.text.toLowerCase().includes(params.term.toLowerCase())
+        ? data
+        : null;
+    }
+  });
+});
+
+function initAutoClose() {
+  if (document.readyState === 'complete') {
+    autoCloseSidebar();
+  } else {
+    window.addEventListener('load', autoCloseSidebar, { once: true });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initAutoClose, { once: true });
+
+
+    </script>
+
+
+
+</div>
+</body>
+</html>

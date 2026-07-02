@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Reservation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { padding: 20px; width: 100%; }
+
+        /* Collapsible header */
+        .filter-panel {
+            background: #DC402B;
+            border-radius: 10px;
+            overflow: hidden;
+            width: 100%;
+            transition: all 0.3s ease-in-out;
+        }
+        .filter-header {
+            padding: 12px 20px;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(220, 64, 43, 0.9);
+        }
+        .filter-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-icon {
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+        .filter-icon:hover {
+            transform: scale(1.1);
+        }
+        .filter-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 0 0 8px 8px;
+            max-height: 500px;
+            overflow: hidden;
+            transition: all 0.4s ease-in-out;
+            opacity: 1;
+        }
+
+        .filter-content.hidden {
+            max-height: 0 !important;
+            opacity: 0;
+            padding: 0 20px;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .filter-panel {
+            transition: all 0.4s ease;
+        }
+
+        .filter-panel:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        /* Table & Buttons */
+        .custom-table-header { background-color: #033882; color: #fff; }
+        table th, table td { vertical-align: middle; padding: 6px; }
+        .btn-sm { font-size: 12px; padding: 3px 8px; }
+
+        .btn-delete { background-color: #dc3545; color: #fff; }
+        .btn-delete:hover { background-color: #bb2d3b; }
+
+        /* Update Reservation Button */
+        .bottom-actions { text-align: center; margin-top: 30px; }
+        .btn-update {
+            background-color: #033882;
+            color: white;
+            font-size: 16px;
+            padding: 10px 25px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-update:hover { background-color: #022b65; }
+
+        #itemTable input.form-control {
+            padding: 4px 6px;
+            font-size: 13px;
+            width: 100%;
+        }
+
+        #itemTable th, #itemTable td {
+            vertical-align: middle;
+            padding: 6px 10px;
+            text-align: center;
+        }
+
+        #itemTable input.form-control,
+        #itemTable select.form-control {
+            height: 32px;
+            font-size: 13px;
+            padding: 4px 6px;
+            width: 100%;
+        }
+
+        .select2-container { width: 100% !important; box-sizing: border-box; }
+        .select2-container .select2-selection--single { height: 32px !important; padding: 4px 6px !important; box-sizing: border-box; border: 1px solid #ced4da; border-radius: .25rem; }
+        .select2-container .select2-selection__rendered { line-height: 22px !important; }
+        .select2-container--open .select2-selection--single { border-color: #86b7fe; box-shadow: 0 0 0 .2rem rgba(13,110,253,.25); }
+
+        /* Disabled field styling */
+        input:disabled, select:disabled {
+            background-color: #e9ecef !important;
+            cursor: not-allowed;
+        }
+
+        /* Fixed columns and scrolling */
+        .custom-table-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .table-scroll {
+            max-height: 400px;
+            overflow-x: auto;
+            overflow-y: auto;
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+
+        #itemTable {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: max-content;
+            min-width: 100%;
+        }
+
+        #itemTable th:nth-child(1),
+        #itemTable td:nth-child(1) {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background: #fff;
+            min-width: 70px;
+            width: 70px;
+        }
+
+        #itemTable th:nth-child(2),
+        #itemTable td:nth-child(2) {
+            position: sticky;
+            left: 70px;
+            z-index: 2;
+            background: #fff;
+            min-width: 180px;
+            width: 180px;
+        }
+
+        #itemTable th:nth-child(3),
+        #itemTable td:nth-child(3) {
+            position: sticky;
+            left: 250px;
+            z-index: 2;
+            background: #fff;
+            min-width: 250px;
+            width: 250px;
+        }
+
+        #itemTable thead th {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            background-color: #033882;
+            color: white;
+        }
+
+        #itemTable thead th:nth-child(1),
+        #itemTable thead th:nth-child(2),
+        #itemTable thead th:nth-child(3) {
+            z-index: 4;
+            background-color: #033882 !important;
+            color: white !important;
+        }
+
+        #itemTable th:nth-child(1),
+        #itemTable td:nth-child(1),
+        #itemTable th:nth-child(2),
+        #itemTable td:nth-child(2),
+        #itemTable th:nth-child(3),
+        #itemTable td:nth-child(3) {
+            border-right: 2px solid #ddd;
+            box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<section layout:fragment="header">
+    <div class="container">
+        <div class="row mb-2">
+            <div class="col-sm-6"><h1>Edit Reservation</h1></div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Reservation</a></li>
+                    <li class="breadcrumb-item active">Edit Reservation</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container" layout:fragment="content">
+    <div class="card">
+        <!-- Reservation Header -->
+        <div class="filter-panel mt-3">
+            <div class="filter-header">
+                <div class="filter-title">
+                    <i class="bi bi-funnel-fill"></i>
+                    <span>Reservation Header Details</span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                    <label style="color: white; margin-bottom: 0;">Reservation No:</label>
+                    <input type="text" id="reservationNo" th:value="${reservation.reservationNo}"
+                           class="form-control" style="width: 200px; background-color: #e9ecef;" disabled>
+                </div>
+
+                <i id="toggleIcon" class="bi bi-chevron-up filter-icon" title="Collapse/Expand" onclick="toggleHeaderSection()"></i>
+            </div>
+
+            <div class="filter-content" id="headerContent">
+                <div class="row mb-3">
+                    <div class="form-group col-md-3">
+                        <label>Movement Type</label>
+                        <input type="text" class="form-control" id="movementType"
+                               th:value="${reservation.movementType}" disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Base Date</label>
+                        <input type="date" class="form-control" id="baseDate"
+                               th:value="${reservation.reqDate}" disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Plant</label>
+                        <input type="text" class="form-control" id="plant"
+                               th:value="${reservation.lineItems[0]?.plant}" disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>GL Account</label>
+                        <input type="text" class="form-control" id="glAccount"
+                               th:value="${reservation.glAccount}" disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>WBS Element</label>
+                        <input type="text" class="form-control" id="wbs"
+                               th:value="${reservation.wbs}" disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Internal Order</label>
+                        <input type="text" class="form-control" id="internalOrder"
+                               th:value="${reservation.internalOrder}" disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Cost Center</label>
+                        <input type="text" class="form-control" id="costCenter"
+                               th:value="${reservation.costCenter}" disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Goods Receipt</label>
+                        <input type="text" class="form-control" name="goodsReceipt" id="goodsReceipt"
+                               placeholder="Enter Goods Receipt"  th:value="${reservation.goodsReceipt}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Table -->
+        <div class="custom-table-container mt-4 table-scroll-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="text-primary">Item Details</h5>
+                <button class="btn btn-success btn-sm" type="button" onclick="addItemRow()">
+                    <i class="bi bi-plus-circle"></i> Add Item
+                </button>
+            </div>
+            <div class="table-scroll">
+                <table id="itemTable" class="table table-bordered table-hover text-center">
+                    <thead class="custom-table-header">
+                    <tr>
+
+                        <th>Sr No.</th>
+                        <th>Material</th>
+                        <th>Description</th>
+                        <th>UOM</th>
+                        <th>Quantity</th>
+                        <th>WithDraw Qty</th>
+                        <th>Storage Location</th>
+                        <th>Lab Storage Location</th>
+                        <th>Batch</th>
+                        <th>Status</th>
+                        <th>Delete</th>
+
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item, iterStat : ${reservation.lineItems}">
+
+                        <td th:text="${item.itemNo}">1</td>
+                        <td>
+                            <input type="text" class="form-control" name="matNumber"
+                                   th:value="${item.material}" disabled>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control" name="shortText"
+                                   th:value="${item.material}" readonly disabled>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control" name="uom"
+                                   th:value="${item.uom}" readonly disabled>
+                        </td>
+                        <td>
+                            <!-- Quantity: Disabled if status is C (Complete), enabled otherwise -->
+                            <input type="number" class="form-control" name="quantity"
+                                   th:value="${item.qty}"
+                                   th:disabled="${item.status == 'C'}">
+                        </td>
+                        <td>
+                            <!-- Quantity: Disabled if status is C (Complete), enabled otherwise -->
+                            <input type="number" class="form-control" name="quantity"
+                                   th:value="${item.withDrawQty}"
+                                   th:disabled="true">
+                        </td>
+                        <td>
+                            <!-- Storage Location: Disabled if status is C (Complete) -->
+                            <select class="form-control storageLoc-dropdown" name="storageLoc"
+                                    th:disabled="${item.status == 'C'}">
+                                <option th:value="${item.storageLoc}" th:text="${item.storageLoc}" selected></option>
+                            </select>
+                        </td>
+                        <td>
+                            <!-- Lab Storage Location: Disabled if status is C (Complete) -->
+                            <select class="form-control labStorageLoc-dropdown" name="labStorageLoc"
+                                    th:disabled="${item.status == 'C'}">
+                                <option th:value="${item.labStorageLoc}" th:text="${item.labStorageLoc != null ? item.labStorageLoc : '-- Select Lab Storage Loc --'}" selected></option>
+                            </select>
+                        </td>
+                        <td>
+                            <!-- Batch: Disabled if status is C (Complete) -->
+                            <input type="text" class="form-control" name="batch"
+                                   th:value="${item.batch}"
+                                   th:disabled="${item.status == 'C'}">
+                        </td>
+                        <td>
+                            <!-- Display status with badge -->
+                            <span th:if="${item.status == 'C'}" class="badge badge-success">Complete</span>
+                            <span th:if="${item.status == 'P'}" class="badge badge-warning">Partial</span>
+                            <span th:if="${item.status == 'O'}" class="badge badge-secondary">Open</span>
+                            <input type="hidden" name="itemStatus" th:value="${item.status}">
+                        </td>
+                        <td>
+                            <!-- Delete checkbox: Disabled if status is C (Complete) or P (Partial), enabled only for O (Open) -->
+                            <input type="checkbox" class="delete-checkbox" name="deleteItem" value="false"
+                                   th:disabled="${item.status == 'C' || item.status == 'P'}">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bottom-actions">
+            <button class="btn-update" type="button" onclick="submitReservationUpdate()">
+                <i class="bi bi-check-circle me-1"></i> UPDATE RESERVATION
+            </button>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script th:inline="javascript">
+        let rowCount = 0;
+
+        $(document).ready(function () {
+            const plant = $('#plant').val();
+
+            // Initialize storage location dropdowns for each row
+            $('.storageLoc-dropdown').each(function() {
+                const $dropdown = $(this);
+                const isDisabled = $dropdown.prop('disabled');
+
+                // Only initialize Select2 if not disabled (skip for status 'C' items)
+                if (!isDisabled) {
+                    const currentValue = $dropdown.val();
+                    $dropdown.select2({
+                        placeholder: "-- Select Storage Location --",
+                        allowClear: true,
+                        width: '100%',
+                        minimumInputLength: 0,
+                        ajax: {
+                            url: '/getStorageLocations',
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
+                                return { plant: plant, query: params.term };
+                            },
+                            processResults: function (data) {
+                                return {
+                                    results: (data || []).map(function (loc) {
+                                        return {
+                                            id: loc.emdValue1.split("#")[0],
+                                            text: loc.emdValue2 + ' (' + loc.emdValue1.split("#")[0] + ')'
+                                        };
+                                    })
+                                };
+                            },
+                            cache: true
+                        }
+                    });
+                }
+            });
+
+            // Initialize lab storage location dropdowns for each row
+            $('.labStorageLoc-dropdown').each(function() {
+                const $dropdown = $(this);
+                const isDisabled = $dropdown.prop('disabled');
+
+                // Only initialize Select2 if not disabled (skip for status 'C' items)
+                if (!isDisabled) {
+                    const currentValue = $dropdown.val();
+                    $dropdown.select2({
+                        placeholder: "-- Select Lab Storage Location --",
+                        allowClear: true,
+                        width: '100%',
+                        minimumInputLength: 0,
+                        ajax: {
+                            url: '/getStorageLocations',
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
+                                return { plant: plant, query: params.term };
+                            },
+                            processResults: function (data) {
+                                return {
+                                    results: (data || []).map(function (loc) {
+                                        return {
+                                            id: loc.emdValue1.split("#")[0],
+                                            text: loc.emdValue2 + ' (' + loc.emdValue1.split("#")[0] + ')'
+                                        };
+                                    })
+                                };
+                            },
+                            cache: true
+                        }
+                    });
+                }
+            });
+
+            // Check if all items have status 'C' (Complete) and hide Update button if true
+            checkAllItemsComplete();
+
+            // Initially hide header details panel
+            const filterContent = document.getElementById("headerContent");
+            const toggleIcon = document.getElementById("toggleIcon");
+            filterContent.classList.add("hidden");
+            toggleIcon.classList.remove("bi-chevron-up");
+            toggleIcon.classList.add("bi-chevron-down");
+
+            // Open on hover in
+            const filterPanel = document.querySelector(".filter-panel");
+            filterPanel.addEventListener("mouseenter", () => {
+                filterContent.classList.remove("hidden");
+                toggleIcon.classList.remove("bi-chevron-down");
+                toggleIcon.classList.add("bi-chevron-up");
+            });
+
+            // Initialize rowCount based on existing items
+            const existingRows = document.querySelectorAll("#itemTable tbody tr");
+            rowCount = existingRows.length;
+        });
+
+        /* ---------- Add Item Row ---------- */
+        function addItemRow() {
+            const plant = $('#plant').val();
+
+            if (!plant) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Plant Required',
+                    text: 'Plant information is required before adding items!',
+                    confirmButtonColor: '#033882'
+                });
+                return;
+            }
+
+            actuallyAddItemRow();
+        }
+
+        function actuallyAddItemRow() {
+            const tbody = document.querySelector("#itemTable tbody");
+            const row = document.createElement("tr");
+            const plant = $('#plant').val();
+
+            // Calculate next item number
+            const nextItemNo = ++rowCount;
+
+            row.innerHTML = `
+                <td style="width: 60px;">${nextItemNo}</td>
+                <td style="width: 180px;">
+                    <select name="matNumber" class="form-control material-select material-code">
+                        <option value="">-- Select Material --</option>
+                    </select>
+                </td>
+                <td style="width: 180px;">
+                    <input type="text" class="form-control" name="shortText" readonly>
+                </td>
+                <td style="width: 50px;">
+                    <input type="text" class="form-control" name="uom" readonly>
+                </td>
+                <td style="width: 50px;">
+                    <input type="number" class="form-control" name="quantity">
+                </td>
+                <td style="width: 50px;">
+                    <input type="number" class="form-control" name="withdrawQty" value="0" readonly>
+                </td>
+                <td style="width: 180px;">
+                    <select class="form-control storageLoc-dropdown" name="storageLoc">
+                        <option value="">-- Select Storage Loc --</option>
+                    </select>
+                </td>
+                <td style="width: 180px;">
+                    <select class="form-control labStorageLoc-dropdown" name="labStorageLoc">
+                        <option value="">-- Select Lab Storage Loc --</option>
+                    </select>
+                </td>
+                <td style="width: 80px;">
+                    <input type="text" class="form-control" name="batch">
+                </td>
+                <td style="width: 60px;">
+                    <span class="badge badge-info">New</span>
+                    <input type="hidden" name="itemStatus" value="NEW">
+                </td>
+                <td style="width: 60px;">
+                    <button class="btn btn-delete btn-sm" type="button" title="Delete Row" onclick="deleteItemRow(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+
+            // Initialize storage location Select2 for this row
+            const $storageEl = $(row).find('.storageLoc-dropdown');
+            if ($storageEl.length && plant) {
+                $storageEl.select2({
+                    placeholder: "-- Select Storage Location --",
+                    allowClear: true,
+                    width: '100%',
+                    minimumInputLength: 0,
+                    ajax: {
+                        url: '/getStorageLocations',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) { return { plant: plant, query: params.term }; },
+                        processResults: function (data) {
+                            return {
+                                results: (data || []).map(function (loc) {
+                                    return {
+                                        id: loc.emdValue1.split("#")[0],
+                                        text: loc.emdValue2 + ' (' + loc.emdValue1.split("#")[0] + ')'
+                                    };
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            }
+
+            // Initialize lab storage location Select2 for this row
+            const $labStorageEl = $(row).find('.labStorageLoc-dropdown');
+            if ($labStorageEl.length && plant) {
+                $labStorageEl.select2({
+                    placeholder: "-- Select Lab Storage Location --",
+                    allowClear: true,
+                    width: '100%',
+                    minimumInputLength: 0,
+                    ajax: {
+                        url: '/getStorageLocations',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) { return { plant: plant, query: params.term }; },
+                        processResults: function (data) {
+                            return {
+                                results: (data || []).map(function (loc) {
+                                    return {
+                                        id: loc.emdValue1.split("#")[0],
+                                        text: loc.emdValue2 + ' (' + loc.emdValue1.split("#")[0] + ')'
+                                    };
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            }
+
+            // Initialize material Select2 for this row
+            const $materialEl = $(row).find('.material-select');
+            if ($materialEl.length && plant) {
+                $materialEl.select2({
+                    placeholder: "-- Type to search Material --",
+                    minimumInputLength: 3,
+                    width: '100%',
+                    ajax: {
+                        url: `/getMaterials`,
+                        dataType: 'json',
+                        delay: 300,
+                        data: function (params) {
+                            return { plant: plant, query: params.term, searchType: 'matNumber' };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: data.map(mat => ({
+                                    id: mat.materialCode,
+                                    text: `${mat.materialCode}`
+                                }))
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            }
+        }
+
+        /* ---------- Delete Item Row ---------- */
+        function deleteItemRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            // Optionally renumber remaining rows
+            const rows = document.querySelectorAll("#itemTable tbody tr");
+            rows.forEach((r, idx) => {
+                r.cells[0].textContent = idx + 1;
+            });
+            rowCount = rows.length;
+        }
+
+        /* ---------- MATERIAL CHANGE HANDLER (populate description & uom) ---------- */
+        $(document).on('change', '.material-select', function () {
+            const row = $(this).closest('tr')[0];
+            const materialCode = $(this).val();
+            const plant = $('#plant').val();
+
+            if (!plant) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Plant Required',
+                    text: 'Please select a Plant first!',
+                    confirmButtonColor: '#033882'
+                });
+                $(this).val('');
+                return;
+            }
+
+            if (!materialCode) {
+                // clear fields
+                const desc = row.querySelector('[name="shortText"]'); if (desc) desc.value = '';
+                const uom = row.querySelector('[name="uom"]'); if (uom) uom.value = '';
+                return;
+            }
+
+            fetch(`/getMaterialDetails?plant=${plant}&materialCode=${materialCode}`)
+                .then(res => { if (!res.ok) throw new Error('Network error'); return res.json(); })
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Material Not Found',
+                            text: 'Material not found in selected Plant!',
+                            confirmButtonColor: '#033882'
+                        });
+                        const desc = row.querySelector('[name="shortText"]'); if (desc) desc.value = '';
+                        const uom = row.querySelector('[name="uom"]'); if (uom) uom.value = '';
+                        return;
+                    }
+                    const mat = data[0];
+                    const desc = row.querySelector('[name="shortText"]');
+                    if (desc) desc.value = mat.description || '';
+                    const uom = row.querySelector('[name="uom"]');
+                    if (uom) uom.value = mat.uom || '';
+                })
+                .catch(err => {
+                    console.error('Error fetching material details:', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error fetching material details. Please try again.',
+                        confirmButtonColor: '#033882'
+                    });
+                });
+        });
+
+        /* ---------- Check if all items are complete ---------- */
+        function checkAllItemsComplete() {
+            const rows = document.querySelectorAll("#itemTable tbody tr");
+            let allComplete = true;
+
+            rows.forEach((row) => {
+                const statusInput = row.querySelector('[name="itemStatus"]');
+                if (statusInput && statusInput.value !== 'C') {
+                    allComplete = false;
+                }
+            });
+
+            // Hide Update button if all items are complete
+            if (allComplete && rows.length > 0) {
+                const updateButton = document.querySelector('.btn-update');
+                if (updateButton) {
+                    updateButton.style.display = 'none';
+                }
+
+                // Show a message that reservation is fully complete
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Reservation Complete',
+                    text: 'All items in this reservation are complete. No further updates allowed.',
+                    confirmButtonColor: '#033882'
+                });
+            }
+        }
+
+        /* ---------- Toggle Header Section ---------- */
+        function toggleHeaderSection() {
+            const content = document.getElementById('headerContent');
+            const icon = document.getElementById('toggleIcon');
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.add('bi-chevron-down');
+                icon.classList.remove('bi-chevron-up');
+            }
+        }
+
+        /* ---------- Submit Reservation Update ---------- */
+        async function submitReservationUpdate() {
+            const reservationNo = $('#reservationNo').val();
+            const plant = $('#plant').val();
+            const goodsReceipt = $('#goodsReceipt').val() || '';
+
+            const rows = document.querySelectorAll("#itemTable tbody tr");
+            if (rows.length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No Items',
+                    text: 'No items found in reservation!'
+                });
+                return;
+            }
+
+            // Collect item data
+            const items = [];
+            const errors = [];
+
+            rows.forEach((row, idx) => {
+                const deleteCheckbox = row.querySelector('[name="deleteItem"]');
+                const isDeleted = deleteCheckbox && deleteCheckbox.checked;
+                const itemStatusInput = row.querySelector('[name="itemStatus"]');
+                const itemStatus = itemStatusInput ? itemStatusInput.value : '';
+
+                const itemNo = row.cells[0].textContent;
+                const matNumberInput = row.querySelector('[name="matNumber"]');
+                const matNumber = matNumberInput ? (matNumberInput.tagName === 'SELECT' ? matNumberInput.value : matNumberInput.value) : '';
+                const quantity = row.querySelector('[name="quantity"]').value;
+                const storageLoc = row.querySelector('[name="storageLoc"]').value;
+                const labStorageLoc = row.querySelector('[name="labStorageLoc"]').value;
+                const uom = row.querySelector('[name="uom"]').value;
+                const batch = row.querySelector('[name="batch"]').value;
+                let status='';
+                if (isDeleted) {
+                    items.push({
+                        itemNo: itemNo,
+                        material: matNumber,
+                        status: "D"
+                    });
+                    return;
+                }
+
+                // Additional validation for new items
+                if (itemStatus === 'NEW') {
+                status='N';
+                    if (!matNumber) {
+                        errors.push(`Row ${idx + 1}: Material is required for new items!`);
+                        return;
+                    }
+                }
+
+                if (!quantity || Number(quantity) <= 0) {
+                    errors.push(`Row ${idx + 1}: Quantity must be greater than 0!`);
+                    return;
+                }
+
+                if (!storageLoc) {
+                    errors.push(`Row ${idx + 1}: Storage Location is required!`);
+                    return;
+                }
+
+                items.push({
+                    itemNo: itemNo,
+                    material: matNumber,
+                    qty: quantity,
+                    uom: uom,
+                    storageLoc: storageLoc,
+                    labStorageLoc: labStorageLoc,
+                    batch: batch,
+                    plant:plant,
+                    status:status
+                });
+            });
+
+            if (items.length === 0) {
+                errors.push('At least one item must remain (not all items can be deleted).');
+            }
+
+            if (errors.length > 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Validation Errors',
+                    html: errors.join("<br>")
+                });
+                return;
+            }
+
+            // Prepare data for submission
+            const updateData = {
+                reservationNo: reservationNo,
+                goodsReceipt: goodsReceipt,
+                plant:plant,
+                items: items
+            };
+
+            console.log("Update Data:", updateData);
+
+            // Submit via AJAX
+            const token = $("meta[name='_csrf']").attr("content");
+            const header = $("meta[name='_csrf_header']").attr("content");
+
+            try {
+                const response = await fetch('/reservation/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [header]: token
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const data = await response.json();
+
+                if (data.success  === true) {
+                    Swal.fire({
+                        title: 'Reservation Updated Successfully!',
+                          html: (data.messages || []).join("<br>"),
+                        icon: 'success',
+                        confirmButtonText: 'Go to Reservation List',
+                        confirmButtonColor: '#3085d6'
+                    }).then(() => {
+                        window.location.href = '/reservation/list';
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        html: (data.errors || []).join("<br>"),
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            } catch (err) {
+                console.error("Error updating reservation:", err);
+                Swal.fire({
+                    title: 'Update Failed',
+                    text: 'Unexpected error. Please check logs.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        }
+
+        /* ---------- Auto Close Sidebar ---------- */
+        function autoCloseSidebar() {
+            const btn = document.querySelector('a.nav-link[data-widget="pushmenu"]');
+            if (!btn) return;
+            if (!document.body.classList.contains('sidebar-collapse')) {
+                btn.click();
+            }
+        }
+
+        function initAutoClose() {
+            if (document.readyState === 'complete') {
+                autoCloseSidebar();
+            } else {
+                window.addEventListener('load', autoCloseSidebar, { once: true });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initAutoClose, { once: true });
+    </script>
+</div>
+</body>
+</html>

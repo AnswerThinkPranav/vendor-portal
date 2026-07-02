@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Reservation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        //.content-wrapper { padding-top: 10px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card {/* margin: 20px auto;*/ padding: 20px; width: 100%; }
+
+        /* Collapsible header */
+        .filter-panel {
+            background: #DC402B;
+            border-radius: 10px;
+            overflow: hidden;
+            width: 100%;
+            transition: all 0.3s ease-in-out;
+        }
+        .filter-header {
+            padding: 12px 20px;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(220, 64, 43, 0.9);
+        }
+        .filter-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-icon {
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+        .filter-icon:hover {
+            transform: scale(1.1);
+        }
+        .filter-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 0 0 8px 8px;
+            max-height: 500px;
+            overflow: hidden;
+            transition: all 0.4s ease-in-out;
+            opacity: 1;
+        }
+
+        /* Hide transition (collapsed state) */
+        .filter-content.hidden {
+            max-height: 0 !important;
+            opacity: 0;
+            padding: 0 20px;
+            transition: all 0.4s ease-in-out;
+        }
+
+        /* Smooth transitions for hover collapse/expand */
+        .filter-panel {
+            transition: all 0.4s ease;
+        }
+
+        /* Optional: Slight shadow pop on hover */
+        .filter-panel:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        /* Table & Buttons */
+        .custom-table-header { background-color: #033882; color: #fff; }
+        table th, table td { vertical-align: middle; padding: 6px; }
+        .btn-sm { font-size: 12px; padding: 3px 8px; }
+
+        .btn-delete { background-color: #dc3545; color: #fff; }
+        .btn-delete:hover { background-color: #bb2d3b; }
+
+        /* Create Reservation Button */
+        .bottom-actions { text-align: center; margin-top: 30px; }
+        .btn-create {
+            background-color: #033882;
+            color: white;
+            font-size: 16px;
+            padding: 10px 25px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-create:hover { background-color: #022b65; }
+
+        #itemTable input.form-control {
+            padding: 4px 6px;
+            font-size: 13px;
+            width: 100%; /* Make inputs fill their td container */
+        }
+
+        /* Wider table fields for better readability */
+        #itemTable th, #itemTable td {
+            vertical-align: middle;
+            padding: 6px 10px;
+            text-align: center;
+        }
+
+        #itemTable input.form-control,
+        #itemTable select.form-control {
+            height: 32px;
+            font-size: 13px;
+            padding: 4px 6px;
+            width: 100%; /* Make all form controls fill their td container */
+        }
+
+        /* Ensure Select2 looks like a regular form-control inside table cells */
+        .select2-container { width: 100% !important; box-sizing: border-box; }
+        .select2-container .select2-selection--single { height: 32px !important; padding: 4px 6px !important; box-sizing: border-box; border: 1px solid #ced4da; border-radius: .25rem; }
+        .select2-container .select2-selection__rendered { line-height: 22px !important; }
+        .select2-container--open .select2-selection--single { border-color: #86b7fe; box-shadow: 0 0 0 .2rem rgba(13,110,253,.25); }
+        .table-scroll .select2-container { width: 100% !important; }
+
+        /* Adjust specific column widths */
+        #itemTable th:nth-child(1),   /* Sr No. */
+        #itemTable td:nth-child(1) {
+            min-width: 60px;
+            width: 60px;
+        }
+
+        #itemTable th:nth-child(2),   /* Material */
+        #itemTable td:nth-child(2) {
+            min-width: 180px;
+            width: 180px;
+        }
+
+        #itemTable th:nth-child(3),   /* Description */
+        #itemTable td:nth-child(3) {
+            min-width: 180px;
+            width: 180px;
+        }
+
+        #itemTable th:nth-child(4),   /* UOM */
+        #itemTable td:nth-child(4) {
+            min-width: 50px !important;
+            width: 50px !important;
+        }
+
+        #itemTable th:nth-child(5),   /* Quantity */
+        #itemTable td:nth-child(5) {
+            min-width: 50px !important;
+            width: 50px !important;
+        }
+
+        #itemTable th:nth-child(6),   /* Storage Location */
+        #itemTable td:nth-child(6) {
+            min-width: 180px !important;
+            width: 180px !important;
+        }
+
+        #itemTable th:nth-child(7),   /* Lab Storage Location */
+        #itemTable td:nth-child(7) {
+            min-width: 180px !important;
+            width: 180px !important;
+        }
+
+        #itemTable th:nth-child(8),   /* Batch */
+        #itemTable td:nth-child(8) {
+            min-width: 80px !important;
+            width: 80px !important;
+        }
+
+        #itemTable th:nth-child(9),   /* Movement Allowed */
+        #itemTable td:nth-child(9) {
+            min-width: 60px !important;
+            width: 60px !important;
+        }
+
+        #itemTable th:nth-child(10),  /* Action */
+        #itemTable td:nth-child(10) {
+            width: 60px !important;
+        }
+
+        /* --- Fix first 3 columns and make the rest scrollable --- */
+        .custom-table-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .table-scroll {
+            max-height: 400px; /* vertical scroll height */
+            overflow-x: auto;
+            overflow-y: auto;
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+
+        #itemTable {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: max-content;
+            min-width: 100%;
+        }
+
+        /* Fix first three columns */
+        #itemTable th:nth-child(1),
+        #itemTable td:nth-child(1) {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background: #fff;
+            min-width: 60px;
+            width: 60px;
+        }
+
+        #itemTable th:nth-child(2),
+        #itemTable td:nth-child(2) {
+            position: sticky;
+            left: 60px; /* width of Sr No column */
+            z-index: 2;
+            background: #fff;
+            min-width: 180px;
+            width: 180px;
+        }
+
+        #itemTable th:nth-child(3),
+        #itemTable td:nth-child(3) {
+            position: sticky;
+            left: 240px; /* sum of Sr No (60px) + Material (180px) column widths */
+            z-index: 2;
+            background: #fff;
+            min-width: 180px;
+            width: 180px;
+        }
+
+        /* Ensure header is above scrolling rows */
+        #itemTable thead th {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            background-color: #033882;
+            color: white;
+        }
+
+        /* Fixed column headers need higher z-index and blue background */
+        #itemTable thead th:nth-child(1),
+        #itemTable thead th:nth-child(2),
+        #itemTable thead th:nth-child(3) {
+            z-index: 4;
+            background-color: #033882 !important;
+            color: white !important;
+        }
+
+        /* Add borders to fixed columns */
+        #itemTable th:nth-child(1),
+        #itemTable td:nth-child(1),
+        #itemTable th:nth-child(2),
+        #itemTable td:nth-child(2),
+        #itemTable th:nth-child(3),
+        #itemTable td:nth-child(3) {
+            border-right: 2px solid #ddd;
+            box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<section layout:fragment="header">
+    <div class="container">
+        <div class="row mb-2">
+            <div class="col-sm-6"><h1>Create Reservation</h1></div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Reservation</a></li>
+                    <li class="breadcrumb-item active">Create Reservation</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container" layout:fragment="content">
+    <div class="card">
+        <!-- Reservation Header -->
+        <div class="filter-panel mt-3">
+            <div class="filter-header">
+                <div class="filter-title">
+                    <i class="bi bi-funnel-fill"></i>
+                    <span>Reservation Header Details</span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                    <label style="color: white; margin-bottom: 0;">Movement Type:</label>
+                    <select id="movementType" name="movementType" class="form-control searchable-dropdown" style="width: 200px;">
+                        <option value="">-- Select Movement Type --</option>
+                        <option th:each="mt : ${movementTypes}"
+                                th:value="${mt['emdValue1']}"
+                                th:text="${mt['emdValue2'] + ' (' + mt['emdValue1'] + ')'}">
+                        </option>
+                    </select>
+                </div>
+
+                <i id="toggleIcon" class="bi bi-chevron-up filter-icon" title="Collapse/Expand" onclick="toggleHeaderSection()"></i>
+            </div>
+
+            <div class="filter-content" id="headerContent">
+                <form th:action="@{/reservation/save}" th:object="${reservationForm}" method="post" id="reservationForm">
+                    <div class="row mb-3">
+                        <div class="form-group col-md-3">
+                            <label>Base Date</label>
+                            <!-- Base Date is set to today's date and disabled so user cannot change it -->
+                            <input type="date" class="form-control" name="baseDate" id="baseDate" disabled>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Plant</label>
+                            <select class="form-control searchable-dropdown" name="plant" id="plant">
+                                <option value="">-- Select Plant --</option>
+                                <option th:each="pt:${plants}" th:value="${pt.emdValue1}" th:text="${pt.emdValue2+' (' +pt.emdValue1+ ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>GL Account</label>
+                            <select class="form-control searchable-dropdown" name="glAccount" id="glAccount">
+                                <option value="">-- Select GL Account --</option>
+                                <option th:each="cc : ${costCenters}" th:value="${cc.emdValue1}" th:text="${cc.emdValue2 +' (' +cc.emdValue1+ ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3" id="wbsGroup">
+                            <label>WBS Element</label>
+                            <select class="form-control searchable-dropdown wbsElement-dd" name="wbs" id="wbs">
+                                <option value="">-- Select WBS Element --</option>
+
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3" id="internalOrderGroup" style="display: none;">
+                            <label>Internal Order</label>
+                            <select class="form-control searchable-dropdown internalOrder-dd" name="internalOrder" id="internalOrder">
+                                <option value="">-- Select Internal Order --</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3" id="costCenterGroup">
+                            <label>Cost Center</label>
+                            <select class="form-control searchable-dropdown" name="costCenter" id="costCenter">
+                                <option value="">-- Select Cost Center --</option>
+                                <option th:each="cc : ${costCenters}" th:value="${cc.emdValue1}" th:text="${cc.emdValue2 +' (' +cc.emdValue1+ ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Goods Receipt</label>
+                            <input type="text" class="form-control" name="goodsReceipt" id="goodsReceipt" placeholder="Enter Goods Receipt">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Item Table -->
+        <div class="custom-table-container mt-4 table-scroll-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="text-primary">Item Details</h5>
+                <button class="btn btn-success btn-sm" type="button" onclick="addItemRow()">
+                    <i class="bi bi-plus-circle"></i> Add Item
+                </button>
+            </div>
+            <div class="table-scroll">
+                <table id="itemTable" class="table table-bordered table-hover text-center">
+                    <thead class="custom-table-header">
+                    <tr>
+                        <th>Sr No.</th>
+                        <th>Material</th>
+                        <th>Description</th>
+                        <th>UOM</th>
+                        <th>Quantity</th>
+                        <th>Storage Location</th>
+                        <th>Lab Storage Location</th>
+                        <th>Batch</th>
+                        <th>Movement Allowed</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bottom-actions">
+            <button class="btn-create" type="button" onclick="submitReservation()">
+                <i class="bi bi-check-circle me-1"></i> CREATE RESERVATION
+            </button>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script th:inline="javascript">
+        let rowCount = 0;
+
+        $(document).ready(function () {
+            $('.searchable-dropdown').select2({
+                placeholder: "-- Select Option --",
+                allowClear: true,
+                width: 'resolve'
+            });
+  // Initialize WBS Element as a Select2 AJAX dropdown
+$('#wbs').select2({
+    placeholder: "-- Select WBS Element --",
+    allowClear: true,
+    width: 'resolve',
+    minimumInputLength: 3,
+    ajax: {
+        url: '/getWBSElementsWithConversion',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return { plant: $('#plant').val(), query: params.term ? params.term.toUpperCase() : '' };
+        },
+        processResults: function (data) {
+            return {
+                results: data.map(loc => ({
+                    id: loc.wbsCode,
+                    text: `${loc.wbsCodeDesc} (${loc.wbsCode})`,
+                    wbsCodeDesc: loc.wbsCodeDesc
+                }))
+            };
+        }
+    }
+});
+
+// Initialize Internal Order as a Select2 dropdown
+// Load Internal Orders once and initialize Select2 with client-side search
+$.ajax({
+    url: '/getInternalOrders',
+    dataType: 'json',
+    success: function(data) {
+        // Populate the select with all internal orders
+        var $select = $('#internalOrder');
+        $select.empty();
+        $select.append('<option value="">-- Select Internal Order --</option>');
+
+        if (data && data.length > 0) {
+            data.forEach(function(io) {
+                var optionText = io.emdValue1 + ' - ' + io.emdValue2;
+                $select.append(new Option(optionText, io.emdValue1, false, false));
+            });
+        }
+
+        // Initialize Select2 with client-side search
+        $select.select2({
+            placeholder: "-- Select Internal Order --",
+            allowClear: true,
+            width: 'resolve',
+            matcher: function(params, data) {
+                // If there are no search terms, return all of the data
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+
+                // Do not display the item if there is no 'text' property
+                if (typeof data.text === 'undefined') {
+                    return null;
+                }
+
+                // Search in the text (case-insensitive)
+                var term = params.term.toLowerCase();
+                var text = data.text.toLowerCase();
+
+                // Check if the text contains the search term
+                if (text.indexOf(term) > -1) {
+                    return data;
+                }
+
+                // Return `null` if the term should not be displayed
+                return null;
+            }
+        });
+    },
+    error: function() {
+        console.error('Failed to load internal orders');
+        // Initialize empty Select2 even on error
+        $('#internalOrder').select2({
+            placeholder: "-- Select Internal Order --",
+            allowClear: true,
+            width: 'resolve'
+        });
+      }
+      });
+        //*********END*******/
+
+            // Movement Type Change Handler - Show/Hide WBS, Internal Order, Cost Center
+            $('#movementType').on('change', function() {
+                const movementType = $(this).val();
+                const wbsGroup = $('#wbsGroup');
+                const internalOrderGroup = $('#internalOrderGroup');
+                const costCenterGroup = $('#costCenterGroup');
+
+                // Reset all fields
+                $('#wbs').val('').trigger('change');
+                $('#internalOrder').val('').trigger('change');
+                $('#costCenter').val('').trigger('change');
+
+                // Hide all groups initially
+                wbsGroup.hide();
+                internalOrderGroup.hide();
+                costCenterGroup.hide();
+
+                // Show fields based on movement type
+                if (movementType === '201') {
+                    // Movement Type 201: Show Cost Center (mandatory), hide WBS and Internal Order
+                    costCenterGroup.show();
+                } else if (movementType === '221') {
+                    // Movement Type 221: Show WBS Element (mandatory), hide Cost Center and Internal Order
+                    wbsGroup.show();
+                } else if (movementType === '261') {
+                    // Movement Type 261: Show Internal Order and Cost Center (both optional)
+                    internalOrderGroup.show();
+                    costCenterGroup.show();
+                } else {
+                    // Default: Show all (for other movement types or when none selected)
+                    wbsGroup.show();
+                    costCenterGroup.show();
+                }
+            });
+
+            // Trigger initial state
+            $('#movementType').trigger('change');
+
+            // Set Base Date to today's date and ensure it's disabled
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                $('#baseDate').val(today);
+                $('#baseDate').prop('disabled', true);
+            } catch (e) {
+                console.warn('Could not set base date automatically:', e);
+            }
+  /* ---------- Material Dropdown AJAX (Search) ---------- */
+        $(document).on('focus', '.material-code, .material-desc, .glacct-dd', function () {
+          if (!$(this).data('select2')) {
+            // First check: Movement Type must be selected
+            const movementType = $('#movementType').val();
+            if (!movementType) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Movement Type Required',
+                text: 'Please select a Movement Type first!',
+                confirmButtonColor: '#033882'
+              });
+              $(this).blur();
+              return;
+            }
+
+            // Second check: Plant must be selected
+            const plant = $('#plant').val();
+            if (!plant) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Plant Required',
+                text: 'Please select a plant first!',
+                confirmButtonColor: '#033882'
+              });
+              $(this).blur();
+              return;
+            }
+
+
+
+            // Fourth check: Movement Type specific mandatory fields
+            const costCenter = $('#costCenter').val();
+            const wbsSelect2Data = $('#wbs').select2('data');
+            const wbsCode = (wbsSelect2Data && wbsSelect2Data.length > 0) ? wbsSelect2Data[0].id : '';
+            const internalOrderSelect2Data = $('#internalOrder').select2('data');
+            const internalOrder = (internalOrderSelect2Data && internalOrderSelect2Data.length > 0) ? internalOrderSelect2Data[0].id : '';
+
+            // Movement Type 201: Cost Center is mandatory
+            if (movementType === '201' && !costCenter) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Cost Center Required',
+                text: 'Cost Center is mandatory for Movement Type 201. Please fill it before selecting material!',
+                confirmButtonColor: '#033882'
+              });
+              $(this).blur();
+              return;
+            }
+
+            // Movement Type 221: WBS Element is mandatory
+            if (movementType === '221' && !wbsCode) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'WBS Element Required',
+                text: 'WBS Element is mandatory for Movement Type 221. Please fill it before selecting material!',
+                confirmButtonColor: '#033882'
+              });
+              $(this).blur();
+              return;
+            }
+
+            // Movement Type 261: Internal Order is mandatory
+            if (movementType === '261' && !internalOrder) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Internal Order Required',
+                text: 'Internal Order is mandatory for Movement Type 261. Please fill it before selecting material!',
+                confirmButtonColor: '#033882'
+              });
+              $(this).blur();
+              return;
+            }
+
+            const isCodeDropdown = $(this).hasClass('material-code');
+            const searchField =  'matNumber' ;
+            $(this).select2({
+              placeholder: "-- Type to search Material --",
+              minimumInputLength: 3,
+              ajax: {
+                url: `/getMaterials`,
+                dataType: 'json',
+                delay: 300,
+                data: function (params) {
+                  return { plant: plant, query: params.term, searchType: searchField };
+                },
+                processResults: function (data) {
+                  return {
+                    results: data.map(mat => ({
+                      id: mat.materialCode,
+                       text: `${mat.materialCode}`
+                     // text: `${mat.materialCode} - ${mat.description}`
+                    }))
+                  };
+                },
+                cache: true
+              }
+            });
+          }
+        });
+
+      //***********MATERIAL END************
+             // When Plant changes, reset storage location and GL Account select2s so they pick up the new plant
+             $('#plant').on('change', function() {
+                // Reset the storage location missing-plant warning so it can show again if needed
+                window._storagePlantWarningShown = false;
+                 const plantVal = $(this).val();
+
+                // Reset Storage Location dropdowns
+                $('.storageLoc-dropdown').each(function() {
+                    if ($(this).data('select2')) {
+                        $(this).select2('destroy');
+                    }
+                    $(this).empty().append('<option value="">-- Select Storage Loc --</option>');
+                    // If plant is present, reinitialize so dropdown is ready
+                    if (plantVal) {
+                        $(this).select2({
+                            placeholder: "-- Select Storage Location --",
+                            allowClear: true,
+                            width: '100%',
+                            minimumInputLength: 0,
+                            ajax: {
+                                url: '/getStorageLocations',
+                                dataType: 'json',
+                                delay: 250,
+                                data: function (params) { return { plant: plantVal, query: params.term }; },
+                                processResults: function (data) { return { results: (data || []).map(function (loc) { return { id: loc.emdValue1.split("#")[0], text: loc.emdValue2 + ' (' + loc.emdValue1.split("#")[0] + ')' }; }) }; },
+                                cache: true
+                            }
+                        });
+                    }
+                });
+
+
+            });
+
+            // Add 10 initial rows
+            for (let i = 0; i < 10; i++) {
+                actuallyAddItemRow();
+            }
+        });
+
+
+
+        // Initialize storage location as a Select2 AJAX dropdown
+        $(document).on('focus', '.storageLoc-dropdown', function () {
+            if (!$(this).data('select2')) {
+                const plant = $('#plant').val();
+                if (!plant) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Plant Required',
+                        text: 'Please select a plant first!',
+                        confirmButtonColor: '#033882'
+                    });
+                    $(this).blur();
+                    return;
+                }
+
+                $(this).select2({
+                    placeholder: "-- Select Storage Location --",
+                    allowClear: true,
+                    width: '100%',
+                    minimumInputLength: 0,
+                    ajax: {
+                        url: '/getStorageLocations',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            // send the plant to the controller
+                            return { plant: $('#plant').val(), query: params.term };
+                        },
+                        processResults: function (data) {
+                            // data is List<EzcMasterData> -> map to Select2 format
+                            return {
+                                results: (data || []).map(function (loc) {
+                                    return { id: loc.emdValue1, text: loc.emdValue2 + ' (' + loc.emdValue1 + ')' };
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            }
+        });
+
+
+        /* ---------- Toggle Header Section ---------- */
+        function toggleHeaderSection() {
+            const content = document.getElementById('headerContent');
+            const icon = document.getElementById('toggleIcon');
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.add('bi-chevron-down');
+                icon.classList.remove('bi-chevron-up');
+            }
+        }
+
+        // 🔹 PR Header Hover Functionality
+        document.addEventListener("DOMContentLoaded", function () {
+            const filterPanel = document.querySelector(".filter-panel");
+            const filterContent = document.getElementById("headerContent");
+            const toggleIcon = document.getElementById("toggleIcon");
+
+            // 🔹 Initially closed
+            filterContent.classList.add("hidden");
+            toggleIcon.classList.remove("bi-chevron-up");
+            toggleIcon.classList.add("bi-chevron-down");
+
+            // 🔹 Open on hover in
+            filterPanel.addEventListener("mouseenter", () => {
+                filterContent.classList.remove("hidden");
+                toggleIcon.classList.remove("bi-chevron-down");
+                toggleIcon.classList.add("bi-chevron-up");
+            });
+
+            // 🔹 Close on hover out
+<!--            filterPanel.addEventListener("mouseleave", (e) => {-->
+<!--                if (!filterPanel.contains(document.activeElement)) {-->
+<!--                    filterContent.classList.add("hidden");-->
+<!--                    toggleIcon.classList.remove("bi-chevron-up");-->
+<!--                    toggleIcon.classList.add("bi-chevron-down");-->
+<!--                }-->
+<!--            });-->
+        });
+
+        /* ---------- Add Item Row ---------- */
+        function addItemRow() {
+            const movementType = $('#movementType').val();
+            const plant = $('#plant').val();
+            const glAccount = $('#glAccount').val();
+            const wbs = $('#wbs').val();
+            const internalOrder = $('#internalOrder').val();
+            const costCenter = $('#costCenter').val();
+            const baseDate = $('#baseDate').val();
+
+            if (rowCount === 0) {
+                if (!movementType) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Movement Type Required',
+                        text: 'Please select a Movement Type before adding items!',
+                        confirmButtonColor: '#033882'
+                    });
+                    return;
+                }
+
+                // Validate mandatory fields based on movement type
+                if (!baseDate || !plant) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Header Fields',
+                        text: 'Please fill in Base Date, Plant before adding items!',
+                        confirmButtonColor: '#033882'
+                    });
+                    return;
+                }
+
+
+
+                // For Movement Type 221, WBS validation will be done at submit time
+                // For Movement Type 261, Cost Center is optional (no validation needed)
+
+                // Disable all header fields except WBS (which can be changed after adding items)
+                const headerFields = document.querySelectorAll("#headerContent select:not(#wbs):not(#internalOrder), #headerContent input");
+                headerFields.forEach(f => f.setAttribute("disabled", true));
+
+                // Hide header details panel
+                const filterContent = document.getElementById("headerContent");
+                const toggleIcon = document.getElementById("toggleIcon");
+                if (filterContent && !filterContent.classList.contains("hidden")) {
+                    filterContent.classList.add("hidden");
+                    toggleIcon.classList.remove("bi-chevron-up");
+                    toggleIcon.classList.add("bi-chevron-down");
+                }
+            }
+
+            actuallyAddItemRow();
+        }
+
+        function actuallyAddItemRow() {
+            const tbody = document.querySelector("#itemTable tbody");
+            const row = document.createElement("tr");
+            const plant = $('#plant').val();
+
+            row.innerHTML = `
+                <td style="width: 60px;">${++rowCount}</td>
+                <td style="width: 180px;">
+                    <select name="matNumber" class="form-control material-select material-code">
+                        <option value="">-- Select Material --</option>
+                    </select>
+                </td>
+
+                <td style="width: 180px;">
+                    <input type="text" class="form-control" name="shortText" readonly>
+                </td>
+
+                <td style="width: 50px;">
+                    <input type="text" class="form-control" name="uom" readonly>
+                </td>
+                <td style="width: 50px;">
+                    <input type="number" class="form-control" name="quantity">
+                </td>
+                <td style="width: 180px;">
+                    <select class="form-control storageLoc-dropdown" name="storageLoc">
+                        <option value="">-- Select Storage Loc --</option>
+                    </select>
+                </td>
+                <td style="width: 180px;">
+                    <select class="form-control storageLoc-dropdown" name="labStorageLoc">
+                        <option value="">-- Select Lab Storage Loc --</option>
+                    </select>
+                </td>
+                <td style="width: 80px;">
+                    <input type="text" class="form-control" name="batch">
+                </td>
+                <td style="width: 60px;">
+                    <input type="checkbox" name="movementAllowed" checked>
+                </td>
+                <td style="width: 60px;">
+                    <button class="btn btn-delete btn-sm" type="button" title="Delete Row" onclick="deleteItemRow(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+
+            // Initialize storage location Select2 for this row (will fetch via /getStorageLocations)
+            const $storageEl = $(row).find('.storageLoc-dropdown');
+            if ($storageEl.length) {
+                // If plant is selected initialize select2 immediately, otherwise it will initialize on focus handler
+                if (plant) {
+                    if ($storageEl.data('select2')) {
+                        $storageEl.select2('destroy');
+                    }
+                    $storageEl.select2({
+                        placeholder: "-- Select Storage Location --",
+                        allowClear: true,
+                        width: '100%',
+                        minimumInputLength: 0,
+                        ajax: {
+                            url: '/getStorageLocations',
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) { return { plant: plant, query: params.term }; },
+                            processResults: function (data) {
+                                return { results: (data || []).map(function (loc) { return { id: loc.emdValue1, text: loc.emdValue2 + ' (' + loc.emdValue1 + ')' }; }) };
+                            },
+                            cache: true
+                        }
+                    });
+                }
+            }
+        }
+
+        // ---------- MATERIAL CHANGE HANDLER (populate description & uom) ----------
+        $(document).on('change', '.material-select', function () {
+            const row = $(this).closest('tr')[0];
+            const materialCode = $(this).val();
+            const plant = $('#plant').val();
+
+            if (!plant) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Plant Required',
+                    text: 'Please select a Plant first!',
+                    confirmButtonColor: '#033882'
+                });
+                $(this).val('');
+                return;
+            }
+
+            if (!materialCode) {
+                // clear fields
+                const desc = row.querySelector('[name="shortText"]'); if (desc) desc.value = '';
+                const uom = row.querySelector('[name="uom"]'); if (uom) uom.value = '';
+                return;
+            }
+
+            fetch(`/getMaterialDetails?plant=${plant}&materialCode=${materialCode}`)
+                .then(res => { if (!res.ok) throw new Error('Network error'); return res.json(); })
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Material Not Found',
+                            text: 'Material not found in selected Plant!',
+                            confirmButtonColor: '#033882'
+                        });
+                        const desc = row.querySelector('[name="shortText"]'); if (desc) desc.value = '';
+                        const uom = row.querySelector('[name="uom"]'); if (uom) uom.value = '';
+                        return;
+                    }
+                    const mat = data[0];
+                    const desc = row.querySelector('[name="shortText"]');
+                    if (desc) desc.value = mat.description || '';
+                    const uom = row.querySelector('[name="uom"]');
+                    if (uom) uom.value = mat.uom || '';
+                })
+                .catch(err => {
+                    console.error('Error fetching material details:', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error fetching material details. Please try again.',
+                        confirmButtonColor: '#033882'
+                    });
+                });
+        });
+
+         function loadStorageLocations(row, plant) {
+             // Keep function for backward compatibility but recommend using Select2 AJAX instead.
+             const dropdown = row.querySelector('.storageLoc-dropdown');
+             dropdown.innerHTML = `<option>Loading...</option>`;
+             if (!plant) {
+                 dropdown.innerHTML = `<option value="">-- Select Storage Loc --</option>`;
+                 return;
+             }
+
+             fetch(`/getStorageLocations?plant=${plant}`)
+                 .then(res => res.json())
+                 .then(data => {
+                     dropdown.innerHTML = `<option value="">-- Select Storage Loc --</option>`;
+                     data.forEach(loc => {
+                         const opt = document.createElement('option');
+                         opt.value = loc.emdValue1.split("#")[0];
+                         opt.text = `${loc.emdValue2} (${loc.emdValue1.split("#")[0]})`;
+                         dropdown.appendChild(opt);
+                     });
+                 })
+                 .catch(err => {
+                     console.error("❌ Error loading storage locations:", err);
+                     dropdown.innerHTML = `<option>Error loading</option>`;
+                 });
+         }
+
+        /* ---------- Delete Item Row ---------- */
+        function deleteItemRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+
+            // Re-number rows
+            const rows = document.querySelectorAll("#itemTable tbody tr");
+            rowCount = 0;
+            rows.forEach((r, idx) => {
+                r.cells[0].textContent = ++rowCount;
+            });
+
+            // If no rows left, enable header fields
+            if (rowCount === 0) {
+                const headerFields = document.querySelectorAll("#headerContent select, #headerContent input");
+                headerFields.forEach(f => f.removeAttribute("disabled"));
+            }
+        }
+
+        /* ---------- Submit Reservation ---------- */
+        async function submitReservation() {
+            const movementType = $('#movementType').val();
+            const baseDate = $('#baseDate').val();
+            const plant = $('#plant').val();
+            const glAccount = $('#glAccount').val();
+
+            // Extract WBS data from Select2
+            const wbsSelect2Data = $('#wbs').select2('data');
+            const wbsCode = (wbsSelect2Data && wbsSelect2Data.length > 0) ? wbsSelect2Data[0].id : '';
+            const wbsCodeDesc = (wbsSelect2Data && wbsSelect2Data.length > 0) ? (wbsSelect2Data[0].wbsCodeDesc || '') : '';
+
+            // Extract Internal Order data from Select2
+            const internalOrderSelect2Data = $('#internalOrder').select2('data');
+            const internalOrder = (internalOrderSelect2Data && internalOrderSelect2Data.length > 0) ? internalOrderSelect2Data[0].id : '';
+
+            const costCenter = $('#costCenter').val();
+
+            // Basic validation
+            if (!movementType || !plant) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Header Information',
+                    text: 'Please fill all header fields!'
+                });
+                return;
+            }
+
+            // Movement Type 221: WBS Element is mandatory
+            if (movementType === '221' && !wbsCode) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'WBS Element Required',
+                    text: 'WBS Element is mandatory for Movement Type 221!',
+                    confirmButtonColor: '#033882'
+                });
+                return;
+            }
+             // Movement Type specific validation
+                if (movementType === '201' && !costCenter) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Cost Center Required',
+                        text: 'Cost Center is mandatory for Movement Type 201!',
+                        confirmButtonColor: '#033882'
+                    });
+                    return;
+                }
+
+                if (movementType === '261' && !internalOrder) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Internal Order Required',
+                        text: 'Internal Order is mandatory for Movement Type 261!',
+                        confirmButtonColor: '#033882'
+                    });
+                    return;
+                }
+
+            const rows = document.querySelectorAll("#itemTable tbody tr");
+            if (rows.length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No Items',
+                    text: 'Please add at least one item!'
+                });
+                return;
+            }
+
+            // Collect item data
+            const items = [];
+            const errors = [];
+
+            // Collect only rows which have a material number filled.
+            // At least one such row must exist to submit.
+            let foundAnyMaterial = false;
+            rows.forEach((row, idx) => {
+                const matNumber = (row.querySelector('[name="matNumber"]') || {}).value;
+                if (!matNumber) return; // skip empty rows
+
+                foundAnyMaterial = true;
+
+                const quantity = (row.querySelector('[name="quantity"]') || {}).value;
+                const storageLoc = (row.querySelector('[name="storageLoc"]') || {}).value;
+                const labStorageLoc = (row.querySelector('[name="labStorageLoc"]') || {}).value;
+
+                if (!quantity || Number(quantity) <= 0) {
+                    errors.push(`Row ${idx + 1}: Quantity must be greater than 0!`);
+                    return;
+                }
+
+                if (!storageLoc) {
+                    errors.push(`Row ${idx + 1}: Storage Location is required!`);
+                    return;
+                }
+
+                // push item with sequential itemNo (1..N for pushed items)
+                items.push({
+                    itemNo: items.length + 1,
+                    material: matNumber,
+                    qty: quantity,
+                    uom: (row.querySelector('[name="uom"]') || {}).value || '',
+                    plant: plant,
+                    storageLoc: storageLoc,
+                    labStorageLoc: labStorageLoc,
+                    batch: (row.querySelector('[name="batch"]') || {}).value || '',
+                    movementAllowed: (row.querySelector('[name="movementAllowed"]') && row.querySelector('[name="movementAllowed"]').checked) ? 'X' : ''
+                });
+            });
+
+            if (!foundAnyMaterial) {
+                errors.push('Please enter at least one item (Material, Quantity, and Storage Location) before submitting.');
+            }
+
+            if (errors.length > 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Validation Errors',
+                    html: errors.join("<br>")
+                });
+                return;
+            }
+
+            // Prepare data for submission
+            const reservationData = {
+                movementType: movementType,
+                reqDate: baseDate,
+                plant: plant,
+                wbs: wbsCode,
+                wbsCodeDesc: wbsCodeDesc,
+                internalOrder: internalOrder,
+                glAccount: glAccount,
+                costCenter: costCenter,
+                goodsReceipt: $('#goodsReceipt').val() || '',
+                items: items
+            };
+
+            console.log("Reservation Data:", reservationData);
+
+            // Submit via AJAX
+            const token = $("meta[name='_csrf']").attr("content");
+            const header = $("meta[name='_csrf_header']").attr("content");
+
+            try {
+                const response = await fetch('/reservation/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [header]: token
+                    },
+                    body: JSON.stringify(reservationData)
+                });
+
+                const data = await response.json();
+
+                if (data.success === true) {
+                    Swal.fire({
+                        title: 'Reservation Created Successfully!',
+                        html: `<b>SAP Reservation Number:</b> ${data.sapReservationNo || 'N/A'}<br><br>${(data.messages || []).join("<br>")}`,
+                        icon: 'success',
+                        confirmButtonText: 'Go to Reservation List',
+                        confirmButtonColor: '#3085d6'
+                    }).then(() => {
+                        window.location.href = '/reservation/list';
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        html: (data.errors || []).join("<br>"),
+                        text: data.errors || 'Failed to create reservation',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            } catch (err) {
+                console.error("Error submitting reservation:", err);
+                Swal.fire({
+                    title: 'Submission Failed',
+                    text: 'Unexpected error. Please check logs.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        }
+
+        /* ---------- Auto Close Sidebar ---------- */
+        function autoCloseSidebar() {
+            const btn = document.querySelector('a.nav-link[data-widget="pushmenu"]');
+            if (!btn) return;
+            if (!document.body.classList.contains('sidebar-collapse')) {
+                btn.click();
+            }
+        }
+
+        function initAutoClose() {
+            if (document.readyState === 'complete') {
+                autoCloseSidebar();
+            } else {
+                window.addEventListener('load', autoCloseSidebar, { once: true });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initAutoClose, { once: true });
+    </script>
+</div>
+</body>
+</html>
