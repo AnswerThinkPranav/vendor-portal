@@ -23,6 +23,7 @@ public class MaterialDto {
     private String description;
     private String uom;
     private String casNo;
+    private String catalog;
     private BigDecimal quantity;
     private String unitPrice;
     private String materialGroup;

@@ -135,6 +135,9 @@ public class EzPurchaseRequisitionItems {
     @Column(name = "EPRI_CAS", length = 30)
     private String cas;
 
+    @Column(name = "EPRI_CATALOG", length = 30)
+    private String catalog;
+
     @Column(name = "EPRI_VENDOR", length = 80)
     private String vendor;
 

@@ -83,6 +83,17 @@ public class SyncMasterController {
     {
         return "master/divisionList";
     }
+    @GetMapping(value="/prValidation")
+    public String prValidationMaster (Model model)
+    {
+        List<EzcMasterData> docType=masterRepo.findByEmdKey("DOCTYPE");
+        List<EzcMasterData> accAssgList = masterRepo.findByEmdKey("ACCASSG");
+        List<EzcMasterData> companyCodes = masterRepo.findByEmdKey("COMPCODE");
+        model.addAttribute("docTypes",docType);
+        model.addAttribute("accAssignments",accAssgList);
+        model.addAttribute("companyCodes",companyCodes);
+        return "master/prValidation";
+    }
 
 
 

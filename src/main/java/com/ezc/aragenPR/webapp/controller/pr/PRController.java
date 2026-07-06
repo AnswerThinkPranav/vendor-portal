@@ -763,6 +763,7 @@ public class PRController {
             String[] queryValues=null;
             String tabName="";
             String casNO="";
+            String catlogNO="";
             String materialPass=String.format("%018d", Long.parseLong(materialCode));
             try {
 
@@ -773,10 +774,11 @@ public class PRController {
                 if (dataList != null) {
                     for (String row[] : dataList) {
                         casNO = row[0];
+                        catlogNO= row[1];
                     }
                 }
             }catch(Exception e){}
-            System.out.println("getCasNo"+casNO+"materialPass"+materialPass);
+            log.debug("getCasNo"+casNO+"materialPass"+materialPass+"catlogNO"+catlogNO);
 //**************************************************
 
             MaterialDto m1=new MaterialDto();
@@ -786,6 +788,7 @@ public class PRController {
             m1.setUom(matUom);
             m1.setUnitPrice(valPrice);
             m1.setCasNo(casNO);
+            m1.setCatalog(catlogNO);
             materials.add(m1);
 
         } catch (Exception e1) {
@@ -1085,6 +1088,7 @@ public class PRController {
                 addTab.setValue("PREQ_ITEM",itemNumber);
                 addTab.setValue("ZZBU",item.getDivision());
                 addTab.setValue("ZZDEPT",item.getDepartment());
+                addTab.setValue("ZZCATALOG",item.getCatalog());
                 addTab.setValue("ZZPACK",packSize);
                 addTab.setValue("ZZCOA",item.getCoa());
                 addTab.setValue("ZZMSDS",item.getMsds());

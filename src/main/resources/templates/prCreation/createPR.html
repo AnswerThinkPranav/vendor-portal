@@ -550,7 +550,7 @@
               if (!data || data.length === 0) {
                 alert("Material not found in selected Plant!");
                 row.querySelector('[name="uom"]').value = "";
-                row.querySelector('[name="casNoHid"]').value = "";
+                row.querySelector('[name="catalogHid"]').value = "";
                 row.querySelector('[name="materialGroup"]').value = "";
                 row.querySelector('[name="valPrice"]').value = "";
                 row.querySelector('[name="shortText"]').value = "";
@@ -576,7 +576,7 @@
               }
 
               row.querySelector('[name="uom"]').value = mat.uom || "";
-              row.querySelector('[name="casNoHid"]').value = mat.casNo || "";
+              row.querySelector('[name="catalogHid"]').value = mat.catalog || "";
               row.querySelector('[name="materialGroup"]').value = mat.materialGroup || "";
               row.querySelector('[name="valPrice"]').value = mat.unitPrice || "";
 
@@ -693,7 +693,7 @@
             $materialCodeDropdown.html('<option value="">-- Select Material --</option>');
 
             // Clear the hidden CAS field so Select2 can be used again
-            row.find('[name="casNoHid"]').val('');
+            row.find('[name="catalogHid"]').val('');
             console.log("CAS number cleared - Select2 can now be used for material search");
             return;
           }
@@ -753,7 +753,7 @@
                 }
 
                 // Store the CAS number in the hidden field
-                row.find('[name="casNoHid"]').val(casNumber);
+               // row.find('[name="catalogHid"]').val(casNumber);
 
                 // Auto-open the sub-row (child row)
                 const subRow = row.nextElementSibling;
@@ -1045,7 +1045,7 @@ function addItemRow()
                     today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
                     const todayStr = today.toISOString().split("T")[0];
                     mainRow.innerHTML = `
-                        <td style="width: 70px;">${++rowCount}<input type="hidden" name="casNoHid" id="casNoHid" value=""></td>
+                        <td style="width: 70px;">${++rowCount}<input type="hidden" name="catalogHid" id="catalogHid" value=""></td>
                         <td style="width: 150px;">
                             <input type="text" class="form-control cas-number-input" name="casNumberInput" placeholder="Enter CAS Number">
                         </td>
@@ -1096,6 +1096,10 @@ function addItemRow()
                                     <label>Department <span style="color: red;">*</span></label>
                                     <input type="text" class="form-control" name="departItem" value=${headerDept} readonly>
                                 </div>
+                                <div class="col-md-1 catalog-container" style="display:none;">
+                                <label>CATALOG NO</label>
+                                    <input type="text" class="form-control" name="catalog" readonly>
+                                 </div>
                                  <div class="col-md-3 wbs-container">
                                   <label>WBS ELEMENT <span style="color: red;">*</span></label>
                                   <select name="wbsElement" class="form-control wbsElement-dd">
@@ -1729,7 +1733,7 @@ $.ajax({
             errors.push(`Row ${rowNum}: Reason is mandatory for Document Type ZCSP`);
         }
 
-        if (!storage) errors.push(`Row ${rowNum}: Storage Location is required`);
+       // if (!storage) errors.push(`Row ${rowNum}: Storage Location is required`);
         if (!qty || Number(qty) <= 0) errors.push(`Row ${rowNum}: Quantity must be greater than 0`);
     });
 
@@ -1884,6 +1888,16 @@ function toggleAgreementsField() {
     } else {
         reasonContainers.forEach(div => div.style.display = "none");
     }
+    const catalogContainers = document.querySelectorAll(".catalog-container");
+
+    if(docType === 'ZCER')
+    {
+        catalogContainers.forEach(div => div.style.display = "block");
+    }
+    else
+    {
+        catalogContainers.forEach(div => div.style.display = "none");
+}
 }
 
  function autoCloseSidebar() {

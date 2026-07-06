@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="layout">
+
+<head>
+    <meta charset="ISO-8859-1">
+    <title>PR Validation Configuration</title>
+
+    <style>
+
+        .dataTables_filter {
+            display: inline;
+            float: right;
+        }
+
+        .dataTables_length {
+            display: inline;
+        }
+
+        .dt-buttons {
+            margin-left:25%;
+        }
+
+        :root {
+            --blue: #033882;
+            --orange: #ff5f00;
+        }
+
+        .sync-panel {
+            background: #f8f9fa;
+            border: 2px solid var(--blue);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .sync-title {
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--blue);
+            border-left: 5px solid var(--orange);
+            padding-left: 10px;
+        }
+
+        .btn-custom {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-load {
+            background-color: var(--orange);
+            color: white;
+            margin-right: 10px;
+        }
+
+        .btn-load:hover {
+            background-color: #e85700;
+        }
+
+        .btn-save {
+            background-color: var(--blue);
+            color: white;
+        }
+
+        .btn-save:hover {
+            background-color: #022b65;
+        }
+
+        .radio-label {
+            font-weight: 600;
+            color: var(--blue);
+        }
+
+        .table thead {
+            background-color: var(--blue);
+            color: white;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f5f9ff;
+        }
+
+        .radio-btn {
+            transform: scale(1.3);
+            cursor: pointer;
+        }
+
+        .mandatory-header {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .optional-header {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        .view-header {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<section layout:fragment="header">
+    <h1 style="color: var(--blue);">
+        PR Validation Configuration
+    </h1>
+
+    <ol class="breadcrumb">
+        <li>
+            <a th:href="@{/dashboard/index.html}">
+                <i class="fa fa-dashboard"></i> Dashboard
+            </a>
+        </li>
+        <li class="active">PR Validation Configuration</li>
+    </ol>
+</section>
+
+
+<div layout:fragment="content">
+
+    <!-- Selection Panel -->
+    <div class="sync-panel">
+
+        <div class="sync-title">
+            Configure PR Fields Based on Document Type & Account Assignment
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-4">
+                <label class="radio-label">
+                    Company Code
+                </label>
+
+                <select class="form-control" id="companyCode" name="companyCode">
+                    <option value="">Select Company Code </option>
+                    <option th:each="cc : ${companyCodes}"
+                            th:value="${cc.emdValue1}"
+                            th:text="${cc.emdValue2}">
+                    </option>
+
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="radio-label">
+                    Document Type
+                </label>
+
+                <select class="form-control"
+                        id="docType"
+                        name="docType">
+
+                    <option value="">
+                        Select Document Type
+                    </option>
+
+                    <option th:each="doc : ${docTypes}"
+                            th:value="${doc.emdValue1}"
+                            th:text="${doc.emdValue2}">
+                    </option>
+
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="radio-label">
+                    Account Assignment
+                </label>
+
+                <select class="form-control"
+                        id="accAssignment"
+                        name="accAssignment">
+
+                    <option value="">
+                        Select Account Assignment
+                    </option>
+
+                    <option th:each="acc : ${accAssignments}"
+                            th:value="${acc.emdValue1}"
+                            th:text="${acc.emdValue2}">
+                    </option>
+
+                </select>
+            </div>
+
+        </div>
+
+        <br>
+
+        <div style="text-align:center">
+
+            <button type="button"
+                    class="btn-custom btn-load"
+                    onclick="loadFields()">
+
+                <i class="fa fa-search"></i>
+                Load Fields
+
+            </button>
+
+            <button type="button"
+                    class="btn-custom btn-save"
+                    onclick="saveConfiguration()">
+
+                <i class="fa fa-save"></i>
+                Save Configuration
+
+            </button>
+
+        </div>
+
+        <br>
+
+        <div id="messageDiv"></div>
+
+    </div>
+
+
+    <!-- Configuration Table -->
+    <div class="box">
+
+        <div class="box-header">
+            <h3 class="box-title"
+                style="color:var(--blue);font-weight:bold;">
+                Field Configuration
+            </h3>
+        </div>
+
+        <div class="box-body">
+
+            <table id="fieldTable"
+                   class="table table-bordered table-hover dt-responsive nowrap"
+                   width="100%">
+
+                <thead>
+
+                <tr>
+                    <th width="40%">
+                        Field Name
+                    </th>
+
+                    <th width="20%" style="text-align:center;">
+                        <span class="mandatory-header">
+                            Mandatory
+                        </span>
+                    </th>
+
+                    <th width="20%" style="text-align:center;">
+                        <span class="optional-header">
+                            Optional
+                        </span>
+                    </th>
+
+                    <th width="20%" style="text-align:center;">
+                        <span class="view-header">
+                            View Only
+                        </span>
+                    </th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <tr th:each="field : ${fieldList}">
+
+                    <td>
+                        <input type="hidden"
+                               name="fieldName"
+                               th:value="${field.fieldName}">
+
+                        <span th:text="${field.displayName}">
+                        </span>
+                    </td>
+
+                    <td align="center">
+                        <input type="radio"
+                               class="radio-btn"
+                               th:name="${field.fieldName}"
+                               value="M">
+                    </td>
+
+                    <td align="center">
+                        <input type="radio"
+                               class="radio-btn"
+                               th:name="${field.fieldName}"
+                               value="O"
+                               checked>
+                    </td>
+
+                    <td align="center">
+                        <input type="radio"
+                               class="radio-btn"
+                               th:name="${field.fieldName}"
+                               value="V">
+                    </td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div layout:fragment="scriptContent">
+
+    <script>
+
+        function loadFields()
+        {
+            let companyCode=$("#companyCode").val();
+            let docType=$("#docType").val();
+            let accAssignment=$("#accAssignment").val();
+
+            if(companyCode=="")
+            {
+                alert("Please select Company Code");
+                return;
+            }
+
+            if(docType=="")
+            {
+                alert("Please select Document Type");
+                return;
+            }
+
+            if(accAssignment=="")
+            {
+                alert("Please select Account Assignment");
+                return;
+            }
+
+            $("#messageDiv").html(
+                "<span style='color:green;font-weight:bold;'>Fields loaded successfully.</span>"
+            );
+
+            // AJAX call can be added here
+        }
+
+
+        function saveConfiguration()
+        {
+            $("#messageDiv").html(
+                "<span style='color:green;font-weight:bold;'>Configuration saved successfully.</span>"
+            );
+
+            // Submit form or AJAX call here
+        }
+
+    </script>
+
+</div>
+
+</body>
+</html>

@@ -39,6 +39,11 @@
                     class="nav-icon fas fa-th"></i>
                 <p>Sync Master Data</p>
             </a></li>
+            <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a
+                    th:href="@{/prValidation}" class="nav-link"> <i
+                    class="nav-icon fas fa-th"></i>
+                <p>PR Validation Master Data</p>
+            </a></li>
             <!--  <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a
                       th:href="@{/syncPurGrp/save}" class="nav-link"> <i
                       class="nav-icon fas fa-th"></i>

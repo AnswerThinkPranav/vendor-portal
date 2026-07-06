@@ -13,6 +13,7 @@ public class PRRequest {
     private String plant;
     private String purGrp;
     private String department;
+    private String catalog;
     private String sapReqName;
     private String portalRefNO;
     private String aonNo;
