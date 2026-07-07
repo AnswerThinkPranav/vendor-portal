@@ -7,10 +7,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Source
         uses: actions/checkout@v4
 
       - name: Setup Java 17
@@ -18,13 +18,31 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          cache: maven
 
       - name: Build WAR
-        run: mvn clean package
+        run: .\mvnw.cmd clean package
+        shell: powershell
 
-      - name: Upload WAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: aragen-pr-portal-war
-          path: target/*.war
+      - name: Create Deployments Folder
+        shell: powershell
+        run: |
+          if (!(Test-Path "C:\Deployments")) {
+              New-Item -ItemType Directory -Path "C:\Deployments" | Out-Null
+          }
+
+      - name: Backup Existing ROOT.war
+        shell: powershell
+        run: |
+          $dest = "C:\Deployments\ROOT.war"
+
+          if(Test-Path $dest)
+          {
+             $date = Get-Date -Format "yyyyMMdd_HHmmss"
+             Rename-Item $dest "ROOT_BACKUP_$date.war"
+          }
+
+      - name: Copy WAR as ROOT.war
+        shell: powershell
+        run: |
+          $war = Get-ChildItem target\*.war | Select-Object -First 1
+          Copy-Item $war.FullName "C:\Deployments\ROOT.war" -Force
