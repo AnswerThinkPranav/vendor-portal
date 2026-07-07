@@ -1,0 +1,30 @@
+name: Build WAR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Build WAR
+        run: mvn clean package
+
+      - name: Upload WAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: aragen-pr-portal-war
+          path: target/*.war
