@@ -14,44 +14,29 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Display Java Version
-        shell: powershell
-        run: |
-          java -version
+        shell: cmd
+        run: java -version
 
       - name: Build WAR
-        shell: powershell
-        run: |
-          .\mvnw.cmd clean package
+        shell: cmd
+        run: mvnw.cmd clean package
 
       - name: Create Deployments Folder
-        shell: powershell
+        shell: cmd
         run: |
-          if (!(Test-Path "C:\Deployments")) {
-              New-Item -ItemType Directory -Path "C:\Deployments" | Out-Null
-          }
+          if not exist C:\Deployments mkdir C:\Deployments
 
       - name: Backup Existing ROOT.war
-        shell: powershell
+        shell: cmd
         run: |
-          $dest = "C:\Deployments\ROOT.war"
+          if exist C:\Deployments\ROOT.war ren C:\Deployments\ROOT.war ROOT_OLD.war
 
-          if (Test-Path $dest) {
-              $date = Get-Date -Format "yyyyMMdd_HHmmss"
-              Rename-Item -Path $dest -NewName "ROOT_BACKUP_$date.war"
-          }
-
-      - name: Copy WAR as ROOT.war
-        shell: powershell
+      - name: Copy WAR
+        shell: cmd
         run: |
-          $war = Get-ChildItem "target\*.war" | Select-Object -First 1
+          copy /Y target\*.war C:\Deployments\ROOT.war
 
-          if ($null -eq $war) {
-              Write-Error "WAR file not found in target folder."
-          }
-
-          Copy-Item $war.FullName "C:\Deployments\ROOT.war" -Force
-
-      - name: Verify Deployment
-        shell: powershell
+      - name: Verify
+        shell: cmd
         run: |
-          Get-ChildItem C:\Deployments
+          dir C:\Deployments
