@@ -13,13 +13,22 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Display Java Version
+      - name: Configure Java 17
         shell: cmd
-        run: java -version
+        run: |
+          set JAVA_HOME=C:\Program Files\Java\jdk-17.0.16+8
+          set PATH=%JAVA_HOME%\bin;%PATH%
+          echo JAVA_HOME=%JAVA_HOME%
+          java -version
+          javac -version
+          mvnw.cmd -version
 
       - name: Build WAR
         shell: cmd
-        run: mvnw.cmd clean package
+        run: |
+          set JAVA_HOME=C:\Program Files\Java\jdk-17.0.16+8
+          set PATH=%JAVA_HOME%\bin;%PATH%
+          mvnw.cmd clean package
 
       - name: Create Deployments Folder
         shell: cmd
@@ -29,7 +38,9 @@ jobs:
       - name: Backup Existing ROOT.war
         shell: cmd
         run: |
-          if exist C:\Deployments\ROOT.war ren C:\Deployments\ROOT.war ROOT_OLD.war
+          if exist C:\Deployments\ROOT.war (
+              ren C:\Deployments\ROOT.war ROOT_OLD.war
+          )
 
       - name: Copy WAR
         shell: cmd
