@@ -583,6 +583,10 @@
               // ✅ Enable and reset agreements dropdown when material changes
               const subRow = row.nextElementSibling;
               if (subRow && subRow.classList.contains('sub-row')) {
+                const catalogInput = subRow.querySelector('[name="catalog"]');
+    if (catalogInput) {
+        catalogInput.value = mat.catalog || "";
+    }
                 const $agreementsDropdown = $(subRow).find('.agreement-dd');
 
                 // Clear previous selection and reset fields
@@ -1574,7 +1578,11 @@ $.ajax({
                         });
                         console.log("✅ All other sub-rows closed");
                     }
-
+                const catalogHidden = mainRow.querySelector('[name="catalogHid"]').value;
+                    const catalogInput = subRow.querySelector('[name="catalog"]');
+                    if (catalogInput) {
+                        catalogInput.value = catalogHidden.trim();
+                    }
             // Toggle visibility
             subRow.style.display = isOpening ? "table-row" : "none";
 
@@ -1758,6 +1766,7 @@ $.ajax({
             plant: plant,
             accAsmt: accAsmt,
             cas: subRow.querySelector('[name="cas"]')?.value || "",
+            catalog: subRow.querySelector('[name="catalog"]')?.value || "",
             quantity: row.querySelector('[name="quantity"]')?.value || "",
             valPrice: row.querySelector('[name="valPrice"]')?.value || "",
             total: row.querySelector('[name="total"]')?.value || "",

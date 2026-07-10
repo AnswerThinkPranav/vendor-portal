@@ -1084,11 +1084,12 @@ public class PRController {
                 String packSize=item.getPackSize();
                 packSize=String.format("%10s", packSize).replace(' ', '0');
                 System.out.println("packSize: " + packSize);
+                System.out.println("catalog: " + item.getCatalog());
                 addTab.appendRow();
                 addTab.setValue("PREQ_ITEM",itemNumber);
                 addTab.setValue("ZZBU",item.getDivision());
                 addTab.setValue("ZZDEPT",item.getDepartment());
-                addTab.setValue("ZZCATALOG",item.getCatalog());
+                addTab.setValue("ZZCATNO",item.getCatalog().trim());
                 addTab.setValue("ZZPACK",packSize);
                 addTab.setValue("ZZCOA",item.getCoa());
                 addTab.setValue("ZZMSDS",item.getMsds());
@@ -1100,6 +1101,7 @@ public class PRController {
                 addTabX.setValue("PREQ_ITEM",itemNumber);
                 addTabX.setValue("ZZBU","X");
                 addTabX.setValue("ZZDEPT","X");
+                addTabX.setValue("ZZCATNO","X");
                 addTabX.setValue("ZZPACK","X");
                 addTabX.setValue("ZZCOA","X");
                 addTabX.setValue("ZZMSDS","X");
