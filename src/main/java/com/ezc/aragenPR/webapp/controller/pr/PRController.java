@@ -1101,7 +1101,7 @@ public class PRController {
                 addTabX.setValue("PREQ_ITEM",itemNumber);
                 addTabX.setValue("ZZBU","X");
                 addTabX.setValue("ZZDEPT","X");
-                addTabX.setValue("ZZCATNO","X");
+                //addTabX.setValue("ZZCATNO","X");
                 addTabX.setValue("ZZPACK","X");
                 addTabX.setValue("ZZCOA","X");
                 addTabX.setValue("ZZMSDS","X");
@@ -1725,6 +1725,9 @@ public class PRController {
                 itemTable.setValue("DELIV_DATE", formattedDate);
                 System.out.println("formattedDate" + formattedDate);
                 itemTable.setValue("PREQ_PRICE", item.getValPrice());
+                if (item.getCurrency() != null && !item.getCurrency().isEmpty()) {
+                    itemTable.setValue("CURRENCY", item.getCurrency());
+                }
                 itemTable.setValue("PERIOD_IND_EXPIRATION_DATE", "D");
                 itemTable.setValue("ACCTASSCAT", prRequest.getAccAsmt());
                 itemTable.setValue("ITEM_CAT", prRequest.getItemCateg());
@@ -1893,7 +1896,7 @@ public class PRController {
                     PrServiceLines.setValue("QUANTITY", serv.getServQty());
                     PrServiceLines.setValue("UOM", serv.getServUnit());
                     PrServiceLines.setValue("GROSS_PRICE", serv.getServPrice());
-                    PrServiceLines.setValue("CURRENCY", "INR");
+                    PrServiceLines.setValue("CURRENCY", item.getCurrency());
                     PrServiceLines.setValue("NET_PRICE", serv.getServNetPrice());
 
                     PrServiceLinesX.appendRow();
@@ -2969,7 +2972,7 @@ public class PRController {
                     PrServiceLines.setValue("QUANTITY", serv.getServQty());
                     PrServiceLines.setValue("UOM", serv.getServUnit());
                     PrServiceLines.setValue("GROSS_PRICE", serv.getServPrice());
-                    PrServiceLines.setValue("CURRENCY", "INR");
+                    PrServiceLines.setValue("CURRENCY", (item.getCurrency() != null && !item.getCurrency().isEmpty()) ? item.getCurrency() : "INR");
                     PrServiceLines.setValue("NET_PRICE", serv.getServNetPrice());
 
                     PrServiceLinesX.appendRow();

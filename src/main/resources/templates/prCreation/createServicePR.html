@@ -1902,6 +1902,7 @@ async function submitPR() {
         const deliveryDate = itemRow.querySelector('[name="deliveryDate"]')?.value || "";
         const materialGroup = itemRow.querySelector('[name="materialGrp"]')?.value?.trim() || "";
         const trackNo = itemRow.querySelector('[name="TrackNo"]')?.value?.trim() || "";
+        const currency = itemRow.querySelector('[name="currency"]')?.value?.trim() || "";
 
         // ?? Validate item values
         if (!valPrice || valPrice <= 0) errors.push(`Row ${rowNum}: Gross Price is required and must be greater than 0`);
@@ -1966,6 +1967,7 @@ async function submitPR() {
             total,
             deliveryDate,
             trackNo,
+            currency,
             passThrough,
             division,
             department,

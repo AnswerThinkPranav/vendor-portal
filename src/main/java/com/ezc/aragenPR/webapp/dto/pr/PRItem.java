@@ -44,6 +44,7 @@ public class PRItem {
     private String catalog;
     private String fixVendor;
     private String aggrItem;
+    private String currency;
     private List<PRService> services;
 
 

@@ -139,6 +139,11 @@ public class ChatbotController {
                 ));
             }
 
+            // Handle material search flow
+            if (isMaterialSearchQuery(messageLower) || "AWAITING_MATERIAL_PLANT".equals(context)) {
+                return handleMaterialSearch(message, context);
+            }
+
             // Check if this is a status inquiry
             if (isStatusQuery(messageLower) || "AWAITING_DOC_TYPE".equals(context)) {
                 return handleStatusQuery(message, messageLower, context);
@@ -499,6 +504,34 @@ public class ChatbotController {
         error.put("error", message);
         error.put("timestamp", System.currentTimeMillis());
         return error;
+    }
+
+    private boolean isMaterialSearchQuery(String message) {
+        String[] keywords = {"material search", "search material", "find material", "material by description", "search by description"};
+        for (String kw : keywords) {
+            if (message.contains(kw)) return true;
+        }
+        return false;
+    }
+
+    private ResponseEntity<?> handleMaterialSearch(String message, String context) {
+        if ("AWAITING_MATERIAL_PLANT".equals(context)) {
+            String plant = message.trim().replaceAll("[^A-Za-z0-9]", "");
+            if (plant.isEmpty()) {
+                return ResponseEntity.ok(createContextResponse(
+                        "Please enter a valid plant code (e.g. 1000):",
+                        "AWAITING_MATERIAL_PLANT"
+                ));
+            }
+            return ResponseEntity.ok(createContextResponse(
+                    "Enter material description to search (min 3 characters):",
+                    "AWAITING_MATERIAL_DESC:" + plant
+            ));
+        }
+        return ResponseEntity.ok(createContextResponse(
+                "Which plant would you like to search in?\n(e.g. type: 1000)",
+                "AWAITING_MATERIAL_PLANT"
+        ));
     }
 
     @GetMapping("/health")

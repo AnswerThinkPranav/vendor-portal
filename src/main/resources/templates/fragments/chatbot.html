@@ -438,6 +438,9 @@
                         <button class="quick-question-btn" onclick="checkStatus()">
                             🔍 Check Status
                         </button>
+                        <button class="quick-question-btn" onclick="materialSearch()">
+                            🔎 Material Search
+                        </button>
                     </div>
                 </div>
 
@@ -654,6 +657,9 @@
                         <button class="quick-question-btn" onclick="checkStatus()">
                             🔍 Check Status
                         </button>
+                        <button class="quick-question-btn" onclick="materialSearch()">
+                            🔎 Material Search
+                        </button>
                     </div>
                 </div>
                 <div class="typing-indicator" id="typingIndicator">
@@ -664,6 +670,54 @@
             `;
             conversationContext = "";
             currentCategory = "";
+        }
+
+        function materialSearch() {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const welcomeMsg = messagesContainer.querySelector('.welcome-message');
+            if (welcomeMsg) welcomeMsg.remove();
+
+            conversationContext = 'AWAITING_MATERIAL_PLANT';
+            addMessage('Material Search', 'user');
+            addMessage('Which plant would you like to search in?\n(e.g. type: 1000)', 'bot');
+            showMenuButton();
+            document.getElementById('chatbotInput').focus();
+        }
+
+        async function doMaterialSearch(plant, query) {
+            document.getElementById('typingIndicator').classList.add('active');
+            document.getElementById('chatbotSendBtn').disabled = true;
+            try {
+                const url = '/getMaterials?plant=' + encodeURIComponent(plant) +
+                            '&query=' + encodeURIComponent(query) +
+                            '&searchType=shortText';
+                const response = await fetch(url, { method: 'GET' });
+                document.getElementById('typingIndicator').classList.remove('active');
+
+                if (!response.ok) {
+                    addMessage('Error connecting to SAP. Please try again.', 'bot');
+                    showMenuButton();
+                    return;
+                }
+
+                const materials = await response.json();
+                if (!materials || materials.length === 0) {
+                    addMessage('No materials found matching "' + query + '".\n\nTry a different description or check the plant code.', 'bot');
+                } else {
+                    let resultHtml = '<b>Found ' + materials.length + ' material(s):</b><br><br>';
+                    materials.forEach(function(mat, i) {
+                        resultHtml += (i + 1) + '. <b>' + mat.materialCode + '</b> — ' + (mat.description || '(no description)') + '<br>';
+                    });
+                    addMessage(resultHtml, 'bot');
+                }
+                showMenuButton();
+            } catch (e) {
+                document.getElementById('typingIndicator').classList.remove('active');
+                addMessage('Error searching materials. Please try again.', 'bot');
+                showMenuButton();
+            } finally {
+                document.getElementById('chatbotSendBtn').disabled = false;
+            }
         }
 
         function toggleChatbot() {
@@ -741,6 +795,20 @@
             // Add user message
             addMessage(message, 'user');
             input.value = '';
+
+            // Handle material description step directly — bypass chatbot backend
+            if (conversationContext.startsWith('AWAITING_MATERIAL_DESC:')) {
+                if (message.length < 3) {
+                    addMessage('Please enter at least 3 characters for the description.', 'bot');
+                    showMenuButton();
+                    return;
+                }
+                const plant = conversationContext.split(':')[1];
+                conversationContext = '';
+                await doMaterialSearch(plant, message);
+                input.focus();
+                return;
+            }
 
             // Show typing indicator
             isProcessing = true;
