@@ -409,7 +409,7 @@
                     <thead class="custom-table-header">
                     <tr>
                         <th>Sr No.</th>
-                        <th>CAS Number</th>
+                        <th id="casCatalogHeader">CAS Number</th>
                         <th>Material Code <span style="color: red;">*</span></th>
                         <th>Description <span style="color: red;">*</span></th>
                         <!--<th>GL Account</th>-->
@@ -456,9 +456,11 @@
 
           // Add event listener for docType change
           $('#docType').on('change', function() {
-            console.log("🔹 docType changed, calling toggleAgreementsField()");
-            toggleAgreementsField();
-          });
+                console.log("🔹 docType changed, calling toggleAgreementsField()");
+                toggleAgreementsField();
+                const docType = $(this).val();
+                $('#casCatalogHeader').text(docType === 'ZANB' ? 'Catalog Number' : 'CAS Number');
+});
 
           // Add event listener to prevent plant selection before document type
           $('#plant').on('select2:opening', function(e) {
@@ -479,12 +481,14 @@
         $(document).on('focus', '.material-code, .material-desc, .glacct-dd', function () {
           const row = $(this).closest('tr')[0];
           const casInput = $(row).find('.cas-number-input');
+          const catalogInput = $(row).find('.catalog-number-input');
 
-          // Check if CAS number was used - if yes, material dropdown already has Select2 with local data
-          if (casInput.length > 0 && casInput.val().trim() !== '') {
-            console.log("CAS Number search was used - material dropdown has Select2 with local filtering");
-            return; // Don't reinitialize - already has Select2 from CAS handler
-          }
+          // Check if CAS number or Catalog Number search was used - if yes, material dropdown already has Select2 with local data
+          if ((casInput.length > 0 && casInput.val().trim() !== '') ||
+              (catalogInput.length > 0 && catalogInput.val().trim() !== '')) {
+            console.log("CAS/Catalog Number search was used - material dropdown has Select2 with local filtering");
+            return; // Don't reinitialize - already has Select2 from CAS/Catalog handler
+  }
 
           if (!$(this).data('select2')) {
             const plant = $('#plant').val();
@@ -701,6 +705,85 @@
             console.log("CAS number cleared - Select2 can now be used for material search");
             return;
           }
+
+          /* ---------- CATALOG NUMBER SEARCH HANDLER (ZANB docType) ---------- */
+$(document).on('input', '.catalog-number-input', function() {
+  const catalogNumber = $(this).val().trim();
+  const row = $(this).closest('tr');
+  const $materialCodeDropdown = row.find('[name="matNumber"]');
+
+  if (!catalogNumber) {
+    if ($materialCodeDropdown.data('select2')) {
+      $materialCodeDropdown.select2('destroy');
+    }
+    $materialCodeDropdown.html('<option value="">-- Select Material --</option>');
+    row.find('[name="catalogHid"]').val('');
+    console.log("Catalog number cleared - Select2 can now be used for material search");
+    return;
+  }
+
+  clearTimeout(this.catalogSearchTimeout);
+  this.catalogSearchTimeout = setTimeout(() => {
+    console.log("Fetching materials for Catalog Number:", catalogNumber);
+
+    fetch(`/getMaterialsFromCatalog?catalogNumber=${encodeURIComponent(catalogNumber)}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Network error while fetching materials by Catalog Number.");
+        return res.json();
+      })
+      .then(data => {
+        console.log("Materials found for Catalog Number:", data);
+
+        if (!data || data.length === 0) {
+          alert(`No materials found for Catalog Number: ${catalogNumber}`);
+          if ($materialCodeDropdown.data('select2')) {
+            $materialCodeDropdown.select2('destroy');
+          }
+          $materialCodeDropdown.html('<option value="">-- No Materials Found --</option>');
+          return;
+        }
+
+        if ($materialCodeDropdown.data('select2')) {
+          $materialCodeDropdown.select2('destroy');
+        }
+
+        let options = '<option value="">-- Select Material --</option>';
+        data.forEach(mat => {
+          options += `<option value="${mat.materialCode}">${mat.materialCode}</option>`;
+        });
+
+        $materialCodeDropdown.html(options);
+
+        $materialCodeDropdown.select2({
+          placeholder: "-- Select Material --",
+          allowClear: true,
+          width: '100%'
+        });
+
+        if (data.length === 1) {
+          $materialCodeDropdown.val(data[0].materialCode).trigger('change');
+          console.log("Auto-selected single material:", data[0].materialCode);
+        }
+
+        const subRow = row.next('tr')[0];
+        if (subRow && subRow.classList.contains('sub-row')) {
+          $(subRow).show();
+          console.log("Auto-opened sub-row for Catalog Number:", catalogNumber);
+        }
+
+        alert(`✅ Found ${data.length} material(s) for Catalog Number: ${catalogNumber}`);
+      })
+      .catch(err => {
+        console.error("❌ Error fetching materials by Catalog Number:", err);
+        alert("Error fetching materials by Catalog Number. Check console or backend logs.");
+
+        if ($materialCodeDropdown.data('select2')) {
+          $materialCodeDropdown.select2('destroy');
+        }
+        $materialCodeDropdown.html('<option value="">-- Error Loading Materials --</option>');
+      });
+  }, 500); // 500ms debounce
+});
 
           // Fetch materials when user stops typing (debounce)
           clearTimeout(this.casSearchTimeout);
@@ -1044,6 +1127,11 @@ function addItemRow()
                     const mainRow = document.createElement("tr");
                     const subRow = document.createElement("tr");
          const headerDivision = document.getElementById("division").value || "";
+         const docType = document.getElementById("docType").value;
+         const isCatalogSearch = (docType === 'ZANB');
+        const searchCellHtml = isCatalogSearch
+            ? `<input type="text" class="form-control catalog-number-input" name="catalogNumberInput" placeholder="Enter Catalog Number">`
+            : `<input type="text" class="form-control cas-number-input" name="casNumberInput" placeholder="Enter CAS Number">`;
                     const headerDept = document.getElementById("department").value || "";
                     const today = new Date();
                     today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
@@ -1051,7 +1139,7 @@ function addItemRow()
                     mainRow.innerHTML = `
                         <td style="width: 70px;">${++rowCount}<input type="hidden" name="catalogHid" id="catalogHid" value=""></td>
                         <td style="width: 150px;">
-                            <input type="text" class="form-control cas-number-input" name="casNumberInput" placeholder="Enter CAS Number">
+                            ${searchCellHtml}
                         </td>
                         <td style="width: 180px;">
                             <select name="matNumber" class="form-control material-select material-code">
@@ -1137,7 +1225,7 @@ function addItemRow()
                                   </select>
                                 </div>
                                 <div class="col-md-1">
-                                    <label>pack size <span style="color: red;">*</span></label>
+                                    <label>pack size </label>
                                      <select class="form-control" name="packSize">
                                     <option value="">-- Select --</option>
                                     <option value="0">0</option>
@@ -1176,6 +1264,10 @@ function addItemRow()
                                     <option value="N">No</option>
                                 </select>
                                 </div>
+                                <div class="col-md-3">
+    <label>Item Text <span style="color: red;">*</span></label>
+    <textarea class="form-control" name="itemText" rows="2" placeholder="Enter item text" required></textarea>
+</div>
                               <div class="col-md-4 agreement-container" style="display: none;">
                                   <label>AGREEMENTS</label>
                                   <select name="agreement" class="form-control agreement-dd" disabled>
@@ -1723,6 +1815,7 @@ $.ajax({
 
         const matNumber = row.querySelector('[name="matNumber"]')?.value?.trim();
         const passThrough = subRow.querySelector('[name="passThrough"]')?.value?.trim();
+        const itemText = subRow.querySelector('[name="itemText"]')?.value?.trim();
         const wbs = subRow.querySelector('[name="wbsElement"]')?.value?.trim();
         const io = subRow.querySelector('[name="internalOrder"]')?.value?.trim();
         const network = subRow.querySelector('[name="network"]')?.value?.trim();
@@ -1733,6 +1826,7 @@ $.ajax({
 
         if (!matNumber) errors.push(`Row ${rowNum}: Material Code is required`);
         if (!passThrough) errors.push(`Row ${rowNum}: Pass Through is required`);
+        if (!itemText) errors.push(`Row ${rowNum}: Item Text is required`);
         if (!wbs && accAsmt=='P') errors.push(`Row ${rowNum}: WBS Element is required`);
         if (!io && accAsmt=='F') errors.push(`Row ${rowNum}: Internal Order  is required`);
 
@@ -1787,7 +1881,8 @@ $.ajax({
             reason: subRow.querySelector('[name="reason"]')?.value || "",
             agreement: subRow.querySelector('[name="agreement"]')?.value || "",
             aggrItem: subRow.querySelector('[name="aggrItem"]')?.value || "",
-            fixVendor: subRow.querySelector('[name="fixVendor"]')?.value || ""
+            fixVendor: subRow.querySelector('[name="fixVendor"]')?.value || "",
+            itemText: subRow.querySelector('[name="itemText"]')?.value || ""
         });
     });
 

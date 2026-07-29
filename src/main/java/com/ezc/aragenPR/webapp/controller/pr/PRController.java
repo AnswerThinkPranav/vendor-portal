@@ -3248,4 +3248,33 @@ public class PRController {
         log.debug("Found " + materials.size() + " materials for CAS Number: " + casNumber);
         return materials;
     }
+    @GetMapping("/getMaterialsFromCatalog")
+    @ResponseBody
+    public List<MaterialDto> getMaterialsFromCatalog(@RequestParam("catalogNumber") String catalogNumber) {
+        log.debug("Fetching materials for Catalog Number: " + catalogNumber);
+        String[] outputFields = null;
+        String[] queryValues = null;
+        String tabName = "";
+        String matNO = "";
+        List<MaterialDto> materials = new ArrayList<>();
+        try {
+            outputFields = new String[]{"MATNR", "ZCATNO", "ZMAN", "ZZBRAND"};
+            queryValues = new String[]{"ZCATNO EQ '" + catalogNumber + "'"};
+            tabName = "MARA";
+            List<String[]> dataList = rfcReadSAPService.readRFCTable(tabName, outputFields, queryValues);
+            if (dataList != null) {
+                for (String row[] : dataList) {
+                    matNO = row[0];
+                    MaterialDto m1 = new MaterialDto();
+                    m1.setMaterialCode(matNO);
+                    materials.add(m1);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error fetching materials from Catalog number: " + e.getMessage());
+            e.printStackTrace();
+        }
+        log.debug("Found " + materials.size() + " materials for Catalog Number: " + catalogNumber);
+        return materials;
+    }
 }

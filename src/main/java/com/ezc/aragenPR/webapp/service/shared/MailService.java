@@ -42,37 +42,36 @@ public class MailService {
     }
     public void sendPRStatusMail(EzPurchaseRequisitionHeader header, String status)
     {
-        String loggedUser="",loggedUserMail="";
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof Users) {
-                loggedUser=((Users) authentication.getPrincipal()).getUserId();
-                loggedUserMail=((Users) authentication.getPrincipal()).getEmail();
+        String userEmail = null;
+        String userName = "";
+        if (header.getCreatedBy() != null && !header.getCreatedBy().isEmpty()) {
+            Users user = userRepository.findByUserId(header.getCreatedBy());
+            if (user != null && user.getEmail() != null) {
+                userEmail = user.getEmail();
+                userName = user.getFirstName() != null ? user.getFirstName() : header.getCreatedBy();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        SimpleMailMessage message = new SimpleMailMessage();
 
+        if (userEmail == null || userEmail.isEmpty()) {
+            log.warn("No email found for PR creator: " + header.getCreatedBy());
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("sap.helpdesk@aragen.com");
-        message.setTo(loggedUserMail);
+        message.setTo(userEmail);
 
         if ("RELEASED".equalsIgnoreCase(status)) {
-
             message.setSubject("PR Released - " + header.getReqNumber());
             message.setText(
-                    "Dear User,\n\n" +
+                    "Dear " + userName + ",\n\n" +
                             "PR " + header.getReqNumber() +
                             " has been released successfully.\n\n" +
                             "Regards,\nSAP Helpdesk");
-
         } else if ("PENDING".equalsIgnoreCase(status)) {
-
-            message.setSubject("PR Pending for Approval - "
-                    + header.getReqNumber());
-
+            message.setSubject("PR Pending for Approval - " + header.getReqNumber());
             message.setText(
-                    "Dear User,\n\n" +
+                    "Dear " + userName + ",\n\n" +
                             "PR " + header.getReqNumber() +
                             " is pending for approval at your level.\n\n" +
                             "Regards,\nSAP Helpdesk");
@@ -99,7 +98,7 @@ public class MailService {
 
         helper.setFrom("sap.helpdesk@aragen.com");
         helper.setTo(loggedUserMail);
-        helper.setCc("kkakarlapudi@answerthink.com");
+        helper.setCc(new String[] { "kkakarlapudi@answerthink.com", "nagasaipranav.varanasi@answerthink.com" });
 
         helper.setSubject("PR has been created - "+header.getReqNumber());
         StringBuilder html = new StringBuilder();
@@ -186,7 +185,7 @@ public class MailService {
         html.append("</body></html>");
 
         helper.setText(html.toString(), true);
-       // mailSender.send(message);
+       mailSender.send(message);
     }
 
     public void sendSESCreationMail(EzcSESHeader header)
@@ -335,7 +334,7 @@ public class MailService {
         html.append("</body></html>");
 
         helper.setText(html.toString(), true);
-     //   mailSender.send(message);
+        mailSender.send(message);
         log.info("SES creation email sent successfully to: " + userEmail);
     }
 
@@ -367,7 +366,7 @@ public class MailService {
 
         helper.setFrom("sap.helpdesk@aragen.com");
         helper.setTo(loggedUserMail);
-        helper.setCc("kkakarlapudi@answerthink.com");
+        helper.setCc(new String[] { "kkakarlapudi@answerthink.com", "nagasaipranav.varanasi@answerthink.com" });
 
         helper.setSubject("Reservation Created Successfully - " + header.getReservationNo());
         StringBuilder html = new StringBuilder();
@@ -498,7 +497,7 @@ public class MailService {
         html.append("</body></html>");
 
         helper.setText(html.toString(), true);
-      //  mailSender.send(message);
+        mailSender.send(message);
         log.info("Reservation creation email sent successfully to: " + loggedUserMail);
     }
 
