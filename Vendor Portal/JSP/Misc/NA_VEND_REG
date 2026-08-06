@@ -1,0 +1,57 @@
+select * from ezc_cat_area_defaults where ECAD_KEY='COMPCODE' and ECAD_VALUE='7300';
+select * from ezc_cat_area_defaults where ECAD_KEY='COMPCODE' and ECAD_VALUE='7501';
+select * from ezc_cat_area_defaults where ECAD_KEY='COMPCODE' and ECAD_VALUE='9000';
+
+SELECT * FROM EZC_VALUE_MAPPING WHERE MAP_TYPE='NA_COMP';
+
+select * from ezc_cat_area_defaults where ecad_sys_key='999814';
+INSERT INTO `jublqa`.`ezc_cat_area_defaults` (`ECAD_CLIENT`, `ECAD_SYS_KEY`, `ECAD_KEY`, `ECAD_VALUE`) VALUES ('200', '999814', 'COUNTRY', 'US');
+
+select * from EZC_DEFAULTS_DESC
+INSERT INTO `jublqa`.`EZC_DEFAULTS_DESC` (`EUDD_KEY`, `EUDD_SYS_KEY`, `EUDD_LANG`, `EUDD_DEFAULTS_DESC`, `EUDD_DEFAULT_TYPE`, `EUDD_IS_MASTER`) VALUES ('COUNTRY', '999814', 'EN', 'User Country', '6', 'Y');
+
+
+Spokane  --> 7300  -->	999811
+Montreal --> 7501  -->	999813
+JDR 	 --> 9000  -->	999814 
+
+select * from EZC_WF_KEY_MAP;
+INSERT INTO `jublqa`.`EZC_WF_KEY_MAP` (`EWKM_DOC_TYPE`, `EWKM_COMP_CODE`, `EWKM_PLANT`, `EWKM_CATEGORY`, `EWKM_TEMPLATE`) VALUES ('VNR', '7501', '7501', 'ENG_SER', '3002');
+
+
+CAUNRUH		
+DNMITCHELL
+MOLSMITH
+NSINGLA
+
+Cindy.Unruh@jublcorp.com
+Doug.Osgood@jubl.com
+monica.smith@jubl.com
+Nitin.Singla@jubl.com
+====================================
+Spokane
+=========
+712216 
+
+recon --> 321101
+=======================================
+select * from ezc_users where eu_id='GRNATARAJ';
+select * from ezc_user_defaults  where eud_user_id='GRNATARAJ';
+select * from ezc_wf_pricing_conditions where EWPC_TEMPLATE='3001' order by EWPC_LEVEL;
+select * from EZC_WF_KEY_MAP where ewkm_comp_code='7300';
+select * from ezc_wf_workgroup_users where EWWU_USER='NSINGLA';
+
+select * from ezc_users where eu_id in ('MOLSMITH','GRNATARAJ','DCOSGOOD','NSINGLA','LVNUNEZ','JBJOHNSON');
+select * from ezc_users where eu_id in ('AEROS','GRNATARAJ','KMIKEROVA2','MAGUPTA','EDUVAL','CTHIBAULT');
+
+
+
+
+select * from ezc_users where eu_id in ('MOLSMITH','GRNATARAJ','DCOSGOOD','NSINGLA','LVNUNEZ','JBJOHNSON')
+select * from ezc_users where eu_id in ('AEROS','GRNATARAJ','KMIKEROVA2','MAGUPTA','EDUVAL','CTHIBAULT')
+
+========================
+
+999807  -->PORG(4500)&CC(4500)
+
+UPDATE `jublqa`.`ezc_customer_form_header` SET `ECFH_SAP_CODE` = '', `ECFH_STATUS` = 'SUBMITTED' WHERE (`ECFH_DOC_ID` = '712628');

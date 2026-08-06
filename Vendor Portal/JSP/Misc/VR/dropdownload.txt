@@ -1,0 +1,671 @@
+'PMNT_TERM', '0001', 'Within 10 days Due net', 'M', NULL, NULL
+'PMNT_TERM', '0002', 'Within 14 days 2 % cash discount Within 30 days Due net', NULL, NULL, NULL
+'PMNT_TERM', '0003', 'Within 14 days 3 % cash discount Within 20 days 2 % cash discount Within 30 days Due net', 'M', NULL, NULL
+'PMNT_TERM', '0004', 'Payable immediately Due net', 'M', NULL, NULL
+'PMNT_TERM', '0005', 'Payable immediately Due net Baseline date on 10 of next month', 'M', NULL, NULL
+'PMNT_TERM', '0006', 'Before End of the month 4 % cash discount ', NULL, NULL, NULL
+'PMNT_TERM', 'A02', '100% Advance Against Proforma', 'M', NULL, NULL
+'PMNT_TERM', 'A03', '100% Advance with Order', 'M', NULL, NULL
+'PMNT_TERM', 'A04', '100% Against Despatch Document', 'M', NULL, NULL
+'PMNT_TERM', 'A05', '100% Against BG/PBG', NULL, NULL, NULL
+'PMNT_TERM', 'BT01', '30 DAYS FROM DATE OF BT AGREEMENT', 'M', NULL, NULL
+'PMNT_TERM', 'BT02', '60 DAYS FROM DATE OF BT AGREEMENT', NULL, NULL, NULL
+'PMNT_TERM', 'BT03', '90 DAYS FROM DATE OF BT AGREEMENT', NULL, NULL, NULL
+'PMNT_TERM', 'BT04', '120 DAYS FROM DATE OF BT AGREEMENT', NULL, NULL, NULL
+'PMNT_TERM', 'BT05', '150 DAYS FROM DATE OF BT AGREEMENT', NULL, NULL, NULL
+'PMNT_TERM', 'BT06', '180 DAYS FROM DATE OF BT AGREEMENT', NULL, NULL, NULL
+'PMNT_TERM', 'C01', 'IMMDTLY FROM DATE OF MATL RECPT, SUB TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'C02', '7 DAYS FROM DATE OF MATL RECEIPT , SUB TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'C03', '15 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'C04', '30 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'C05', '45 DAYS FROM DATE OF MATL RECEPT , SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C06', '60 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C07', '90 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C08', '120 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C09', '150 DAYS FROM DATE OF MATL RECEPT, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C10', '180 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C11', '7 DAYS FROM DATE OF INVOICE , SUB TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'C12', '15 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'C13', '30 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'C14', '45 DAYS FROM DATE OF INVOICE , SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C15', '60 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C16', '90 DAYS FROM DATE OF INVOICE SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C17', '120 DAYSFROM DATE OF INVOICE, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C18', '150 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C19', '180 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C20', '75 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C21', '75 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'C30', '30 DAYS FROM AWB DATE', 'M', NULL, NULL
+'PMNT_TERM', 'C35', 'MSME-35 DAYS FROM DATE OF INVOICE', 'M', NULL, NULL
+'PMNT_TERM', 'C36', '40 days from the date of material receipt', 'M', NULL, NULL
+'PMNT_TERM', 'DA01', 'DA/DP SIGHT', NULL, NULL, NULL
+'PMNT_TERM', 'DA02', 'DA 30 DAYS FROM INVOICE DATE', 'M', NULL, NULL
+'PMNT_TERM', 'DA03', 'DA 45 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'DA04', 'DA 60 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'DA05', 'DA 90 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'DA06', 'DA 120 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'DA07', 'DA 150 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'DA08', 'DA 180 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'DA09', 'DA 15 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'DA11', 'DA 100 DAYS FROM DATE OF BL/AWB DATE', NULL, NULL, NULL
+'PMNT_TERM', 'DA12', 'DA 90 Days from date of BL/AWB date', '', '', ''
+'PMNT_TERM', 'DA13', 'DA 75 Days from date of BL/AWB date', '', '', ''
+'PMNT_TERM', 'J0', 'Payable immediately Due net', 'M', NULL, NULL
+'PMNT_TERM', 'J047', 'DA 60 DAYS FROM AWB/BL DATE', NULL, NULL, NULL
+'PMNT_TERM', 'J050', 'LC 60 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC01', 'LC SIGHT', NULL, NULL, NULL
+'PMNT_TERM', 'LC02', 'LC 30 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC03', 'LC 45 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC04', 'LC 60 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC05', 'LC 90 DAYS FROM INVOICE DATE', 'M', NULL, NULL
+'PMNT_TERM', 'LC06', 'LC 120 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC07', 'LC 150 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC08', 'LC 180 DAYS FROM INVOICE DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC09', 'LC SIGHT BT Date', NULL, NULL, NULL
+'PMNT_TERM', 'LC10', 'LC 30 DAYS FROM BT DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC11', 'LC 45 DAYS FROM BT DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC12', 'LC 60 DAYS FROM BT DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC13', 'LC 90 DAYS FROM BT DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC14', 'LC 120 DAYS FROM BT DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC15', 'LC 150 DAYS FROM BT DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC16', 'LC 180 DAYS FROM BT DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC17', 'LC 60 DAYS FROM BL/AWB DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC18', 'LC 90 DAYS FROM BL/AWB DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC19', 'LC 75 DAYS FROM BL/AWB DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC20', 'LC 120 DAYS FROM BL/AWB DATE', NULL, NULL, NULL
+'PMNT_TERM', 'LC25', 'LC 75 days from invoice date', NULL, NULL, NULL
+'PMNT_TERM', 'LC26', 'LC 90 DAYS FROM DATE OF GRN', NULL, NULL, NULL
+'PMNT_TERM', 'LC27', 'L/C 90 days from date of delivery', NULL, NULL, NULL
+'PMNT_TERM', 'MX01', '100% on COD Basis', 'M', NULL, NULL
+'PMNT_TERM', 'MX02', '100% on Completion of work', 'M', NULL, NULL
+'PMNT_TERM', 'MX03', '10%ABG+70%supply+10%ins+10%PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX04', '100% CAD Basis', 'M', '', ''
+'PMNT_TERM', 'MX05', '100% Cheque agt. delivery      ', 'M', NULL, NULL
+'PMNT_TERM', 'MX06', '15% agst BG,75% 30 days matl recpt,10% agst PBG ', NULL, NULL, NULL
+'PMNT_TERM', 'MX07', '20% agst BG,70% 30 days matl recpt,10% agst PBG ', NULL, NULL, NULL
+'PMNT_TERM', 'MX08', '20%ABG/70%-Lc60daysUsance/10%P', NULL, NULL, NULL
+'PMNT_TERM', 'MX09', '20%Adv.Ag.ABG,80+Tx-15dyFm Rp', NULL, NULL, NULL
+'PMNT_TERM', 'MX10', '25% agst BG,65% 30 days matl recpt,10% agst PBG ', NULL, NULL, NULL
+'PMNT_TERM', 'MX11', '70%30days+15%+tax Insat+15%PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX12', '80%runing Bill+10%Test+10%Hand', NULL, NULL, NULL
+'PMNT_TERM', 'MX13', '85%within 30days from dely,15%agst PBG for 3years ', NULL, NULL, NULL
+'PMNT_TERM', 'MX14', '90% within 30days from delivery, 10% against PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX15', '90% within15 days from MRN dt & 10% against PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX16', '90%order+100%tx-30day/10%PBG ', NULL, NULL, NULL
+'PMNT_TERM', 'MX17', '10% against BG, 80% against Prof Inv, 10% PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX18', '10%ABG/80%-30day del/10%ComPBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX19', '10% aginst ABG, 85% after work completion, 5% PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX20', '25% ADVANCE & 75% AGT DESP DOC', 'M', NULL, NULL
+'PMNT_TERM', 'MX21', '25%ADVANCE 75%AGAINST DESP.DOC', 'M', NULL, NULL
+'PMNT_TERM', 'MX22', '90%-15day MRN & 10% on Comm-PB', 'M', NULL, NULL
+'PMNT_TERM', 'MX23', '50% Adv. & Bal 50% after 15 day', 'M', NULL, NULL
+'PMNT_TERM', 'MX24', '95% Against work completion, 5% Performance BG', NULL, NULL, NULL
+'PMNT_TERM', 'MX25', '20%ABG/70%+Tx-15day del/10%Com', NULL, NULL, NULL
+'PMNT_TERM', 'MX26', '20%ABG/70%+Tx-agt Recpt/10%PBG', 'M', NULL, NULL
+'PMNT_TERM', 'MX27', '90%agtPI/100%Tx-15days/10%PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX28', '30% ADV AGST. ABG, 60% AGST.PI & 10% AFTER SUPPLY', 'M', NULL, NULL
+'PMNT_TERM', 'MX29', '10% ADV AGST. ABG, 90% AGST SUPPLY OF MAT', 'M', NULL, NULL
+'PMNT_TERM', 'MX30', '30% ADV AGST. PO, 70% AGST SUPPLY OF MAT', 'M', NULL, NULL
+'PMNT_TERM', 'MX31', '90% RA Bill & 10% After Completion of Job', 'M', NULL, NULL
+'PMNT_TERM', 'MX32', '25% Adv agst ABG, 65% Agst MAT 10% Agst.Comm.& PBG', 'M', NULL, NULL
+'PMNT_TERM', 'MX33', '20% AGST ABG+75% AGST MAT+5% AGST COMP & PBG (1y)', NULL, NULL, NULL
+'PMNT_TERM', 'MX34', '50% Agst. Erection+40% Agst fixing sheet+10% Comp.', NULL, NULL, NULL
+'PMNT_TERM', 'MX35', '30% ADV AGST. PO, 70% AGST SUPPLY OF SERVICE', 'M', NULL, NULL
+'PMNT_TERM', 'MX36', '20% AGST ABG+70% AGST PI+10% AGST COMP & PBG (1y)', NULL, NULL, NULL
+'PMNT_TERM', 'MX37', '20% Adv agst ABG, 70% Agst MAT 10% Agst.Comm.& HAN', NULL, NULL, NULL
+'PMNT_TERM', 'MX38', '90% LC at sight,10% against PBG for 1 year', NULL, NULL, NULL
+'PMNT_TERM', 'MX39', '50% adv with PO & bal 50% against Performa invoice', 'M', NULL, NULL
+'PMNT_TERM', 'MX40', '50% advance & 50% on completion of work', 'M', NULL, NULL
+'PMNT_TERM', 'MX41', '20%Ad.ABG,60%dlivry&10% instltn,10% PBG 1Yr', NULL, NULL, NULL
+'PMNT_TERM', 'MX42', '50% on receipt, 35% after installation, 15% PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX43', '50% after 45 days on Material receipt', NULL, NULL, NULL
+'PMNT_TERM', 'MX44', '80% Delivry of matl with in 15D & 20% aftr instltn', 'M', NULL, NULL
+'PMNT_TERM', 'MX45', '30% Adv & 70% Against P.I', 'M', NULL, NULL
+'PMNT_TERM', 'MX46', '30 Adv.Agst ABG,60%Agst Del witin15D &10% Agst PBG', 'M', NULL, NULL
+'PMNT_TERM', 'MX47', '10%Ag Agr,30%AgDR-19in,30%AgDR-19 in&30%AgDR-20', NULL, NULL, NULL
+'PMNT_TERM', 'MX48', '40% Adv,50% Befre disp aftr FAT&10% Aftr Trail Run', NULL, NULL, NULL
+'PMNT_TERM', 'MX49', '20%Aglo,30%hvac,15%Agele,15%aguti,10%agf&s&10%Agdr', '', '', ''
+'PMNT_TERM', 'MX50', '30% Adv,35% Ast Pre-Ad-Rep&35% Ast Final Ad-Report', NULL, NULL, NULL
+'PMNT_TERM', 'MX51', '20%Adv,40%Agt tenpack & 40% Agt Com-work asbui Drg', NULL, NULL, NULL
+'PMNT_TERM', 'MX52', '100% Against Completion of work within 15 Days', 'M', NULL, NULL
+'PMNT_TERM', 'MX53', '30%adhocpay-agstsub of bill&70%Agstbillcerti-30day', 'M', NULL, NULL
+'PMNT_TERM', 'MX54', '20% Adv & 80% Agst Delivery within 15 Days', 'M', NULL, NULL
+'PMNT_TERM', 'MX57', '20% Adv Asgt C.G,70%+Tx Agst Recpt & 10% Agst', NULL, NULL, NULL
+'PMNT_TERM', 'MX58', '30% Adv Agst C.G,60%+Tx Agst Recpt & 10% Agst', NULL, NULL, NULL
+'PMNT_TERM', 'MX59', '20% Adv, 70% 45 days L.C & 10% Agst PBG', 'M', NULL, NULL
+'PMNT_TERM', 'MX60', '20% Adv, 70% 90 days L.C & 10% Agst PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX61', '20% Adv, 80%  days L.C 90 days from date of delive', NULL, NULL, NULL
+'PMNT_TERM', 'MX62', '30% Adv, 40% Agst Mat-Recpt & 30% Agst Comp of Work', 'M', NULL, NULL
+'PMNT_TERM', 'MX63', '30% Adv,50% Agst P.I & 20% Agst Installation', 'M', NULL, NULL
+'PMNT_TERM', 'MX64', '30%Adv.Agst ABG,60%+Tax Agst. del imm&10% Agst.PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX65', '20%Ad Ag-BG,80%60dayusanLCatsiteagsdisdocwit1', 'M', NULL, NULL
+'PMNT_TERM', 'MX68', '30%Adv, 50% Agst Delivery & 20% Agst Instal & Comm', 'M', NULL, NULL
+'PMNT_TERM', 'MX69', '30%Adv, 50% Agst Running Bill&20% Agst Instal&Comm', 'M', NULL, NULL
+'PMNT_TERM', 'MX71', '90% within15 days from GRN dt&10% after 30D agt BG', 'M', NULL, NULL
+'PMNT_TERM', 'MX72', '90% Against work completion, 10% Performance BG ', 'M', NULL, NULL
+'PMNT_TERM', 'MX73', '20% Adv & 80% Agst FAT/P.I', 'M', NULL, NULL
+'PMNT_TERM', 'MX74', '20% Adv70% Agst Delivery & 10% Agst PBG', 'M', NULL, NULL
+'PMNT_TERM', 'MX76', '30% Ad agst.ABG,60% after FAT,10%agst.Inst W 45Day', NULL, NULL, NULL
+'PMNT_TERM', 'MX77', '90%agst. Mat.Dlv.&10%agst.Inst.or in30D frm Inv.Dt', 'M', NULL, NULL
+'PMNT_TERM', 'MX78', '90%Agt PI Aft FAT Bef Dsp&10%Agt Instl/90D Frm Dsp', 'M', NULL, NULL
+'PMNT_TERM', 'MX79', '30%Adv.Agst.ABG&Balance Agst.Fortnightly RA Bills |', 'M', NULL, NULL
+'PMNT_TERM', 'MX80', '50% Agst Deli of Mater & 50% Agst Complete Install', 'M', NULL, NULL
+'PMNT_TERM', 'MX81', '20% Adv, 70% Agst Delivery & 10% Agst Comm', 'M', NULL, NULL
+'PMNT_TERM', 'MX82', '60% Adv & 40% Agst Sub of Draft Final report', NULL, NULL, NULL
+'PMNT_TERM', 'MX83', '70%After Del. in 15D,30%Agst.Comm./45D Inv.Dt.', 'M', NULL, NULL
+'PMNT_TERM', 'MX84', '90%After Del. in 30D,10%Agst.Comm./45D Inv.Dt.', 'M', NULL, NULL
+'PMNT_TERM', 'MX86', '35%Adv,60%Agst Runbill&5% Agst PBG valid for 1 Year', NULL, NULL, NULL
+'PMNT_TERM', 'MX89', '20% Adv,70%Agst Runing Bill,5% Agst Com&5% Agst PBG', 'M', NULL, NULL
+'PMNT_TERM', 'MX90', '30%adv agnstABG,60%after Instal.&10%after Comision', 'M', NULL, NULL
+'PMNT_TERM', 'MX92', '40%Adv,30%WithinStandCont&30%30 DaysFromEOMInvoice', NULL, NULL, NULL
+'PMNT_TERM', 'MX93', '85%AgtFAT Bef Dsp&15%Agt Instl/60D From Del.', NULL, NULL, NULL
+'PMNT_TERM', 'MX94', '30%adv,60asgtP.I(FAT)10%Agt 45D From Del.', NULL, NULL, NULL
+'PMNT_TERM', 'MX95', '30%adv,50%del,10%aft ins,10% pbg', NULL, NULL, NULL
+'PMNT_TERM', 'MX96', '10% Adv, 70% AgstRun-Bill, 10% AgstMechComp & 10%AgstComm', NULL, NULL, NULL
+'PMNT_TERM', 'MX97', '30%Adv,60%Agst Runing Bill,5%Agst Com&5% Agst PBG', NULL, NULL, NULL
+'PMNT_TERM', 'MX98', '30% Adv,60%Agst Del witin30D&10%AgstPBG after Comm', NULL, NULL, NULL
+'PMNT_TERM', 'TT01', 'TT ADVANCE', 'M', NULL, NULL
+'PMNT_TERM', 'TT02', 'TT 7 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'TT03', 'TT15 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'TT04', 'TT30 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL', 'M', NULL, NULL
+'PMNT_TERM', 'TT05', 'TT45 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'TT06', 'TT60 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'TT07', 'TT90 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'TT08', 'TT120 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'TT09', 'TT150 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'TT10', 'TT180 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL', NULL, NULL, NULL
+'PMNT_TERM', 'Y001', 'Immediate payment without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'Y010', 'Net due within 10 days without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'Y015', 'Net due within 15 days without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'Y016', 'Net due within 40 days without any discount', NULL, NULL, NULL
+'PMNT_TERM', 'Y020', 'Net due in 20 days with 1% discount in 10 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y030', 'Net due in 30 days with 1% discount in 10 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y045', 'Net Due within 45 days with 4% discount on Immedia', NULL, NULL, NULL
+'PMNT_TERM', 'Y050', '50% due immediately and 50% due net 30 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y075', '75% due immediately and 25% due net 30 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y120', 'Net Due within 20 days without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'Y130', 'Net Due  in 30 days with 2% discount in 15 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y135', 'Net Due within 35 days without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'Y175', 'Net Due within 75 days without any discount', NULL, NULL, NULL
+'PMNT_TERM', 'Y220', 'Net Due in 20 days with 2% disount in 10 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y230', 'Net Due in 30 days with 2% disount in 10 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y250', 'Net Due within 50 days with 5% Discount on Immedia', NULL, NULL, NULL
+'PMNT_TERM', 'Y260', 'Net Due within 60 days without any discount', NULL, NULL, NULL
+'PMNT_TERM', 'Y330', 'Net Due within 30 days without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'Y410', 'Net Due within 30 days with 4% discount in 10 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y420', 'Net Due within 30 days with 4% discount in 20 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y445', 'Net Due within 45 days without any discount', NULL, NULL, NULL
+'PMNT_TERM', 'Y505', 'Net Due within 30 days with 5% discount in 5 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y510', 'Net Due within 30 days with 5% discount in 10 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y520', 'Net Due within 30 days with 5% discount in 20 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y521', 'Before 15 next month,2%', NULL, NULL, NULL
+'PMNT_TERM', 'Y522', 'within 14 days,2%', NULL, NULL, NULL
+'PMNT_TERM', 'Y523', 'Payable in 3 installments', NULL, NULL, NULL
+'PMNT_TERM', 'Y524', '1% 15 days,net 30', NULL, NULL, NULL
+'PMNT_TERM', 'Y525', '1% 20 days,net 30', NULL, NULL, NULL
+'PMNT_TERM', 'Y526', '1.5% 15 days,net 30', NULL, NULL, NULL
+'PMNT_TERM', 'Y527', '2% 10 days,net 30', NULL, NULL, NULL
+'PMNT_TERM', 'Y528', '2% 15 days, net 30', NULL, NULL, NULL
+'PMNT_TERM', 'Y529', '2% 30 days, net 120', NULL, NULL, NULL
+'PMNT_TERM', 'Y530', '3% 20 days,net 25', NULL, NULL, NULL
+'PMNT_TERM', 'Y531', 'Pay upon receipt', 'M', NULL, NULL
+'PMNT_TERM', 'Y532', 'Net 7 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y533', 'Net 15 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y534', 'Net 25 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y535', 'Net 45 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y536', 'Net 90 Days', NULL, NULL, NULL
+'PMNT_TERM', 'Y537', 'Net 30 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y538', 'Net 60 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y539', '3% 10 days,net 30', 'M', NULL, NULL
+'PMNT_TERM', 'Y540', '80% Advance & 20% with in 45 Days', NULL, NULL, NULL
+'PMNT_TERM', 'Y541', '2% 20 Days, Net 45', NULL, NULL, NULL
+'PMNT_TERM', 'Y542', 'Net 50 days', NULL, NULL, NULL
+'PMNT_TERM', 'Y543', '1% 10 Net 30', NULL, NULL, NULL
+'PMNT_TERM', 'Y544', 'Net 31 days', 'M', NULL, NULL
+'PMNT_TERM', 'Y545', '2% 64 Days, Net 65', NULL, NULL, NULL
+'PMNT_TERM', 'Y546', '2% 20, Net 30', NULL, NULL, NULL
+'PMNT_TERM', 'Y547', '0.5% 33 Net 34', NULL, NULL, NULL
+'PMNT_TERM', 'Y548', 'Due First of Month', 'M', NULL, NULL
+'PMNT_TERM', 'Y601', '60 days from B/L date', NULL, NULL, NULL
+'PMNT_TERM', 'Y602', '90 days from B/L date', NULL, NULL, NULL
+'PMNT_TERM', 'Y616', '30% Adv,60% Agst Running Bills & 10% Agst PBG', 'M', NULL, NULL
+'PMNT_TERM', 'YEE0', 'Immediate payment without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'YEOM', 'Net Due at the end of the month without any discou', NULL, NULL, NULL
+'PMNT_TERM', 'YINS', 'Immediate payment without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'YNT0', 'Immediate payment without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'YNT1', 'Net Due within 10 days without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'YNT5', 'Net Due within 5 days without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'YQRD', 'Immediate payment without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'YRFD', 'Immediate refund without any discount', NULL, NULL, NULL
+'PMNT_TERM', 'YTAX', 'Immediat Tax payment without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'Z015', 'Net due within 15 days without any discount', 'M', NULL, NULL
+'PMNT_TERM', 'Z025', 'Pay prior to shipment', 'M', NULL, NULL
+'PMNT_TERM', 'Z029', '2% 15 days, net 16 from date of invoice', NULL, NULL, NULL
+'PMNT_TERM', 'Z031', '2% 97 days, Net 98 days from date of invoice', NULL, NULL, NULL
+'PMNT_TERM', 'Z034', '', NULL, NULL, NULL
+'PMNT_TERM', 'Z035', '90% advance & 10% after 45 days of invoice', NULL, NULL, NULL
+'PMNT_TERM', 'Z065', 'Payable immediately Due net', 'M', NULL, NULL
+'PMNT_TERM', 'Z066', 'Free of Cost', NULL, NULL, NULL
+'PMNT_TERM', 'Z070', 'PDC 90 Days', NULL, NULL, NULL
+'PMNT_TERM', 'Z071', '40% Advnc rcpt of invoic & 60% -60 days dte invoic', NULL, NULL, NULL
+'PMNT_TERM', 'ZA01', '90 days from AWB date', NULL, NULL, NULL
+'PMNT_TERM', 'ZA02', '60 days from AWB date', NULL, NULL, NULL
+
+
+
+'CURRENCY', 'ADP', 'Peseta ', '', '', ''
+'CURRENCY', 'AED', 'Dirham ', '', '', ''
+'CURRENCY', 'AFA', 'Afghani', '', '', ''
+'CURRENCY', 'ALL', 'Lek', '', '', ''
+'CURRENCY', 'AMD', 'Dram ', '', '', ''
+'CURRENCY', 'ANG', 'W.Ind.Guilder', '', '', ''
+'CURRENCY', 'AON', 'New Kwanza ', '', '', ''
+'CURRENCY', 'ARS', 'Arg. Peso', '', '', ''
+'CURRENCY', 'ATS', 'Shilling ', '', '', ''
+'CURRENCY', 'AUD', 'Austr. Dollar', '', '', ''
+'CURRENCY', 'AUDN ', 'Austr. dollar', '', '', ''
+'CURRENCY', 'AWG', 'Aruban Guilder ', '', '', ''
+'CURRENCY', 'AZM', 'Manat', '', '', ''
+'CURRENCY', 'BAD', 'Dinar', '', '', ''
+'CURRENCY', 'BBD', 'Dollar ', '', '', ''
+'CURRENCY', 'BDT', 'Taka ', '', '', ''
+'CURRENCY', 'BEF', 'Belgian Franc', '', '', ''
+'CURRENCY', 'BGL', 'Lev', '', '', ''
+'CURRENCY', 'BHD', 'Dinar', '', '', ''
+'CURRENCY', 'BIF', 'Burundi Franc', '', '', ''
+'CURRENCY', 'BMD', 'Bermudan Dollar', '', '', ''
+'CURRENCY', 'BND', 'Dollar ', '', '', ''
+'CURRENCY', 'BOB', 'Peso ', '', '', ''
+'CURRENCY', 'BRL', 'Real ', '', '', ''
+'CURRENCY', 'BSD', 'Dollar ', '', '', ''
+'CURRENCY', 'BTN', 'Ngultrum ', '', '', ''
+'CURRENCY', 'BWP', 'Pula ', '', '', ''
+'CURRENCY', 'BYR', 'Beloruss.Ruble ', '', '', ''
+'CURRENCY', 'BZD', 'Dollar ', '', '', ''
+'CURRENCY', 'CAD', 'Canadian Dollar', '', '', ''
+'CURRENCY', 'CFP', 'Fr. Frank (Pac)', '', '', ''
+'CURRENCY', 'CHF', 'Swiss Franc', '', '', ''
+'CURRENCY', 'CLP', 'Peso ', '', '', ''
+'CURRENCY', 'CNY', 'Renmimbi ', '', '', ''
+'CURRENCY', 'COP', 'Peso ', '', '', ''
+'CURRENCY', 'CRC', 'Cost.Rica Colon', '', '', ''
+'CURRENCY', 'CUP', 'Cuban Peso ', '', '', ''
+'CURRENCY', 'CVE', 'Escudo ', '', '', ''
+'CURRENCY', 'CYP', 'Cyprus Pound ', '', '', ''
+'CURRENCY', 'CZK', 'Krona', '', '', ''
+'CURRENCY', 'DEM', 'German Mark', '', '', ''
+'CURRENCY', 'DJF', 'Djibouti Franc ', '', '', ''
+'CURRENCY', 'DKK', 'Danish Krone ', '', '', ''
+'CURRENCY', 'DOP', 'Dominican Peso ', '', '', ''
+'CURRENCY', 'DZD', 'Dinar', '', '', ''
+'CURRENCY', 'ECS', 'Sucre', '', '', ''
+'CURRENCY', 'EEK', 'Krona', '', '', ''
+'CURRENCY', 'EGP', 'Pound', '', '', ''
+'CURRENCY', 'ESP', 'Peseta ', '', '', ''
+'CURRENCY', 'ETB', 'Birr ', '', '', ''
+'CURRENCY', 'EUR', 'Euro ', '', '', ''
+'CURRENCY', 'FIM', 'Finnish Mark ', '', '', ''
+'CURRENCY', 'FJD', 'Dollar ', '', '', ''
+'CURRENCY', 'FKP', 'Falkland Pound ', '', '', ''
+'CURRENCY', 'FRF', 'French Franc ', '', '', ''
+'CURRENCY', 'GBP', 'Pound sterling ', '', '', ''
+'CURRENCY', 'GEK', 'Kupon', '', '', ''
+'CURRENCY', 'GHC', 'Cedi ', '', '', ''
+'CURRENCY', 'GIP', 'Gibraltar Pound', '', '', ''
+'CURRENCY', 'GMD', 'Dalasi ', '', '', ''
+'CURRENCY', 'GNS', 'Franc', '', '', ''
+'CURRENCY', 'GRD', 'Drachma', '', '', ''
+'CURRENCY', 'GTQ', 'Quetzal', '', '', ''
+'CURRENCY', 'GWP', 'Guinea Peso', '', '', ''
+'CURRENCY', 'GYD', 'Guyana Dollar', '', '', ''
+'CURRENCY', 'HKD', 'H.K.Dollar ', '', '', ''
+'CURRENCY', 'HNL', 'Lempira', '', '', ''
+'CURRENCY', 'HRK', 'Kuna ', '', '', ''
+'CURRENCY', 'HTG', 'Gourde ', '', '', ''
+'CURRENCY', 'HUF', 'Forint ', '', '', ''
+'CURRENCY', 'IDR', 'Rupiah ', '', '', ''
+'CURRENCY', 'IEP', 'Irish Pound', '', '', ''
+'CURRENCY', 'ILS', 'Scheckel ', '', '', ''
+'CURRENCY', 'INR', 'Rupee', '', '', ''
+'CURRENCY', 'IQD', 'Dinar', '', '', ''
+'CURRENCY', 'IRR', 'Rial ', '', '', ''
+'CURRENCY', 'ISK', 'Krona', '', '', ''
+'CURRENCY', 'ITL', 'Lire ', '', '', ''
+'CURRENCY', 'JMD', 'Jamaican Dollar', '', '', ''
+'CURRENCY', 'JOD', 'Jordanian Dinar', '', '', ''
+'CURRENCY', 'JPY', 'Yen', '', '', ''
+'CURRENCY', 'KES', 'Shilling ', '', '', ''
+'CURRENCY', 'KGS', 'Som', '', '', ''
+'CURRENCY', 'KHR', 'Riel ', '', '', ''
+'CURRENCY', 'KMF', 'Comoros Franc', '', '', ''
+'CURRENCY', 'KPW', 'N. Korean Won', '', '', ''
+'CURRENCY', 'KRW', 'S.Korean Won ', '', '', ''
+'CURRENCY', 'KWD', 'Dinar', '', '', ''
+'CURRENCY', 'KYD', 'Cayman Dollar', '', '', ''
+'CURRENCY', 'KZT', 'Tenge', '', '', ''
+'CURRENCY', 'LAK', 'Kip', '', '', ''
+'CURRENCY', 'LBP', 'Lebanese Pound ', '', '', ''
+'CURRENCY', 'LKR', 'Sri Lanka Rupee', '', '', ''
+'CURRENCY', 'LRD', 'Liberian Dollar', '', '', ''
+'CURRENCY', 'LSL', 'Loti ', '', '', ''
+'CURRENCY', 'LTL', 'Lita ', '', '', ''
+'CURRENCY', 'LUF', 'Luxembourg Fr. ', '', '', ''
+'CURRENCY', 'LVL', 'Lat', '', '', ''
+'CURRENCY', 'LYD', 'Libyan Dinar ', '', '', ''
+'CURRENCY', 'MAD', 'Dirham ', '', '', ''
+'CURRENCY', 'MDL', 'Lei', '', '', ''
+'CURRENCY', 'MGF', 'Madagascan Fr. ', '', '', ''
+'CURRENCY', 'MNT', 'Tugrik ', '', '', ''
+'CURRENCY', 'MOP', 'Pataca ', '', '', ''
+'CURRENCY', 'MRO', 'Ouguiya', '', '', ''
+'CURRENCY', 'MTL', 'Lira ', '', '', ''
+'CURRENCY', 'MUR', 'Rupee', '', '', ''
+'CURRENCY', 'MVR', 'Rufiyaa', '', '', ''
+'CURRENCY', 'MWK', 'Malawi Kwacha', '', '', ''
+'CURRENCY', 'MXN', 'Peso ', '', '', ''
+'CURRENCY', 'MYR', 'Ringgit', '', '', ''
+'CURRENCY', 'MZM', 'Metical', '', '', ''
+'CURRENCY', 'NAD', 'Namibian Dollar', '', '', ''
+'CURRENCY', 'NGN', 'Naira', '', '', ''
+'CURRENCY', 'NIC', 'Cordoba', '', '', ''
+'CURRENCY', 'NLG', 'Guilder', '', '', ''
+'CURRENCY', 'NOK', 'Norwegian Krone', '', '', ''
+'CURRENCY', 'NPR', 'Rupee', '', '', ''
+'CURRENCY', 'NZD', 'N.Zeal.Dollars ', '', '', ''
+'CURRENCY', 'OMR', 'Omani Rial ', '', '', ''
+'CURRENCY', 'PAB', 'Balboa ', '', '', ''
+'CURRENCY', 'PEN', 'New Sol', '', '', ''
+'CURRENCY', 'PGK', 'Kina ', '', '', ''
+'CURRENCY', 'PHP', 'Peso ', '', '', ''
+'CURRENCY', 'PKR', 'Rupee', '', '', ''
+'CURRENCY', 'PLN', 'Zloty', '', '', ''
+'CURRENCY', 'PTE', 'Escudo ', '', '', ''
+'CURRENCY', 'PYG', 'Guarani', '', '', ''
+'CURRENCY', 'QAR', 'Riyal', '', '', ''
+'CURRENCY', 'RMB', 'Renminbi Yuan', '', '', ''
+'CURRENCY', 'ROL', 'Lei', '', '', ''
+'CURRENCY', 'RUB', 'Rouble ', '', '', ''
+'CURRENCY', 'RUR', 'Rouble ', '', '', ''
+'CURRENCY', 'RWF', 'Franc', '', '', ''
+'CURRENCY', 'SAR', 'Riyal', '', '', ''
+'CURRENCY', 'SBD', 'Sol.Isl.Dollar ', '', '', ''
+'CURRENCY', 'SCR', 'Rupee', '', '', ''
+'CURRENCY', 'SDP', 'Pound', '', '', ''
+'CURRENCY', 'SEK', 'Swedish Krona', '', '', ''
+'CURRENCY', 'SGD', 'Sing.Dollar', '', '', ''
+'CURRENCY', 'SHP', 'St.Helena Pound', '', '', ''
+'CURRENCY', 'SIT', 'Tolar', '', '', ''
+'CURRENCY', 'SKK', 'Krona', '', '', ''
+'CURRENCY', 'SLL', 'Leone', '', '', ''
+'CURRENCY', 'SOS', 'Shilling ', '', '', ''
+'CURRENCY', 'SRG', 'Surinam Guilder', '', '', ''
+'CURRENCY', 'STD', 'Dobra', '', '', ''
+'CURRENCY', 'SUR', 'Rouble ', '', '', ''
+'CURRENCY', 'SVC', 'Colon', '', '', ''
+'CURRENCY', 'SYP', 'Syrian Pound ', '', '', ''
+'CURRENCY', 'SZL', 'Lilangeni', '', '', ''
+'CURRENCY', 'THB', 'Bhat ', '', '', ''
+'CURRENCY', 'TJR', 'Rouble ', '', '', ''
+'CURRENCY', 'TMM', 'Manat', '', '', ''
+'CURRENCY', 'TND', 'Dinar', '', '', ''
+'CURRENCY', 'TOP', 'Paanga', '', '', ''
+'CURRENCY', 'TPE', 'Timor Escudo ', '', '', ''
+'CURRENCY', 'TRL', 'Lira ', '', '', ''
+'CURRENCY', 'TTD', 'T.+ T. Dollar', '', '', ''
+'CURRENCY', 'TWD', 'Dollar ', '', '', ''
+'CURRENCY', 'TZS', 'Shilling ', '', '', ''
+'CURRENCY', 'UAH', 'Hryvnia', '', '', ''
+'CURRENCY', 'UGX', 'Shilling ', '', '', ''
+'CURRENCY', 'USD', 'US Dollar', '', '', ''
+'CURRENCY', 'USDN ', 'US Dollar', '', '', ''
+'CURRENCY', 'UYU', 'Peso ', '', '', ''
+'CURRENCY', 'VEB', 'Bolivar', '', '', ''
+'CURRENCY', 'VND', 'Dong ', '', '', ''
+'CURRENCY', 'VUV', 'Vatu ', '', '', ''
+'CURRENCY', 'WST', 'Tala ', '', '', ''
+'CURRENCY', 'XAF', 'C.f.A. Franc ', '', '', ''
+'CURRENCY', 'XCD', 'Dollar ', '', '', ''
+'CURRENCY', 'XDS', 'Dollar ', '', '', ''
+'CURRENCY', 'XEU', 'E.C.U. ', '', '', ''
+'CURRENCY', 'XOF', 'Franc', '', '', ''
+'CURRENCY', 'XPF', 'Franc', '', '', ''
+'CURRENCY', 'YER', 'Yemeni Ryal', '', '', ''
+'CURRENCY', 'ZAR', 'Rand ', '', '', ''
+'CURRENCY', 'ZMK', 'Kwacha ', '', '', ''
+'CURRENCY', 'ZRN', 'Zaire', '', '', ''
+'CURRENCY', 'ZWD', 'Zimbabwe Dollar', '', '', ''
+'DOC_TYPE', 'NB', 'Purchase Requisition', '', '', ''
+'DOC_TYPE', 'ZH01', 'JL-Stock Materials', '', '', ''
+'DOC_TYPE', 'ZH02', 'JL -Consumables/Serv', '', '', ''
+'DOC_TYPE', 'ZH03', 'JL -Asset', '', '', ''
+'DOC_TYPE', 'ZH04', 'JL -Maintenance', '', '', ''
+'DOC_TYPE', 'ZH05', 'JL-Project', '', '', ''
+'DOC_TYPE', 'ZH07', 'JL-Ext Manufacturing', '', '', ''
+'INCO_TERM', 'CFR', 'Costs and freight', '', '', ''
+'INCO_TERM', 'CIF', 'Costs, insurance & freight', '', '', ''
+'INCO_TERM', 'CIP', 'Carriage and insurance paid to', '', '', ''
+'INCO_TERM', 'CPT', 'Carriage paid to', '', '', ''
+'INCO_TERM', 'DAF', 'Delivered at frontier', '', '', ''
+'INCO_TERM', 'DAP', 'Delivered at Place', '', '', ''
+'INCO_TERM', 'DAT', 'Delivered at Terminal', '', '', ''
+'INCO_TERM', 'DDP', 'Delivered Duty Paid', '', '', ''
+'INCO_TERM', 'DDU', 'Delivered Duty Unpaid', '', '', ''
+'INCO_TERM', 'DEQ', 'Delivered ex quay (duty paid)', '', '', ''
+'INCO_TERM', 'DES', 'Delivered ex ship', '', '', ''
+'INCO_TERM', 'EXW', 'Ex Works', '', '', ''
+'INCO_TERM', 'FAS', 'Free Alongside Ship', '', '', ''
+'INCO_TERM', 'FCA', 'Free Carrier', '', '', ''
+'INCO_TERM', 'FH', 'Free house', '', '', ''
+'INCO_TERM', 'FOB', 'Free on board', '', '', ''
+'INCO_TERM', 'FOR', 'Free on Road', '', '', ''
+'INCO_TERM', 'P08', 'Delivery in one day', '', '', ''
+'INCO_TERM', 'RSH', 'Courier patient order not mail', '', '', ''
+'INCO_TERM', 'UN', 'Not Free', '', '', ''
+
+
+
+'COUNTRY', 'AD', 'Andorra', '', '', ''
+'COUNTRY', 'AE', 'Utd.Arab.Emir. ', '', '', ''
+'COUNTRY', 'AF', 'Afghanistan ', '', '', ''
+'COUNTRY', 'AG', 'Antigua/Barbads', '', '', ''
+'COUNTRY', 'AI', 'Anguilla ', '', '', ''
+'COUNTRY', 'AL', 'Albania', '', '', ''
+'COUNTRY', 'AM', 'Armenia', '', '', ''
+'COUNTRY', 'AN', 'Dutch Antilles ', '', '', ''
+'COUNTRY', 'AO', 'Angola ', '', '', ''
+'COUNTRY', 'AQ', 'Antarctica  ', '', '', ''
+'COUNTRY', 'AR', 'Argentina', '', '', ''
+'COUNTRY', 'AS', 'Samoa,American ', '', '', ''
+'COUNTRY', 'AT', 'Austria', '', '', ''
+'COUNTRY', 'AU', 'Australia', '', '', ''
+'COUNTRY', 'AW', 'Aruba  ', '', '', ''
+'COUNTRY', 'AZ', 'Azerbaijan  ', '', '', ''
+'COUNTRY', 'BA', 'Bosnia-Herz.', '', '', ''
+'COUNTRY', 'BB', 'Barbados ', '', '', ''
+'COUNTRY', 'BD', 'Bangladesh  ', '', '', ''
+'COUNTRY', 'BE', 'Belgium', '', '', ''
+'COUNTRY', 'BF', 'Burkina-Faso', '', '', ''
+'COUNTRY', 'BG', 'Bulgaria ', '', '', ''
+'COUNTRY', 'BH', 'Bharain', '', '', ''
+'COUNTRY', 'BI', 'Burundi', '', '', ''
+'COUNTRY', 'BJ', 'Benin  ', '', '', ''
+'COUNTRY', 'BM', 'Bermuda', '', '', ''
+'COUNTRY', 'BN', 'Brunei Dar-es-S', '', '', ''
+'COUNTRY', 'BO', 'Bolivia', '', '', ''
+'COUNTRY', 'BR', 'Brazil ', '', '', ''
+'COUNTRY', 'BS', 'Bahamas', '', '', ''
+'COUNTRY', 'BT', 'Bhutan ', '', '', ''
+'COUNTRY', 'BV', 'Bouvet Island  ', '', '', ''
+'COUNTRY', 'BW', 'Botswana ', '', '', ''
+'COUNTRY', 'BY', 'White Russia', '', '', ''
+'COUNTRY', 'BZ', 'Belize ', '', '', ''
+'COUNTRY', 'CA', 'Canada ', '', '', ''
+'COUNTRY', 'CC', 'Coconut Islands', '', '', ''
+'COUNTRY', 'CF', 'Central Afr.Rep', '', '', ''
+'COUNTRY', 'CG', 'Congo  ', '', '', ''
+'COUNTRY', 'CH', 'Switzerland ', '', '', ''
+'COUNTRY', 'CI', 'Ivory Coast ', '', '', ''
+'COUNTRY', 'CK', 'Cook Islands', '', '', ''
+'COUNTRY', 'CL', 'Chile  ', '', '', ''
+'COUNTRY', 'CM', 'Cameroon ', '', '', ''
+'COUNTRY', 'CN', 'China  ', '', '', ''
+'COUNTRY', 'CO', 'Columbia ', '', '', ''
+'COUNTRY', 'CR', 'Costa Rica  ', '', '', ''
+'COUNTRY', 'CU', 'Cuba', '', '', ''
+'COUNTRY', 'CV', 'Cape Verde  ', '', '', ''
+'COUNTRY', 'CX', 'Christmas Islnd', '', '', ''
+'COUNTRY', 'CY', 'Cyprus ', '', '', ''
+'COUNTRY', 'CZ', 'Czech Republic ', '', '', ''
+'COUNTRY', 'DE', 'Germany', '', '', ''
+'COUNTRY', 'DJ', 'Djibouti ', '', '', ''
+'COUNTRY', 'DK', 'Denmark', '', '', ''
+'COUNTRY', 'DM', 'Dominica ', '', '', ''
+'COUNTRY', 'DO', 'Dominican Rep. ', '', '', ''
+'COUNTRY', 'DZ', 'Algeria', '', '', ''
+'COUNTRY', 'EC', 'Ecuador', '', '', ''
+'COUNTRY', 'EE', 'Estonia', '', '', ''
+'COUNTRY', 'EG', 'Egypt  ', '', '', ''
+'COUNTRY', 'EH', 'West Sahara ', '', '', ''
+'COUNTRY', 'ER', 'Eritrea', '', '', ''
+'COUNTRY', 'ES', 'Spain  ', '', '', ''
+'COUNTRY', 'ET', 'Ethiopia ', '', '', ''
+'COUNTRY', 'FI', 'Finland', '', '', ''
+'COUNTRY', 'FJ', 'Fiji', '', '', ''
+'COUNTRY', 'FK', 'Falkland Islnds', '', '', ''
+'COUNTRY', 'FM', 'Micronesia  ', '', '', ''
+'COUNTRY', 'FO', 'Faeroe ', '', '', ''
+'COUNTRY', 'FR', 'France ', '', '', ''
+'COUNTRY', 'GA', 'Gabon  ', '', '', ''
+'COUNTRY', 'GB', 'United Kingdom ', '', '', ''
+'COUNTRY', 'GD', 'Grenada', '', '', ''
+'COUNTRY', 'GE', 'Georgia', '', '', ''
+'COUNTRY', 'GF', 'French Guinea  ', '', '', ''
+'COUNTRY', 'GH', 'Ghana  ', '', '', ''
+'COUNTRY', 'GI', 'Gibraltar', '', '', ''
+'COUNTRY', 'GL', 'Greenland', '', '', ''
+'COUNTRY', 'GM', 'Gambia ', '', '', ''
+'COUNTRY', 'GN', 'Guinea ', '', '', ''
+'COUNTRY', 'GP', 'Guadeloupe  ', '', '', ''
+'COUNTRY', 'GQ', 'Equatorial Guin', '', '', ''
+'COUNTRY', 'GR', 'Greece ', '', '', ''
+'COUNTRY', 'GS', 'Sth Sandwich Is', '', '', ''
+'COUNTRY', 'GT', 'Guatemala', '', '', ''
+'COUNTRY', 'GU', 'Guam', '', '', ''
+'COUNTRY', 'GW', 'Guinea-Bissau  ', '', '', ''
+'COUNTRY', 'GY', 'Guyana ', '', '', ''
+'COUNTRY', 'HK', 'Hong Kong', '', '', ''
+'COUNTRY', 'HM', 'Heard/McDon.Isl', '', '', ''
+'COUNTRY', 'HN', 'Honduras ', '', '', ''
+'COUNTRY', 'HR', 'Croatia', '', '', ''
+'COUNTRY', 'HT', 'Haiti  ', '', '', ''
+'COUNTRY', 'HU', 'Hungary', '', '', ''
+'COUNTRY', 'ID', 'Indonesia', '', '', ''
+'COUNTRY', 'IE', 'Ireland', '', '', ''
+'COUNTRY', 'IL', 'Israel ', '', '', ''
+'COUNTRY', 'IN', 'India  ', '', '', ''
+'COUNTRY', 'IO', 'Brit.Ind.Oc.Ter', '', '', ''
+'COUNTRY', 'IQ', 'Iraq', '', '', ''
+'COUNTRY', 'IR', 'Iran', '', '', ''
+'COUNTRY', 'IS', 'Iceland', '', '', ''
+'COUNTRY', 'IT', 'Italy  ', '', '', ''
+'COUNTRY', 'JM', 'Jamaica', '', '', ''
+'COUNTRY', 'JO', 'Jordan ', '', '', ''
+'COUNTRY', 'JP', 'Japan  ', '', '', ''
+'COUNTRY', 'KE', 'Kenya  ', '', '', ''
+'COUNTRY', 'KG', 'Kirghistan  ', '', '', ''
+'COUNTRY', 'KH', 'Cambodia ', '', '', ''
+'COUNTRY', 'KI', 'Kiribati ', '', '', ''
+'COUNTRY', 'KM', 'Comoro ', '', '', ''
+'COUNTRY', 'KN', 'St Kitts&Nevis ', '', '', ''
+'COUNTRY', 'KP', 'North Korea ', '', '', ''
+'COUNTRY', 'KR', 'South Korea ', '', '', ''
+'COUNTRY', 'KW', 'Kuwait ', '', '', ''
+'COUNTRY', 'KY', 'Cayman Islands ', '', '', ''
+'COUNTRY', 'KZ', 'Kazakhstan  ', '', '', ''
+'COUNTRY', 'LA', 'Laos', '', '', ''
+'COUNTRY', 'LB', 'Lebanon', '', '', ''
+'COUNTRY', 'LC', 'St. Lucia', '', '', ''
+'COUNTRY', 'LI', 'Liechtenstein  ', '', '', ''
+'COUNTRY', 'LK', 'Sri Lanka', '', '', ''
+'COUNTRY', 'LR', 'Liberia', '', '', ''
+'COUNTRY', 'LS', 'Lesotho', '', '', ''
+'COUNTRY', 'LT', 'Lithuania', '', '', ''
+'COUNTRY', 'LU', 'Luxembourg  ', '', '', ''
+'COUNTRY', 'LV', 'Latvia ', '', '', ''
+'COUNTRY', 'LY', 'Libya  ', '', '', ''
+'COUNTRY', 'MA', 'Morocco', '', '', ''
+'COUNTRY', 'MC', 'Monaco ', '', '', ''
+'COUNTRY', 'MD', 'Moldavia ', '', '', ''
+'COUNTRY', 'MG', 'Madagascar  ', '', '', ''
+'COUNTRY', 'MH', 'Marshall Islnds', '', '', ''
+'COUNTRY', 'MK', 'Macedonia', '', '', ''
+'COUNTRY', 'ML', 'Mali', '', '', ''
+'COUNTRY', 'MM', 'Myanmar', '', '', ''
+'COUNTRY', 'MN', 'Mongolia ', '', '', ''
+'COUNTRY', 'MO', 'Macau  ', '', '', ''
+'COUNTRY', 'MP', 'N.Mariana Islnd', '', '', ''
+'COUNTRY', 'MQ', 'Martinique  ', '', '', ''
+'COUNTRY', 'MR', 'Mauretania  ', '', '', ''
+'COUNTRY', 'MS', 'Montserrat  ', '', '', ''
+'COUNTRY', 'MT', 'Malta  ', '', '', ''
+'COUNTRY', 'MU', 'Mauritius', '', '', ''
+'COUNTRY', 'MV', 'Maldives ', '', '', ''
+'COUNTRY', 'MW', 'Malawi ', '', '', ''
+'COUNTRY', 'MX', 'Mexico ', '', '', ''
+'COUNTRY', 'MY', 'Malaysia ', '', '', ''
+'COUNTRY', 'MZ', 'Mozambique  ', '', '', ''
+'COUNTRY', 'NA', 'Namibia', '', '', ''
+'COUNTRY', 'NC', 'New Caledonia  ', '', '', ''
+'COUNTRY', 'NE', 'Niger  ', '', '', ''
+'COUNTRY', 'NF', 'Norfolk Island ', '', '', ''
+'COUNTRY', 'NG', 'Nigeria', '', '', ''
+'COUNTRY', 'NI', 'Nicaragua', '', '', ''
+'COUNTRY', 'NL', 'Netherlands ', '', '', ''
+'COUNTRY', 'NO', 'Norway ', '', '', ''
+'COUNTRY', 'NP', 'Nepal  ', '', '', ''
+'COUNTRY', 'NR', 'Nauru  ', '', '', ''
+'COUNTRY', 'NU', 'Niue Islands', '', '', ''
+'COUNTRY', 'NZ', 'New Zealand ', '', '', ''
+'COUNTRY', 'OM', 'Oman', '', '', ''
+'COUNTRY', 'PA', 'Panama ', '', '', ''
+'COUNTRY', 'PE', 'Peru', '', '', ''
+'COUNTRY', 'PF', 'Frenc.Polynesia', '', '', ''
+'COUNTRY', 'PG', 'Pap. New Guinea', '', '', ''
+'COUNTRY', 'PH', 'Philippines ', '', '', ''
+'COUNTRY', 'PK', 'Pakistan ', '', '', ''
+'COUNTRY', 'PL', 'Poland ', '', '', ''
+'COUNTRY', 'PM', 'St.Pier,Miquel.', '', '', ''
+'COUNTRY', 'PN', 'Pitcairn Islnds', '', '', ''
+'COUNTRY', 'PR', 'Puerto Rico ', '', '', ''
+'COUNTRY', 'PT', 'Portugal ', '', '', ''
+'COUNTRY', 'PW', 'Palau  ', '', '', ''
+'COUNTRY', 'PY', 'Paraguay ', '', '', ''
+'COUNTRY', 'QA', 'Qatar  ', '', '', ''
+'COUNTRY', 'RE', 'Reunion', '', '', ''
+'COUNTRY', 'RO', 'Rumania', '', '', ''
+'COUNTRY', 'RU', 'Russian Fed.', '', '', ''
+'COUNTRY', 'RW', 'Rwanda ', '', '', ''
+'COUNTRY', 'SA', 'Saudi Arabia', '', '', ''
+'COUNTRY', 'SB', 'Solomon Islands', '', '', ''
+'COUNTRY', 'SC', 'Seychelles  ', '', '', ''
+'COUNTRY', 'SD', 'Sudan  ', '', '', ''
+'COUNTRY', 'SE', 'Sweden ', '', '', ''
+'COUNTRY', 'SG', 'Singapore', '', '', ''
+'COUNTRY', 'SH', 'St. Helena  ', '', '', ''
+'COUNTRY', 'SI', 'Slovenia ', '', '', ''
+'COUNTRY', 'SJ', 'Svalbard ', '', '', ''
+'COUNTRY', 'SK', 'Slovakia ', '', '', ''
+'COUNTRY', 'SL', 'Sierra Leone', '', '', ''
+'COUNTRY', 'SM', 'San Marino  ', '', '', ''
+'COUNTRY', 'SN', 'Senegal', '', '', ''
+'COUNTRY', 'SO', 'Somalia', '', '', ''
+'COUNTRY', 'SR', 'Suriname ', '', '', ''
+'COUNTRY', 'ST', 'S.Tome,Principe', '', '', ''
+'COUNTRY', 'STL  ', 'stateless', '', '', ''
+
+
+countries
+
+
+
+

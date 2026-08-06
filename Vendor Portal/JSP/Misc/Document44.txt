@@ -1,0 +1,27 @@
+<option value="A5" >Pudukottai --A5</option>
+<option value="A6" >TN-EID-Others --A6</option>
+<option value="A7" >Trichy--A7</option>
+<option value="ARP" >Arunachal Pradesh--ARP</option>*****
+<option value="BT" >Bhutan--BT</option>
+<option value="CD" >Chandigarh --CD</option>*********CH
+<option value="CH" >Chattisgargh--CH</option>**********CT
+<option value="DEL" >Delhi--DEL</option>*********DL
+<option value="DH" >Dadra, Nagarhaveli--DH</option>*********DN
+<option value="GDD" >Goa, Daman & Diu --GDD</option>*******DD/GA
+himachal pradesh
+<option value="JHA" selected>Jharkand--JHA</option>********JH
+<option value="KAR" >Karnataka--KAR</option>**********KA
+<option value="KER" >Kerala--KER</option>**********KL
+<option value="LAK" >Lakshadweep--LAK</option>********LD
+<option value="MAH" >Maharashtra--MAH</option>**********MH
+<option value="MEG" >Meghalaya--MEG</option>*********ME
+<option value="MNP" >Manipur --MNP</option>********MN
+<option value="MZ" >Mizoram --MZ</option>*********MI
+<option value="NG" >Nagaland--NG</option>********NL
+<option value="NP" >Nepal--NP</option>
+<option value="TG" >Telangana--TG</option>******TS
+<option value="TRP" >Tripura --TRP</option>*******TR
+<option value="UTR" >Uttranchal --UTR</option>
+uttarachand
+
+

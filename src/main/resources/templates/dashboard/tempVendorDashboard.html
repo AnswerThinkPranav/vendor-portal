@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <title>Vendor Dashboard</title>
+    <link rel="shortcut icon" type="image/png"
+          th:href="@{/resources/images/logo.png}" />
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+
+        <!-- legacy Vendor Portal ezWelcomeTempUser.jsp (temp vendor dashboard, EU_TYPE=4).
+             RFQ tiles only show when ALLOW_RFQ='Y' and the registration tile only when
+             ALLOW_REG='Y', mirroring the legacy session flags - now read from
+             UserSessionContext (set by PostLoginSessionSetupService at login) instead of
+             raw HttpSession attributes. Counts are placeholders from
+             IVendorPortalDashboardService until wired up piece by piece. -->
+        <div class="row">
+            <div class="col-lg-3 col-6" th:if="${allowRfq}">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 th:text="${rfqToQuote}"></h3>
+                        <p>RFQ(s) To Quote</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-newspaper-o"></i>
+                    </div>
+                    <a href="/rfq/list?type=New" class="small-box-footer">More info <i
+                            class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6" th:if="${allowRfq}">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 th:text="${rfqToRequote}"></h3>
+                        <p>RFQ(s) To Requote</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-newspaper-o"></i>
+                    </div>
+                    <a href="/rfq/list?type=Req" class="small-box-footer">More info <i
+                            class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6" th:if="${allowReg}">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>&nbsp;</h3>
+                        <p>Complete Vendor Registration</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-file-text-o"></i>
+                    </div>
+                    <a href="/vendorReg/new" class="small-box-footer">Click Here <i
+                            class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+        </div><!--row  close-->
+
+        <div class="row" th:if="${!allowRfq and !allowReg}">
+            <div class="col-12">
+                <p class="text-muted">No actions available for this account yet.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

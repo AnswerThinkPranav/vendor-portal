@@ -1,0 +1,65 @@
+PurOrg --> Plant Mapping
+
+Main Contact --> MOre than One
+
+IFSC code check
+
+mail sent @ block
+
+MObile & Pin Code valiadtion
+
+=======================================================
+
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezTempUserCreation.jsp
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezAddTempUser.jsp
+
+
+
+CREATE TABLE `ezc_customer_form_header` (
+  `ECFH_DOC_ID` varchar(10) NOT NULL,
+  `ECFH_SALES_ORG` varchar(5) DEFAULT NULL,
+  `ECFH_CUST_NAME` varchar(50) DEFAULT NULL,
+  `ECFH_CREATED_BY` varchar(10) DEFAULT NULL,
+  `ECFH_CREATED_ON` date DEFAULT NULL,
+  `ECFH_MODIFIED_BY` varchar(10) DEFAULT NULL,
+  `ECFH_MODIFIED_ON` date DEFAULT NULL,
+  `ECFH_SAP_CODE` varchar(10) DEFAULT NULL,
+  `ECFH_STATUS` varchar(15) DEFAULT NULL,
+  `ECFH_EXT1` varchar(100) DEFAULT NULL,
+  `ECFH_EXT2` varchar(40) DEFAULT NULL,
+  `ECFH_EXT3` varchar(10) DEFAULT NULL,
+  `ECFH_NEXT_PARTICIPANT` varchar(100) DEFAULT NULL,
+  `ECFH_MASTER_TYPE` varchar(1) DEFAULT NULL,
+  `ECFH_PAN_NO` varchar(15) DEFAULT NULL,
+  `ECFH_VEN_GRP` varchar(10) DEFAULT NULL,
+  `ECFH_VEN_TYPE` varchar(3) DEFAULT NULL,
+  `ECFH_PLANT` varchar(5) DEFAULT NULL,
+  `ECFH_CATEGORY` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`ECFH_DOC_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `ezc_customer_form_details` (
+  `ECFD_DOC_ID` varchar(10) DEFAULT NULL,
+  `ECFD_FIELD` varchar(20) DEFAULT NULL,
+  `ECFD_VALUE` varchar(100) DEFAULT NULL,
+  `ECFD_TAB_NAME` varchar(20) DEFAULT NULL,
+  `ECFD_EXT1` varchar(10) DEFAULT NULL,
+  `ECFD_EXT2` varchar(10) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+=========================================
+
+SELECT ECFH_SAP_CODE,ECFH_DOC_ID,ECFH_CUST_NAME,ECFH_SALES_ORG,ECFH_CREATED_BY,ECFH_EXT1,EWDHH_CREATED_ON,EWDHH_MODIFIED_ON,EWDHH_CREATED_BY,
+EWDHH_WF_STATUS,EWDHH_NEXT_PARTICIPANT,NEXT_PART FROM  EZC_CUSTOMER_FORM_HEADER A INNER JOIN EZC_WF_DOC_HISTORY_HEADER B ON A.ECFH_DOC_ID=B.EWDHH_DOC_ID 
+LEFT OUTER JOIN (SELECT EWWU_GROUP,GROUP_CONCAT(CONCAT(EU_ID,'[',EU_FIRST_NAME,']')) AS NEXT_PART  FROM EZC_WF_WORKGROUP_USERS,EZC_USERS WHERE 
+EWWU_USER=EU_ID  AND EWWU_USER IN (SELECT EUDKV_USER_ID FROM EZC_USER_DEF_KEY_VALUES WHERE EUDKV_KEY='CATEGORY' AND
+EUDKV_VALUE IN ('3001#ENG_SER','3001#EXT_MFG','3001#LOG','3001#RM_PM')) GROUP BY EWWU_GROUP) AS C ON B.EWDHH_NEXT_PARTICIPANT=C.EWWU_GROUP  
+WHERE CONCAT(A.ECFH_PLANT,'#',A.ECFH_CATEGORY) IN ('3001#ENG_SER','3001#EXT_MFG','3001#LOG','3001#RM_PM') AND A.ECFH_VEN_TYPE IN ('IN') 
+AND B.EWDHH_WF_STATUS IN ('APPROVED') AND B.EWDHH_CREATED_ON BETWEEN STR_TO_DATE('01/04/2021 12:01','%d/%m/%Y %H:%i') AND 
+STR_TO_DATE('31/10/2022 23:59','%d/%m/%Y %H:%i');
+
+select * from ezc_customer_form_details where ecfd_field in ('gst_Number','') and  ECFD_DOC_ID in (select ECFH_DOC_ID from ezc_customer_form_header where ecfh_status='POSTED'  and ECFH_VEN_TYPE='IN' and ecfh_modified_on  BETWEEN STR_TO_DATE('01/04/2021 12:01','%d/%m/%Y %H:%i') AND 
+STR_TO_DATE('31/10/2022 23:59','%d/%m/%Y %H:%i'));

@@ -1,0 +1,110 @@
+<%@ page import ="ezc.ezparam.*,java.util.*,ezc.ezutil.*,ezc.ezvendorapp.params.*,ezc.ezpurchase.params.*" %>
+<jsp:useBean id="AppManager" class="ezc.ezvendorapp.client.EzVendorAppManager" scope="session" />
+<%@ page import="ezc.ezmisc.params.*" %>
+
+
+<%
+	String userType    = (String)session.getValue("UserType");
+	String sysKey 	 = (String) session.getValue("SYSKEY");
+	String soldTo 	 = (String) session.getValue("SOLDTO");
+	
+	
+	 	
+	if(soldTo!=null)
+		soldTo = soldTo.trim();
+%>
+<%@ include file="../../../Includes/Lib/ezSessionBean.jsp"%>
+<%@ include file="../../../Includes/JSPs/Misc/iMultiVendorDetails.jsp" %>
+<%@ include file="../../../Includes/JSPs/Purorder/iPOSyncFromSAP.jsp"%>
+<%@ include file="../../../Includes/JSPs/Misc/iSBUWelcome.jsp" %> 
+
+<Html>
+<Head>  
+	<title>The Hackett Group Home Page</title> 
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<%@include file="../../../Includes/Lib/AddButtonDir.jsp" %>
+	
+
+</Head>
+<Body bgcolor='#C7D7DE' scroll=no> 
+<Form name="myForm">
+<%
+	String display_header="Message Board";
+%>
+<%@ include file="../Misc/ezDisplayHeader.jsp"%>
+<div style="position:absolute;top:26%;left:0%;width:100%;">
+<!--a href='ezSelectCatalog.jsp' style='cursor:hand'>catalog </a-->
+<Div id='inputDiv' style='position:absolute;background-color:#FFFFFF;top:35%;width:100%;height:100%;align:center' align=center>
+<table width="100%" height="15%" border="0" cellspacing="0" cellpadding="3" align=center valign=center>
+<tr>
+<td style='background-color:#c9e0ff; text-align: center;'>
+<b><a style="color:#29385d;" href="../Purorder/ezListAcknowledgedPOs.jsp?type=NotAcknowledged"><Font size = 2>Purchase Orders to be acknowledged</Font></a>&nbsp;&nbsp;[&nbsp;<%=toBeAckPOsCount%>&nbsp;]
+</b></td>
+ <td style='background-color:#c9e0ff'>
+ <table>
+ <tr>
+ <td valign="top" style='background-color:#c9e0ff;'>
+</td><td style='background-color:#c9e0ff'><b><Font color="BLACK" size = "4">&nbsp; </b></td></tr></table>
+</td>
+</tr>
+
+<tr>
+<td style='text-align: center; background-color:#ffffff;'>
+<b><a style="color:#29385d;" href="#"><Font size = 2>Contracts to be Signed</Font></a>&nbsp;&nbsp;[&nbsp;<%=toBeSignedCONCount%>&nbsp;]</b>  </td>
+ <td style='background-color:#ffffff;'>
+ <table>                                                 
+ <td valign="top" style='background-color:#ffffff;'>
+</td><td style='background-color:#ffffff;'><b><Font color="BLACK" size = 4>&nbsp; </Font></b></td></tr></table>
+</td>
+</tr>
+
+<tr>
+<td style='background-color:#c9e0ff; text-align: center;'>
+<b><a style="color:#29385d;" href="../Rfq/ezListGenRFQs.jsp?type=ToBeQuote"><Font size = 2>RFQs to be processed</Font></a>&nbsp;&nbsp;[&nbsp;<%=toBeQuotedRFQCount%>&nbsp;]</b>
+</td>
+ <td style='background-color:#c9e0ff'>
+ <table>
+ <tr>
+ <td valign="top" style='background-color:#c9e0ff;'>
+ </td><td style='background-color:#c9e0ff;'><b><Font color="BLACK" size = 4>&nbsp; </Font></b></td></tr></table>
+</td>
+</tr>
+
+</table>
+</div>
+</div>   
+
+<div  style="position:absolute;top:58%;left:20%;width:50%"> 
+<%
+	String noOfDays = (String)session.getValue("PWDDAYS");
+	//out.println("noOfDays:"+noOfDays);
+	//noOfDays ="80";
+	ezc.ezcommon.EzLog4j.log("::noOfDays::"+noOfDays,"I");
+	int daysInt = 0;
+	try
+	{
+		daysInt = Integer.parseInt(noOfDays);
+	}
+	catch(Exception e)
+	{
+		daysInt = 0;
+		ezc.ezcommon.EzLog4j.log("::noOfDays::"+e,"I");
+	}
+	ezc.ezcommon.EzLog4j.log("::noOfDays::"+noOfDays,"I");
+
+	if(daysInt>80)
+	{
+	%>
+		<b><font color=red><marquee>"Your Password is about to expire , please change your Password"</marquee></font></b>
+	<%
+	}
+%>
+</div>
+
+
+<%@ include file="../News/ezNews.jsp"%> 
+
+</Form>
+<Div id="MenuSol"></Div>
+</Body>
+</Html>

@@ -42,6 +42,8 @@ build/
 
 app.log
 app.log.*.gz
+app-restart.log
+err.log
 
 # Server-only config — never commit
 application-prod.properties

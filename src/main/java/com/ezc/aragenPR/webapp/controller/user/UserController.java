@@ -165,7 +165,7 @@ public class UserController {
             Users user = userRepository.findByEmail(email);
             if (user == null) { resp.put("status", "NOT_FOUND"); return resp; }
             PasswordResetToken token = passwordResetTokenRepository.findByToken(otp);
-            if (token == null || token.getUser().getId() != user.getId()) {
+            if (token == null || !token.getUser().getId().equals(user.getId())) {
                 resp.put("status", "INVALID");
                 return resp;
             }
@@ -193,7 +193,7 @@ public class UserController {
             Users user = userRepository.findByEmail(email);
             if (user == null) { resp.put("status", "NOT_FOUND"); return resp; }
             PasswordResetToken token = passwordResetTokenRepository.findByToken(otp);
-            if (token == null || token.getUser().getId() != user.getId()) {
+            if (token == null || !token.getUser().getId().equals(user.getId())) {
                 resp.put("status", "INVALID");
                 return resp;
             }
@@ -332,9 +332,9 @@ public class UserController {
     }
     
     @PostMapping(value = "/deleteUser/{id}")
-    public String deleteUser(@PathVariable("id") Long id,final Locale locale, final Model model) {   
-    	
-    	Optional<Users> lv_user = iUserService.getUserByID(id); 
+    public String deleteUser(@PathVariable("id") String id,final Locale locale, final Model model) {
+
+    	Optional<Users> lv_user = iUserService.getUserByID(id);
 		Users lv_User = (Users)lv_user.get();
     	
     	Users user = new Users();
@@ -349,7 +349,7 @@ public class UserController {
     }
     
     @GetMapping(value = "/editUser/{id}")
-    public String editUser(@PathVariable("id") Long id,final Locale locale, final Model model) {   	
+    public String editUser(@PathVariable("id") String id,final Locale locale, final Model model) {
     	 List<UserRoles> roles = userDefaults.getRoles();
     	 List<UserZones> zones = userDefaults.getZones();   
       	
@@ -476,7 +476,7 @@ public class UserController {
     }
 
     @RequestMapping(value = "/changePassword", method = RequestMethod.GET)
-    public String showChangePasswordPage(final Locale locale, final Model model, @RequestParam("id") final long id, @RequestParam("token") final String token) {
+    public String showChangePasswordPage(final Locale locale, final Model model, @RequestParam("id") final String id, @RequestParam("token") final String token) {
         final String result = securityService.validatePasswordResetToken(id, token);
         if (result != null) {
             model.addAttribute("message", messages.getMessage("auth.message." + result, null, locale));

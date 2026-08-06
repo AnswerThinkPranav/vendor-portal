@@ -8,7 +8,11 @@ import com.ezc.aragenPR.webapp.model.user.Users;
 import com.ezc.aragenPR.webapp.repository.pr.EzcPRHeaderRepository;
 import com.ezc.aragenPR.webapp.repository.reservation.EzcReservationHeaderRepo;
 import com.ezc.aragenPR.webapp.repository.ses.SESRepo;
+import com.ezc.aragenPR.webapp.security.PostLoginSessionSetupService;
+import com.ezc.aragenPR.webapp.security.UserSessionContext;
 import com.ezc.aragenPR.webapp.service.pr.EzcPRHeaderService;
+import com.ezc.aragenPR.webapp.service.shared.IVendorPortalDashboardService;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -24,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -41,21 +46,15 @@ public class DashboardController {
     @Autowired
     private EzcReservationHeaderRepo resRepo;
 
+    @Autowired
+    private IVendorPortalDashboardService vendorPortalDashboardService;
+
     @GetMapping("/dashboard/*")
     public String showView(Principal principal, Authentication auth, Model model,
-                           SecurityContextHolderAwareRequestWrapper requestWrapper) {
+                           SecurityContextHolderAwareRequestWrapper requestWrapper, HttpSession session) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String plantCode = "";
         Users userObj = (Users) authentication.getPrincipal();
-        Set<UserDefaults> defaults = userObj.getUserDefaults();
-        List<String> userRoles = userObj.getRoles().stream()
-                .map(Roles::getName)
-                .toList();
-
-        ArrayList<String> userList = new ArrayList<>();
-        String loggedUser = userObj.getUserId();
-        userList.add(userObj.getUserId());
 
         model.addAttribute("userId", userObj.getUserId());
 
@@ -64,6 +63,30 @@ public class DashboardController {
                 log.debug("Role: " + authority.getAuthority());
             }
         }
+
+        Set<String> authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+
+        // EU_TYPE-derived role (see CustomUserServiceImpl.getAuthorities) picks the dashboard
+        // variant, mirroring the legacy ezBuyerWelcome.jsp / ezWelcome_New.jsp / ezWelcomeTempUser.jsp split.
+        if (authorities.contains("ROLE_VEND_SAP")) {
+            return showVendorDashboard(userObj, model);
+        }
+        if (authorities.contains("ROLE_VEND_TEMP")) {
+            return showTempVendorDashboard(userObj, model, session);
+        }
+        return showBuyerDashboard(userObj, model);
+    }
+
+    private String showBuyerDashboard(Users userObj, Model model) {
+        String plantCode = "";
+        Set<UserDefaults> defaults = userObj.getUserDefaults();
+        List<String> userRoles = userObj.getRoles().stream()
+                .map(Roles::getName)
+                .toList();
+
+        String loggedUser = userObj.getUserId();
 
         List<String> plantList = new ArrayList<>();
         if (defaults != null) {
@@ -110,7 +133,44 @@ public class DashboardController {
         model.addAttribute("releasedSES", releasedSESCnt);
         model.addAttribute("pendingSES", pendingSESCnt);
 
+        // Vendor Portal merge - QCF / RFQ / Vendor Registration tiles. See ezBuyerWelcome.jsp;
+        // counts are placeholders from IVendorPortalDashboardService until wired up piece by piece.
+        model.addAttribute("domesticRfqToAct", vendorPortalDashboardService.getDomesticRfqToActCount(loggedUser));
+        model.addAttribute("importRfqToAct", vendorPortalDashboardService.getImportRfqToActCount(loggedUser));
+        model.addAttribute("qcfPendingApproval", vendorPortalDashboardService.getQcfPendingApprovalCount(loggedUser));
+        model.addAttribute("qcfPendingPoCreation", vendorPortalDashboardService.getQcfPendingPoCreationCount(loggedUser));
+        model.addAttribute("domesticVendorPendingApproval", vendorPortalDashboardService.getDomesticVendorPendingApprovalCount(loggedUser));
+        model.addAttribute("importVendorPendingApproval", vendorPortalDashboardService.getImportVendorPendingApprovalCount(loggedUser));
+
         return "dashboard/index";
+    }
+
+    private String showVendorDashboard(Users userObj, Model model) {
+        // See ezWelcome_New.jsp (SAP vendor dashboard, EU_TYPE=3). UI only for now - counts
+        // are placeholders from IVendorPortalDashboardService until wired up piece by piece.
+        String vendorCode = userObj.getVendorCode();
+        model.addAttribute("rfqToQuote", vendorPortalDashboardService.getRfqToQuoteCount(vendorCode));
+        model.addAttribute("rfqToRequote", vendorPortalDashboardService.getRfqToRequoteCount(vendorCode));
+        return "dashboard/vendorDashboard";
+    }
+
+    private String showTempVendorDashboard(Users userObj, Model model, HttpSession session) {
+        // See ezWelcomeTempUser.jsp (temp vendor dashboard, EU_TYPE=4). Tiles are gated by
+        // ALLOW_RFQ/ALLOW_REG exactly like the legacy page, now sourced from the
+        // UserSessionContext that PostLoginSessionSetupService populates at login.
+        UserSessionContext ctx = (UserSessionContext) session.getAttribute(PostLoginSessionSetupService.SESSION_ATTRIBUTE);
+        boolean allowRfq = ctx != null && "Y".equals(ctx.getAllowRfq());
+        boolean allowReg = ctx != null && "Y".equals(ctx.getAllowReg());
+        model.addAttribute("allowRfq", allowRfq);
+        model.addAttribute("allowReg", allowReg);
+
+        if (allowRfq) {
+            String vendorCode = userObj.getVendorCode();
+            model.addAttribute("rfqToQuote", vendorPortalDashboardService.getRfqToQuoteCount(vendorCode));
+            model.addAttribute("rfqToRequote", vendorPortalDashboardService.getRfqToRequoteCount(vendorCode));
+        }
+
+        return "dashboard/tempVendorDashboard";
     }
 
     @GetMapping("/user-manuals")

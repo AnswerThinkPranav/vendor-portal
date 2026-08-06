@@ -26,6 +26,9 @@ public class CustomLoginAuthenticationSuccessHandler implements AuthenticationSu
 	@Autowired
 	ActiveUserStore activeUserStore;
 
+	@Autowired
+	PostLoginSessionSetupService postLoginSessionSetupService;
+
 	@Override
 	public void onAuthenticationSuccess(final HttpServletRequest request, final HttpServletResponse response,
 			final Authentication authentication) throws IOException {
@@ -47,6 +50,10 @@ public class CustomLoginAuthenticationSuccessHandler implements AuthenticationSu
 
 			LoggedUser user = new LoggedUser(username, activeUserStore);
 			session.setAttribute("user", user);
+
+			if (authentication.getPrincipal() instanceof Users) {
+				postLoginSessionSetupService.populate(session, (Users) authentication.getPrincipal());
+			}
 		}
 		clearAuthenticationAttributes(request);
 	}

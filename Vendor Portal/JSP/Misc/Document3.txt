@@ -1,0 +1,165 @@
+<%@ page import="ezc.ezmisc.params.*,ezc.ezparam.*,java.util.*" %>		
+<%@ include file="../../Library/Globals/errorPagePath.jsp"%>
+<%@ include file="../../../Includes/JSPs/Misc/iCacheControl.jsp" %> 
+<%@ page import ="ezc.ezparam.*,java.util.*,ezc.ezutil.*,ezc.ezvendorapp.params.*,ezc.ezpurchase.params.*,ezc.messaging.params.*" %>
+<jsp:useBean id="Session" class="ezc.session.EzSession" scope="session"></jsp:useBean>
+<jsp:useBean id="AppManager" class="ezc.ezvendorapp.client.EzVendorAppManager" scope="session" />  
+<%@ include file="ezHeader.jsp"%> 
+<%@ include file="ezGetUserAuthDefaults.jsp"%>    
+<%@ include file="ezWelcomePageCounts.jsp"%>  
+<%@ include file="../Confirmations/ezGetConfAlerts.jsp"%> 
+ 
+<%!
+	public String checkNull(String value)
+	{
+		if(value==null || "null".equals(value.trim()))value="";
+		value=value.trim();
+		
+		return value;
+	}
+%>
+
+<Head>   
+<style>
+.form-control {
+    background-color: #101317;
+}  
+</style> 
+<div class="content-wrapper">
+<section class="content-header">
+	<h1>Dashboard</h1> 
+	<ol class="breadcrumb">
+	<li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+	<li class="active">Dashboard</li>
+	</ol>
+	</section>
+	<!-- Main content -->
+	
+	<section class="content">
+	 <div class="row">
+	        <div class="col-lg-3 col-xs-6">
+	          <!-- small box -->
+	          <div class="small-box"> 
+	            <div class="inner">
+			<Center><img src="PO.jpg" width='150px' height='130px' alt="POs"></Center>
+	            </div>
+			<a href="#" class="small-box-footer">
+			<img src="arrow.gif" alt="More Info">&nbsp;&nbsp;&nbsp;Orders To Be Acknowledged
+			</a>	
+	          </div>      
+	        </div> 
+	        <!-- ./col --> 
+	        <div class="col-lg-3 col-xs-6">
+	          <!-- small box -->
+	          <div class="small-box">
+	            <div class="inner">
+	           	<Center><img src="RFQ.png" width='150px' height='130px' alt="RFQs"></Center>
+	            </div> 
+			<a href="#" class="small-box-footer">
+				<img src="arrow.gif" alt="More Info">&nbsp;&nbsp;&nbsp;Pending RFQs
+			</a>
+	          </div>
+	        </div>
+	        <!-- ./col --> 
+	        <div class="col-lg-3 col-xs-6">   
+	          <!-- small box -->
+	          <div class="small-box">
+	            <div class="inner">
+			<Center><img src="balance.jpg" width='150px' height='130px' alt="Outstanding"></Center>
+	            </div>
+	            <a href="ezVendorRequests.jsp?Status=OPEN" class="small-box-footer">
+	            	<img src="arrow.gif" alt="More Info">&nbsp;Open Vendor Profile Changes
+	            </a>
+	          </div>
+	        </div>
+	
+	        <!-- ./col -->
+	        
+	                <!-- ./col --> 
+		        <div class="col-lg-3 col-xs-6">   
+		          <!-- small box -->
+		          <div class="small-box">
+		            <div class="inner">
+				<Center><img src="Shipment.jpg" width='150px' height='130px' alt="Outstanding"></Center>
+		            </div>
+		            <a href="../Shipment/ezGetVendorShipments.jsp?status=Y" class="small-box-footer">
+		            	<img src="arrow.gif" alt="More Info"><%=shipmentsCnt%>&nbsp;To Be Approved Shipments
+		            </a>
+		          </div>
+		        </div>
+		
+	        <!-- ./col -->
+	        
+	      </div>
+      <!-- /.row -->
+
+
+	<!-- Main row -->
+	<div class="row">
+	<section class="col-lg-6 connectedSortable">
+		<div class="box box-success">
+			<div class="box-header  with-border" >
+				<h3 class="box-title"><B>&nbsp;&nbsp News</B></h3>
+			</div>
+		<div class="box-body chat" id="chat-box">
+		<p class="message">	 
+		<marquee scrollamount="2" direction="up" loop="true">
+		<center> 
+		<font color="PURPLE">
+			<strong> WELCOME <br>
+			TO <br>
+			COROMANDEL<br>
+			VENDOR PORTAL
+			</strong></font></center>
+		</marquee></p>
+		</div>
+		</div>
+
+		<div class="box box-warning">
+			<div class="box-header  with-border" >
+			<h3 class="box-title"><B>&nbsp;&nbsp Alerts</B></h3>
+			</div>
+
+		<div class="box-body chat" id="chat-box">
+<%
+		if("3".equals(userType))
+		{
+			if(getConfirmationAlertsRetObjCnt>0)
+			{
+				for(int i=0 ;i<getConfirmationAlertsRetObjCnt;i++)
+				{
+					String dispText = "Confirm Your A/C statement period from ";
+					String confId 	= getConfirmationAlertsRetObj.getFieldValueString(i,"EASCH_ID");
+					String remarks 	= getConfirmationAlertsRetObj.getFieldValueString(i,"EASCH_REMARKS");
+					String fromDateAlert	= getDateForDateObj((java.util.Date)getConfirmationAlertsRetObj.getFieldValue(i,"EASCH_FROM"));
+					String toDateAlert 	= getDateForDateObj((java.util.Date)getConfirmationAlertsRetObj.getFieldValue(i,"EASCH_TO"));
+
+					dispText 	= dispText+fromDateAlert+" to "+toDateAlert;
+%>
+
+					<p class="message">	
+						<i class="fa fa-arrow-circle-right"></i>
+						<B><a href="../Confirmations/ezGetAccStmtToConfirm.jsp?confId=<%=confId%>&fromDateAlert=<%=fromDateAlert%>&toDateAlert=<%=toDateAlert%>"><%=dispText%></B>
+					</p>
+<%
+				}
+			}
+		}
+%>
+		<br><br><br><br><br>
+		</div>
+		</div>
+	</section>
+		
+	<div class="tab-content no-padding">
+		<div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 20px;"></div>
+		</div>
+	</div>
+	</section>
+	</div>
+</section>
+</div>
+</form>
+</section><!-- /.content -->
+</Div><!-- /.content-wrapper -->  
+<%@ include file="ezFooter.jsp"%>           

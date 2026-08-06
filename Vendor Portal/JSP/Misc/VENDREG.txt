@@ -1,0 +1,78 @@
+select * from ezc_wf_key_map where ewkm_doc_type='VNR'
+select * from ezc_wf_pricing_conditions where EWPC_TEMPLATE='2001' order by EWPC_LEVEL
+========================================================================================
+TEMLATE CREATION
+=================
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (2001,1,'PUR_PERSON','PUR_PERSON','LE',0);
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (2001,2,'LEADBUYER','LEADBUYER','LE',0);
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (2001,3,'VENDAPR','VENDAPR','LE',0);
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (2001,4,'SITEFI','SITEFI','LE',0);
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (2001,5,'SCMHD','SCMHD','LE',0);
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (2001,6,'FIHEAD','FIHEAD','GE',0);
+====================================================================================
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzAdmin\EzAdmin4\Admin1\JSPs\User\ezPreQuickAddInternalVendorUser.jsp
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzAdmin\EzAdmin4\Admin1\JSPs\User\ezQuickAddInternalVendorUser.jsp
+====================================================================================
+Role --> VAR 
+
+
+select * from EZC_USER_DEF_KEY_VALUES where eudkv_user_id='PNEGI'
+select * from EZC_USER_DEF_KEY_VALUES where eudkv_user_id='ADWIVEDI'
+
+
+====================================================================================
+
+SELECT * FROM EZC_VALUE_MAPPING WHERE MAP_TYPE IN ('TEMP_USER_NR_RANGE')
+select * from ezc_users where eu_id between '711001' and '711020'
+
+====================================================================================
+
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezDesclaimerConfirm.jsp
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezGetUserAuthDefaults.jsp
+
+
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzCommon\JSPs\ezApplicationAreas.jsp
+
+			else
+			{
+				session.putValue("ValidVendorUser","Y");
+				//response.sendRedirect("ezLoginError.jsp");
+				response.sendRedirect("../../EzVendor/Vendor2/JSPs/Misc/ezDesclaimerConfirm.jsp");
+			}
+			
+=====================================================================================
+SELECT  ECFH_SAP_CODE,ECFH_DOC_ID,ECFH_SALES_ORG,EWDHH_CREATED_ON,EWDHH_MODIFIED_ON,
+EWDHH_CREATED_BY,EWDHH_WF_STATUS,EWDHH_NEXT_PARTICIPANT,NEXT_PART FROM  
+EZC_CUSTOMER_FORM_HEADER A INNER JOIN EZC_WF_DOC_HISTORY_HEADER B ON A.ECFH_DOC_ID=B.EWDHH_DOC_ID 
+LEFT OUTER JOIN (SELECT EWWU_GROUP,GROUP_CONCAT(CONCAT(EU_ID,'[',EU_FIRST_NAME,']')) AS NEXT_PART  
+FROM EZC_WF_WORKGROUP_USERS,EZC_USERS WHERE EWWU_USER=EU_ID AND TRIM(EWWU_USER) IN 
+(SELECT EUDKV_USER_ID FROM EZC_USER_DEF_KEY_VALUES WHERE EUDKV_KEY='PURORG' AND EUDKV_VALUE IN ('1001','3001')) 
+GROUP BY EWWU_GROUP) AS C ON B.EWDHH_NEXT_PARTICIPANT=C.EWWU_GROUP  WHERE A.ECFH_SALES_ORG IN ('1001','3001') 
+AND B.EWDHH_WF_STATUS IN ('SUBMITTED','REJECTED','APPROVED') AND  B.EWDHH_NEXT_PARTICIPANT IN ('PUR_PERSON','VENDAPR') 
+AND B.EWDHH_CREATED_ON BETWEEN STR_TO_DATE('01/04/2021 12:01','%d/%m/%Y %H:%i') AND 
+STR_TO_DATE('11/11/2021 23:59','%d/%m/%Y %H:%i') 
+
+
+SELECT *,(SELECT GROUP_CONCAT(CONCAT(B.EU_ID,'[',B.EU_FIRST_NAME,']')) 
+FROM EZC_WF_WORKGROUP_USERS A,EZC_USERS B WHERE A.EWWU_USER=B.EU_ID  AND A.EWWU_GROUP =EWPC_GROUP 
+AND TRIM(A.EWWU_USER) IN (SELECT EUDKV_USER_ID FROM EZC_USER_DEF_KEY_VALUES WHERE EUDKV_KEY='PURORG' 
+AND EUDKV_VALUE='1001') AND A.EWWU_USER IN (SELECT EUDKV_USER_ID FROM EZC_USER_DEF_KEY_VALUES
+) GROUP BY A.EWWU_GROUP) AS USER_STR FROM 
+EZC_WF_PRICING_CONDITIONS WHERE EWPC_TEMPLATE IN (SELECT EWKM_TEMPLATE FROM EZC_WF_KEY_MAP WHERE EWKM_COMP_CODE='5000' AND EWKM_PLANT='1001' AND EWKM_CATEGORY='VNR' AND EWKM_DOC_TYPE='VNR') ORDER BY EWPC_LEVEL
+
+
+=============================
+
+0000101521
+
+=============================
+711050
+
+=============================
+SELECT * from EZC_MASTER_KEY_VALUES where EMKV_MASTER_TYPE IN('PUR_ORG','COMP_CODE','VEN_GRP')
+
+select distinct(EMKV_MASTER_TYPE) from EZC_MASTER_KEY_VALUES
+
+--insert into EZC_MASTER_KEY_VALUES values('VEN_GRP','Z001','Suppliers- Raw Materials','','','') 
+
+====================

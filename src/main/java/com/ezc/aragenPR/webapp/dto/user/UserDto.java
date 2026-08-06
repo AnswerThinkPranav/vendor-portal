@@ -17,8 +17,8 @@ public class UserDto {
 	
 	@NotNull
     @Size(min = 1)
-    private Long id;
-	
+    private String id;
+
     @NotNull
     @Size(min = 1, message = "{Size.userDto.firstName}")
     private String firstName;
@@ -45,11 +45,11 @@ public class UserDto {
     private List<String> privilegeIds;
     private String vendorCode;
     
-    public Long getId() {
+    public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import com.ezc.aragenPR.webapp.model.user.Privilages;
 import com.ezc.aragenPR.webapp.model.user.Roles;
 import com.ezc.aragenPR.webapp.model.user.Users;
+import com.ezc.aragenPR.webapp.model.user.UserType;
 import com.ezc.aragenPR.webapp.repository.user.UserRepository;
 
 
@@ -105,6 +106,16 @@ public class CustomUserServiceImpl implements UserDetailsService  {
 			}
 			for (UserPrivilege privilege : user.getPrivileges()) {
 				roleAndPermissions.add(privilege.getDesc());
+			}
+			// Additive, coarse authority derived from the legacy EU_TYPE - gives later
+			// phases (dashboard routing) a hasRole()/hasAuthority() hook without touching Users again.
+			UserType userType = UserType.fromCode(user.getUserType());
+			if (userType != null) {
+				switch (userType) {
+					case BUYER -> roleAndPermissions.add("ROLE_BUYER");
+					case VENDOR_SAP -> roleAndPermissions.add("ROLE_VEND_SAP");
+					case VENDOR_TEMP -> roleAndPermissions.add("ROLE_VEND_TEMP");
+				}
 			}
 			String[] roleNames = new String[roleAndPermissions.size()];
 			Collection<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(roleAndPermissions.toArray(roleNames));

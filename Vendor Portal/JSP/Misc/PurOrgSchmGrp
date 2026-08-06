@@ -1,0 +1,13 @@
+pur.org		Schema Group		Description
+4101		C1			CD-Domestic Pricing Procedure
+4101		C2			CD-Import Pricing Procedure
+7300		H1			HS-Domestic Pricing Procedure
+7300		H2			HS-Import Pricing Procedure
+4500		l1			DL-Domestic Pricing Procedure
+4500		l2			DL-Import Pricing Procedure
+9000		J1			JD-Domestic Pricing Procedure
+7501		P1			DP-Domestic Pricing Procedure
+7501		P2			DP-Import Pricing Procedure
+7501		P3			DP-STO Pricing Procedure
+4150		IM			Import
+4150		IN			Local

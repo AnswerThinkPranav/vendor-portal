@@ -1,0 +1,22 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<EzPlants>
+	<EzPlant code="FENN" sbu="FENN">
+		<Name>COROMANDEL INTERNATIONAL LIMITED</Name>
+		<Address>Chennai</Address>
+		<Address1>Chennai</Address1>
+		<Address2></Address2>	
+		<Address3></Address3>
+		<Address4></Address4>
+		<Address5>Pin-600057</Address5>
+		<Range></Range>
+		<Cerno></Cerno>
+		<Division></Division>
+		<Centralexice-code></Centralexice-code>
+		<Collectorate></Collectorate>
+		<SalesTaxNo>  </SalesTaxNo>
+		<CstNo>  </CstNo>
+		<DrugLincenceNo>  </DrugLincenceNo>		
+	</EzPlant>	
+	
+	
+	</EzPlants>

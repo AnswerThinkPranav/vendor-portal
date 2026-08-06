@@ -1,0 +1,26 @@
+User Id- 10010035
+Password - cfl@2017  
+
+alter table ezc_mail_groups modify emg_from varchar(100);
+
+
+
+JNDI
+------
+Administrator
+gromor@0708
+
+UNDEPLOY name=EzCFL vendor=answerthink.com
+DEPLOY D:\ANSR\CFL_WAS\CFL\EAR\EzCFL.ear
+
+
+User "304309" created successfully with Password "DJZ8PQW0PP". cfl@2017
+User "303291" created successfully with Password "W1HW6A95QP". cfl@2017
+User "10010035" created successfully with Password "4M5MBQB01S". cfl@2017
+User "429867" created successfully with Password "HYXQU1V3GJ". cfl@2017
+User "404931" created successfully with Password "CTRDHD6Y23". cfl@2017
+330976
+406683    cfl@2017
+300815    cfl@2017
+301142    cfl@2017
+345903    cfl@2017

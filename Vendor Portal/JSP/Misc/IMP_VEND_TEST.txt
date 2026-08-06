@@ -1,0 +1,82 @@
+INSERT INTO `jublqa`.`EZC_WF_KEY_MAP` (`EWKM_DOC_TYPE`, `EWKM_COMP_CODE`, `EWKM_PLANT`, `EWKM_CATEGORY`, `EWKM_TEMPLATE`) 
+VALUES ('VNR', '4500', '3001', 'RM_PM', '2004');
+
+
+select * from ezc_wf_pricing_conditions where EWPC_TEMPLATE='2005'
+
+insert into ezc_buss_partner_areas values('200','','999800','KCOOPER','V');
+
+
+Insert into EZC_CAT_AREA_DEFAULTS (ECAD_CLIENT,ECAD_SYS_KEY,ECAD_KEY,ECAD_VALUE) values ('200','999804','COUNTRY','US');
+Insert into EZC_DEFAULTS_DESC (EUDD_KEY,EUDD_SYS_KEY,EUDD_LANG,EUDD_DEFAULTS_DESC,EUDD_DEFAULT_TYPE,EUDD_IS_MASTER) values ('COUNTRY','999804','EN','User Country','6','Y');
+
+===============================================
+select * from EZC_WF_KEY_MAP;
+
+select * from EZC_WF_PRICING_CONDITIONS where ewpc_template='1001' order by ewpc_level
+
+insert into ezc_user_def_key_values (EUDKV_USER_ID,EUDKV_SYS_KEY, EUDKV_KEY, EUDKV_VALUE) VALUES ('SCMHD','999800','PLANT','4101')
+
+insert into ezc_user_def_key_values (EUDKV_USER_ID,EUDKV_SYS_KEY, EUDKV_KEY, EUDKV_VALUE) VALUES ('SCMHD','999800','CATEGORY','4101#RM_PM')
+
+================================================
+
+4101 
+
+select * from ezc_cat_Area_defaults where ecad_value='4101' and ecad_key='COMPCODE';
+
+999801
+
+================================================
+
+select * from ezc_users where eu_id in ('KCOOPER','REVIEWER','SCMHD','FIHEAD');
+--update ezc_users set eu_email='karen.cooper@jubl.com' where eu_id in ('KCOOPER','REVIEWER','SCMHD','FIHEAD');
+
+hchowdary@answerthink.com
+
+karen.cooper@jubl.com
+
+================================================
+
+711886
+
+711888
+
+4500 --> 08701
+================================
+
+711888	4101  
+
+ZIP Code: K9V 0A0
+
+Recon -->  CO --> 322025
+
+==============================
+711892	4500
+
+ZIP Code: 08701
+
+Recon -->  CO --> 321101
+
+
+==================================================
+DWARNER		N	Don Warner			Don.Warner@jubl.com		04/12/2023	04/12/2023	EZCADMIN	01/31/01	16:03:19	05/01/2023	h?q}B)j)6~p@K@y;	2	0	20041	N		null
+EKROENCKE	N	Eric Kroencke			Eric.Kroencke@jubl.com		01/23/2023	01/23/2023	EZCADMIN	01/31/01	18:25:52	05/01/2023	h?q}B)j)6~p@K@y;	2	0	20041	N		null
+GTUTEJA		N	Gagan Tuteja			Gagan_Tuteja@jubl.com		01/20/2023	01/20/2023	EZCADMIN	01/31/01	16:03:37	05/01/2023	h?q}B)j)6~p@K@y;	2	0	20041	N		null
+JTWIETMEYE	N	Jonathan Twietmeyer		jonathan.twietmeyer@jubl.com	04/12/2023	04/12/2023	EZCADMIN	01/31/01	11:43:36	04/28/2023	s@I^I^I^L-n|y^m,w-r;d%S*e$g=m!	2	0	20041	N		null
+SSHRIVASTA	N	Shubhrata Shrivastava		Shubhrata.Shrivastava@jubl.com	01/23/2023	01/23/2023	EZCADMIN	01/31/01	20:49:47	04/12/2023	h?q}B)j)6~p@K@y;	2	0	20041	N		null
+SVANHEESBE	N	Scott VanHeesbeke		Scott.VanHeesbeke@jubl.com	01/20/2023	01/20/2023	EZCADMIN	01/31/01	21:01:40	04/12/2023	h?q}B)j)6~p@K@y;	2	0	20041	N		null
+																		
+																		
+==================================================
+
+4500:
+
+Ref: 303373	
+CA		
+LAVAL				
+Recon --> 321103
+
+
+
+712499

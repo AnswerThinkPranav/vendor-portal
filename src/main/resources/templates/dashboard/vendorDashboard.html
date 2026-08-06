@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <title>Vendor Dashboard</title>
+    <link rel="shortcut icon" type="image/png"
+          th:href="@{/resources/images/logo.png}" />
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+
+        <!-- RFQ - legacy Vendor Portal ezWelcome_New.jsp (SAP vendor dashboard, EU_TYPE=3).
+             Counts are placeholders from IVendorPortalDashboardService until wired up piece by piece. -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 th:text="${rfqToQuote}"></h3>
+                        <p>RFQ(s) To Quote</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-newspaper-o"></i>
+                    </div>
+                    <a href="/rfq/list?type=New" class="small-box-footer">More info <i
+                            class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 th:text="${rfqToRequote}"></h3>
+                        <p>RFQ(s) To Requote</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-newspaper-o"></i>
+                    </div>
+                    <a href="/rfq/list?type=Req" class="small-box-footer">More info <i
+                            class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+        </div><!--row  close-->
+
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+
+<%@ page import="java.util.*" %>
+<html>
+<head>
+</head>
+<body>
+
+<%
+
+Map<String, String> hashMap = new HashMap<String, String> ();
+hashMap.put("4101", "316120-->ICD LOAN TAKEN-INTER COMPANY,321103-->SUPPLIERS-GENERAL,321106-->SUPPLIERS-CAPITAL,321109-->EMPLOYEES PAYABLE-Up,321176-->ADVANCE FROM CUSTOMER,321179-->ADVANCE-CAPITAL,321187-->ACCOUNTS PAYABLE-TRADE-INTER CO,322025-->ACCOUNTS PAYABLE-OTHER-INTER CO,332916-->INTEREST ACCURED PAYABLE INTER CO,540104-->SECURITY DEPOSIT,630102-->ADVANCE TO SUPPLIERS,63020-->OTHER PAYABLES-CUSTOMERS");
+hashMap.put("7300", "316101-->INTER COMPANY LIABILITY,316120-->ICD LOAN TAKEN-INTER COMPANY,321101-->SUPPLIERS-RAW MATERIAL,321102-->SUPPLIERS PACKAGING MATERIAL,321103-->SUPPLIERS-GENERAL,321104-->SUPPLIERS-CONTRACTOR,321105-->SUPPLIERS-TRANSPORTER,321106-->SUPPLIERS-CAPITAL,321107-->SUPPLIERS-CAPITAL CONTRACTOR,321108-->SUPPLIERS-STORE SPARES,321109-->EMPLOYEES PAYYABLE Up,321179-->ADVANCE-CAPITAL,321187-->ACCOUNTS PAYABLE-TRADE-INTER CO,322025-->ACCOUNTS PAYABLE-OTHER-INTER CO,630102-->ADVANCE TO SUPPLIERS");
+hashMap.put("9000", "316101-->INTER COMPANY LIABILITY,321101-->SUPPLIERS-RAW MATERIAL,321103-->SUPPLIERS-GENERAL,321106-->SUPPLIERS-CAPITAL,321109-->EMPLOYEES PAYYABLE Up,321187-->ACCOUNTS PAYABLE-TRADE-INTER CO,322025-->ACCOUNTS PAYABLE-OTHER-INTER CO,540104-->SECURITY DEPOSIT,630102-->ADVANCE TO SUPPLIERS,651010-->STAFF-ADVANCE-TRAVEL,652701-->ADVANCE-CAPITAL");
+hashMap.put("7501", "316101-->INTER COMPANY LIABILITY,316120-->ICD LOAN TAKEN-INTER COMPANY,321101-->SUPPLIERS-RAW MATERIAL,321102-->SUPPLIERS PACKAGING MATERIAL,321103-->SUPPLIERS-GENERAL,321104-->SUPPLIERS-CONTRACTOR,321105-->SUPPLIERS-TRANSPORTER,321106-->SUPPLIERS-CAPITAL,321107-->SUPPLIERS-CAPITAL CONTRACTOR,321108-->SUPPLIERS-STORE SPARES,321109-->EMPLOYEES PAYYABLE Up,322025-->ACCOUNTS PAYABLE-OTHER-INTER CO,630102-->ADVANCE TO SUPPLIERS");
+hashMap.put("4500", "316101-->INTER COMPANY LIABILITY,316120-->ICD LOAN TAKEN-INTER COMPANY,321101-->SUPPLIERS-RAW MATERIAL,321102-->SUPPLIERS PACKAGING MATERIAL,321103-->SUPPLIERS-GENERAL,321104-->SUPPLIERS-CONTRACTOR,321105-->SUPPLIERS-TRANSPORTER,321106-->SUPPLIERS-CAPITAL,321107-->SUPPLIERS-CAPITAL CONTRACTOR,321108-->SUPPLIERS-STORE SPARES,321109-->EMPLOYEES PAYYABLE Up,321187-->ACCOUNTS PAYABLE-TRADE-INTER CO,322025-->ACCOUNTS PAYABLE-OTHER-INTER CO,630102-->ADVANCE TO SUPPLIERS");
+%>
+ 
+ <Select id="recAcc" class="form-control select2" onchange="validateReconAccount()">	
+<option value="">--Select Payment terms--</option>
+ <%
+        for (Map.Entry<String, String> entry : hashMap.entrySet()) 
+        {
+            String key = entry.getKey();
+            String value = entry.getValue();
+ 	if(!"4101".equals(key))continue;
+            String[] valueParts = value.split(",");
+ 
+            String firstValue = "";
+            String secondValue = "";
+ 
+            for (String part : valueParts) 
+            {
+                String[] pair = part.split("-->");
+                if (pair.length == 2) 
+                {
+                    firstValue = pair[0];
+                    secondValue = pair[1];
+                }
+ %>
+	 <option value="<%=firstValue%>"><%=firstValue%>---><%=secondValue%></option>
+ <%
+            }
+ 
+            // Remove trailing commas
+            firstValue = firstValue.replaceAll(",$", "");
+            secondValue = secondValue.replaceAll(",$", "");
+       
+   }
+ 
+  %>
+        </Select>
+        </body>
+        </html>
+        
+<script>
+function validateReconAccount()
+{	
+	var recAcc = document.getElementById("recAcc").value;
+	alert("recAcc"+recAcc);
+}
+</script>
+	
+       

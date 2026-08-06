@@ -1,0 +1,40 @@
+<%
+	java.util.Hashtable statesHT = new java.util.Hashtable();
+
+	statesHT.put("01","Andra Pradesh");
+	statesHT.put("02","Arunachal Pradesh");
+	statesHT.put("03","Assam");
+	statesHT.put("04","Bihar");
+	statesHT.put("05","Goa");
+	statesHT.put("06","Gujarat");
+	statesHT.put("07","Haryana");
+	statesHT.put("08","Himachal Pradesh");
+	statesHT.put("09","Jammu and Kashmir");
+	statesHT.put("10","Karnataka");
+	statesHT.put("11","Kerala");
+	statesHT.put("12","Madhya Pradesh");
+	statesHT.put("13","Maharashtra");
+	statesHT.put("14","Manipur");
+	statesHT.put("15","Megalaya");
+	statesHT.put("16","Mizoram");
+	statesHT.put("17","Nagaland");
+	statesHT.put("18","Orissa");
+	statesHT.put("19","Punjab");
+	statesHT.put("20","Rajasthan");
+	statesHT.put("21","Sikkim");
+	statesHT.put("22","Tamil Nadu");
+	statesHT.put("23","Tripura");
+	statesHT.put("24","Uttar Pradesh");
+	statesHT.put("25","West Bengal");
+	statesHT.put("26","Andaman and Nico.In.");
+	statesHT.put("27","Chandigarh");
+	statesHT.put("28","Dadra and Nagar Hav.");
+	statesHT.put("29","Daman and Diu");
+	statesHT.put("30","Delhi");
+	statesHT.put("31","Lakshadweep");
+	statesHT.put("32","Pondicherry");
+	statesHT.put("33","Pondicherry");
+	statesHT.put("34","Jharkhand");
+	statesHT.put("35","Chattisgarh");
+	statesHT.put("36","Uttarakhand");
+%>

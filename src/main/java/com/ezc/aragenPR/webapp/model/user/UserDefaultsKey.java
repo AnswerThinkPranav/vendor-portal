@@ -4,17 +4,17 @@ import java.io.Serializable;
 
 public class UserDefaultsKey implements Serializable{
 
-	
+
 	private static final long serialVersionUID = 1L;
 	public UserDefaultsKey() {
-		
+
 	}
-	private long userId;
+	private String userId;
 	private String key;
-	public long getUserId() {
+	public String getUserId() {
 		return userId;
 	}
-	public void setUserId(long userId) {
+	public void setUserId(String userId) {
 		this.userId = userId;
 	}
 	public String getKey() {
@@ -28,7 +28,7 @@ public class UserDefaultsKey implements Serializable{
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((key == null) ? 0 : key.hashCode());
-		result = prime * result + (int) (userId ^ (userId >>> 32));
+		result = prime * result + ((userId == null) ? 0 : userId.hashCode());
 		return result;
 	}
 	@Override
@@ -45,15 +45,18 @@ public class UserDefaultsKey implements Serializable{
 				return false;
 		} else if (!key.equals(other.key))
 			return false;
-		if (userId != other.userId)
+		if (userId == null) {
+			if (other.userId != null)
+				return false;
+		} else if (!userId.equals(other.userId))
 			return false;
 		return true;
 	}
-	public UserDefaultsKey(long userId, String key) {
+	public UserDefaultsKey(String userId, String key) {
 		super();
 		this.userId = userId;
 		this.key = key;
 	}
-			
-	
+
+
 	}

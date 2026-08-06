@@ -42,7 +42,7 @@ public interface IUserService {
 
 	Users getUserByPasswordResetToken(String token);
 
-	Optional<Users> getUserByID(long id);
+	Optional<Users> getUserByID(String id);
 
 	void changeUserPassword(Users user, String password);
 

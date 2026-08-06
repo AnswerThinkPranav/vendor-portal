@@ -15,11 +15,11 @@ import com.ezc.aragenPR.webapp.model.user.UserDefaultsKey;
 public interface UserDefRepository extends JpaRepository<UserDefaults, UserDefaultsKey> {
      
 	@Modifying
-	@Query("DELETE FROM UserDefaults u WHERE u.userId = ?1")	
-	void deleteUserDefaults(Long userId);
+	@Query("DELETE FROM UserDefaults u WHERE u.userId = ?1")
+	void deleteUserDefaults(String userId);
 
-	@Query(nativeQuery = true,value="select a.USER_ID,b.EUD_value,a.FIRST_NAME from ezc_users a,ezc_user_defaults b where a.id=b.EUD_USER_ID and eud_key='STORE'")
+	@Query(nativeQuery = true,value="select a.EU_ID,b.EUD_VALUE,a.EU_FIRST_NAME from ezc_users a,ezc_user_defaults b where a.EU_ID=b.EUD_USER_ID and eud_key='STORE'")
 	List<Object[]> getStoreUsers();
 
-	UserDefaults findByuserIdAndKey(Long userDocId, String location);
+	UserDefaults findByuserIdAndKey(String userDocId, String location);
 }

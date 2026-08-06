@@ -1,0 +1,2495 @@
+<%@ page import="ezc.vendorprofile.params.*,ezc.ezparam.*,ezc.ezmisc.params.*,java.util.*,java.text.*" %>		
+<jsp:useBean id="Session" class="ezc.session.EzSession" scope="session"></jsp:useBean>
+<jsp:useBean id="vendorprofile" class="ezc.vendorprofile.client.EzVendorProfileManager" scope="session"></jsp:useBean>
+<jsp:useBean id="ezMiscManager" class="ezc.ezmisc.client.EzMiscManager" scope="session"/>
+
+<%!
+	public String checkNull(String value)
+	{
+		if(value==null || "null".equals(value.trim()))value="";
+		value=value.trim();
+		
+		return value;
+	}
+%>
+
+<%
+ReturnObjFromRetrieve bankListRetObj = new ReturnObjFromRetrieve(new String[]{"VENDOR","COUNTRY","KEY","ACCOUNT_CODE"});
+ReturnObjFromRetrieve bankAddrRetObj = new ReturnObjFromRetrieve(new String[]{"KEY","COUNTRY","DATE","BANK_NAME","REGION","STREET","CITY","BRANCH","IFSC","CURRENCY"});
+
+String STRASBank ="";
+String  ORT01Bank="",BKREF="";
+	String usersList = "";
+	String userName	= "";
+	ArrayList userIdAL=new ArrayList();
+	ReturnObjFromRetrieve UserNamesRetObj=null;
+	int userNameCount=0;
+	
+	ReturnObjFromRetrieve retVenComm	=  null;
+	int retVenCommCnt = 0;
+	
+	String docId 	= checkNull(request.getParameter("selDocId"));
+	String status 	= checkNull(request.getParameter("status"));
+	String vendor 	= checkNull(request.getParameter("selVendor"));
+	
+	ReturnObjFromRetrieve generalDataRetObj =null;
+	ReturnObjFromRetrieve purchOrgRetObj =null;
+	ReturnObjFromRetrieve companyDataRetObj =null;
+	ReturnObjFromRetrieve exciseDataRetObj =null;
+	ReturnObjFromRetrieve bankDtlsRetObj =null;
+	ReturnObjFromRetrieve partnersRetObj =null;
+	ReturnObjFromRetrieve emailRetObj =null;
+	ReturnObjFromRetrieve telphoneRetObj =null;
+	ReturnObjFromRetrieve faxRetObj =null;
+	ReturnObjFromRetrieve contactPersonRetObj =null;
+	ReturnObjFromRetrieve bankMasterRetObj =null;
+	
+	ezc.ezparam.EzcParams mainParams = new ezc.ezparam.EzcParams(true);
+	ezc.vendorprofile.params.EziVendorGeneralDataParams generalParams= new ezc.vendorprofile.params.EziVendorGeneralDataParams();
+	ezc.vendorprofile.params.EziVendorProfileKeyParams keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	EziVendorKeyParamsTable keyTableParams = new EziVendorKeyParamsTable();
+	
+	keyParams.setKey("GetGeneralData");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetPurOrgData");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetCompanyData");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetExciseData");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetBankDetails");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetVendorPartners");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetVendorEmail");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetVendorTelephone");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetVendorFax");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetVendorContactPerson");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetBankMaster");
+	keyTableParams.appendRow(keyParams);
+	 keyParams = new ezc.vendorprofile.params.EziVendorProfileKeyParams();
+	keyParams.setKey("GetDocComments");
+	keyTableParams.appendRow(keyParams);
+	
+	mainParams.setLocalStore("Y");
+	//out.println("docId:::"+docId+"::vendor::"+vendor);
+	generalParams.setDocId(docId);
+	generalParams.setVendor(vendor);
+	generalParams.setStatus("OPEN");
+	
+	mainParams.setObject(keyTableParams);	
+	
+	mainParams.setObject(generalParams);
+	Session.prepareParams(mainParams);
+	
+	
+	try{
+		
+	ReturnObjFromRetrieve finalRetObj = (ReturnObjFromRetrieve)vendorprofile.ezGetDetails(mainParams);
+
+		generalDataRetObj 	= (ReturnObjFromRetrieve)finalRetObj.getObject("GetGeneralData");
+		//out.println("generalDataRetObj"+generalDataRetObj.toEzcString());
+		purchOrgRetObj 		= (ReturnObjFromRetrieve)finalRetObj.getObject("GetPurOrgData");
+		//out.println("purchOrgRetObj"+purchOrgRetObj.toEzcString());
+		companyDataRetObj 	= (ReturnObjFromRetrieve)finalRetObj.getObject("GetCompanyData");
+		//out.println("companyDataRetObj"+companyDataRetObj.toEzcString());
+		exciseDataRetObj 	= (ReturnObjFromRetrieve)finalRetObj.getObject("GetExciseData");
+		//out.println("exciseDataRetObj"+exciseDataRetObj.toEzcString());
+		bankDtlsRetObj 		= (ReturnObjFromRetrieve)finalRetObj.getObject("GetBankDetails");
+		//out.println("bankDtlsRetObj"+bankDtlsRetObj.toEzcString());
+		partnersRetObj 		= (ReturnObjFromRetrieve)finalRetObj.getObject("GetVendorPartners");
+		//out.println("partnersRetObj"+partnersRetObj.toEzcString());
+		emailRetObj 		= (ReturnObjFromRetrieve)finalRetObj.getObject("GetVendorEmail");
+		//out.println("emailRetObj"+emailRetObj.toEzcString());
+		telphoneRetObj 		= (ReturnObjFromRetrieve)finalRetObj.getObject("GetVendorTelephone");
+		//out.println("telphoneRetObj"+telphoneRetObj.toEzcString());
+		faxRetObj 		= (ReturnObjFromRetrieve)finalRetObj.getObject("GetVendorFax");
+		//out.println("faxRetObj"+faxRetObj.toEzcString());
+		contactPersonRetObj 	= (ReturnObjFromRetrieve)finalRetObj.getObject("GetVendorContactPerson");
+		 //out.println("contactPersonRetObj"+contactPersonRetObj.toEzcString());
+		bankMasterRetObj 	= (ReturnObjFromRetrieve)finalRetObj.getObject("GetBankMaster");
+		//out.println("bankMasterRetObj"+bankMasterRetObj.toEzcString());
+		retVenComm 	= (ReturnObjFromRetrieve)finalRetObj.getObject("GetDocComments");
+		//out.println("retVenComm"+retVenComm.toEzcString());
+	}catch(Exception e){out.println(e);}
+	if(retVenComm!=null)retVenCommCnt = retVenComm.getRowCount();
+	
+	for(int i=0;i<retVenCommCnt;i++)
+	{
+		String uid	= checkNull(retVenComm.getFieldValueString(i,"EDC_USER_ID"));
+		try{
+		uid=Integer.parseInt(uid)+"";
+		}catch(Exception e){uid= retVenComm.getFieldValueString(i,"EDC_USER_ID");}
+		if(!userIdAL.contains(uid))
+			userIdAL.add(uid);
+	}
+	for(int i=0;i<userIdAL.size();i++)
+	{
+		if("".equals(usersList))
+			usersList=(String)userIdAL.get(i);
+		else
+			usersList=usersList+"','"+(String)userIdAL.get(i);
+		
+	}
+	mainParams	= new ezc.ezparam.EzcParams(false);
+	EziMiscParams miscParams = new EziMiscParams();
+
+
+	miscParams.setQuery("SELECT EU_ID,EU_FIRST_NAME,EU_LAST_NAME FROM EZC_USERS WHERE EU_ID IN ('"+usersList+"')");
+
+	mainParams.setObject(miscParams);
+	mainParams.setLocalStore("Y");
+	Session.prepareParams(mainParams);
+	UserNamesRetObj = (ReturnObjFromRetrieve)ezMiscManager.ezSelect(mainParams);
+	try
+	{
+	if(UserNamesRetObj!=null)
+	userNameCount = UserNamesRetObj.getRowCount();
+	}catch(Exception e){System.out.println(e);}
+	
+	
+	/*String venComments="";
+	String venCommentDate="";
+	String venCommentName="";
+	ReturnObjFromRetrieve retVenComm	=  null;
+	int retVenCommCnt = 0;
+
+	mainParams				= new ezc.ezparam.EzcParams(false);
+	EziMiscParams miscParams		= new EziMiscParams(); 
+
+	miscParams.setQuery("SELECT * from EZC_DOCUMENT_COMMENTS , EZC_USERS where EDC_USER_ID=EU_ID AND EDC_DOC_ID='"+docId+"' And EDC_USER_ID='"+vendor+"'");
+	mainParams.setLocalStore("Y");
+	mainParams.setObject(miscParams);
+	Session.prepareParams(mainParams); 
+	try
+	{		
+		retVenComm = (ReturnObjFromRetrieve)ezMiscManager.ezSelect(mainParams);
+
+	}catch(Exception e){
+		ezc.ezcommon.EzLog4j.log("::::Error Occured While Getting Vendor Comments:::"+e,"E");
+	}
+	if(retVenComm!=null)
+	{
+		venComments = retVenComm.getFieldValueString(0,"EDC_COMMENTS");
+		venCommentDate = retVenComm.getFieldValueString(0,"EDC_DATE");
+		venCommentName = retVenComm.getFieldValueString(0,"EU_FIRST_NAME");
+		
+	}*/
+	//out.println("venComments::"+venComments);
+	
+%>
+<%@ page import ="ezc.sapconnection.*,com.sap.conn.jco.monitor.*,com.sap.conn.jco.*,com.sap.conn.jco.ext.DestinationDataProvider,java.io.*" %>
+<%@ page import ="java.util.*" %>
+
+<%
+String LIFNR       =	"";
+String NAME1       =	"";
+String NAME2       =	"";
+String NAME3       =	"";
+String NAME4       =	"";
+String DLGRP       =	"";
+String ANRED       =	"";
+String ORT01       =	"";
+String ORT02       =	"";
+String REGIO       =	"";
+String PSTLZ       =	"";
+String STRAS       =	"";
+String LAND1       =	"";
+String BANKN       =	"";
+String BANKS       = 	"",SWIFT="";
+String BANKL       = 	"";
+String BANKA       = 	"";
+String PROVZ       = 	"";
+String BRNCH       = 	"";
+String SMTP_ADDR   =    "";  
+String TELF1	   =	"";  
+
+String ZTERM	   =	""; 
+String ZTERMComp   =    "";
+String ZWELS       =    "";
+String BUKRS       =    "";
+Date	CERDT	   =    new Date();
+String	HBKID	   =    "";
+String	KALSK	   =    "";
+String  WAERS      = 	"";
+String  LEBRE      = 	"";
+String  WEBRE      = 	"";
+String EKORG       =    "";
+String TELFX       = 	"";
+String TELF2       = 	"";
+String NAMEV       = 	"";
+String NAME1ConInfo       =    "";
+String STCEG       = 	"";
+String MINDK       = 	"";
+
+String J_1ISERN    	= 	"";
+String J_1IEXRG  	= 	"";			   
+String J_1ICSTNO 	=	"";
+String J_1IEXCD 	=	"";
+String J_1IEXDI		=	"";
+String J_1IPANNO	=	"";
+String J_1IEXRN 	=	"";
+String J_1IEXCO 	=	"";
+
+ 
+
+%>
+<%
+	String defSoldTo    = "0000000000"+vendor; 	
+	
+	defSoldTo=defSoldTo.substring(vendor.length(),defSoldTo.length());
+ezc.ezcommon.EzLog4j.log(vendor+":::vendor:::defSoldTo:::::"+defSoldTo,"I");
+	java.util.Hashtable openIBDItemsHT = new java.util.Hashtable();
+
+	try
+	{
+		JCoDestination destination = EzSAPHandler.getDestination("200~999");
+		//out.println(":::::destination:::::::"+destination);
+		JCoFunction function = EzSAPHandler.getJCoFunction(destination,"Z_EZ_GET_VENDOR_DETAILS");
+		//out.println(":::::function:::::::"+function);
+JCoParameterList impParam = function.getImportParameterList();
+
+
+			impParam.setValue("VENDOR",defSoldTo);
+			impParam.setValue("COMPCODE","CFL");
+			
+			
+     
+
+			try
+			{
+				function.execute(destination);
+				//System.out.println("function executed::::::");
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception::::::"+e);
+			}
+			
+			
+			JCoParameterList expParam = function.getExportParameterList();
+			
+			JCoStructure expTable = expParam.getStructure("GEN_DATA");
+			//int expCoun         = expTable.getNumRows();
+			
+				
+					//String MANDT0       =  (String)expTable.getValue("MANDT");
+					 LIFNR       =  (String)expTable.getValue("LIFNR");
+					 //out.println("LIFNR::"+LIFNR);
+					 NAME1       =  (String)expTable.getValue("NAME1");
+					 NAME2       =  (String)expTable.getValue("NAME2");
+					 NAME3       =  (String)expTable.getValue("NAME3");
+					 NAME4       =  (String)expTable.getValue("NAME4");
+					 DLGRP       =  (String)expTable.getValue("DLGRP");
+					 ANRED       =  (String)expTable.getValue("ANRED");
+					 ORT01       =  (String)expTable.getValue("ORT01");
+					 ORT02       =  (String)expTable.getValue("ORT02");
+					 REGIO       =  (String)expTable.getValue("REGIO");
+					 PSTLZ       =  (String)expTable.getValue("PSTLZ");
+					 STRAS       =  (String)expTable.getValue("STRAS");
+					 LAND1       =  (String)expTable.getValue("LAND1");
+					 STCEG       =  (String)expTable.getValue("STCEG");
+					 TELFX       =  (String)expTable.getValue("TELFX");
+					 TELF2       =  (String)expTable.getValue("TELF1");
+							
+					String ADRNR       =  (String)expTable.getValue("ADRNR");
+					String WERKS       =  (String)expTable.getValue("WERKS");
+
+			JCoStructure compTable = expParam.getStructure("COMP_DATA");
+
+				CERDT	   	   =  (Date)compTable.getValue("CERDT");
+				ZTERMComp   	   =  (String)compTable.getValue("ZTERM");
+				HBKID	   	   =  (String)compTable.getValue("HBKID");
+				ZWELS              =  (String)compTable.getValue("ZWELS");
+				BUKRS              =  (String)compTable.getValue("BUKRS");
+				MINDK	   	   =  (String)compTable.getValue("MINDK");
+			JCoTable retTable  = function.getTableParameterList().getTable("PURORG_DATA");	      
+			JCoTable retTable1 = function.getTableParameterList().getTable("STATUTARY_DATA");
+			JCoTable retTable2 = function.getTableParameterList().getTable("CONTACT_INFO");
+			JCoTable retTable3 = function.getTableParameterList().getTable("VENDOR_BANKS");
+			JCoTable retTable4 = function.getTableParameterList().getTable("BANK_ADDRESS");
+			JCoTable retTable5 = function.getTableParameterList().getTable("VEND_EMAILS");
+			
+			int retCoun         = retTable.getNumRows();
+			int retCoun1         = retTable1.getNumRows();
+			int retCoun2         = retTable2.getNumRows();
+			int retCoun3         = retTable3.getNumRows();
+			int retCoun4         = retTable4.getNumRows();
+			int retCoun5         = retTable5.getNumRows();
+			
+			//System.out.println("retTable=="+retTable+"==retCoun=="+retCoun);
+
+			if(retCoun > 0)
+						{
+							do
+							{
+								 ZTERM       =  (String)retTable.getValue("ZTERM");
+								 KALSK       =  (String)retTable.getValue("KALSK");
+								 WAERS       =  (String)retTable.getValue("WAERS");
+								 LEBRE       =  (String)retTable.getValue("LEBRE");
+								 WEBRE       =  (String)retTable.getValue("WEBRE");
+								 EKORG       =  (String)retTable.getValue("EKORG");
+									 
+							}						 
+							while(retTable.nextRow());			 
+						}
+			
+						if(retCoun1 > 0)
+						{
+							do
+							{
+								// STCEG       	=  (String)retTable1.getValue("STCEG");
+								 J_1ISERN       =  (String)retTable1.getValue("J_1ISERN");
+								 J_1IEXRG       =  (String)retTable1.getValue("J_1IEXRG");					
+								
+								 J_1ICSTNO      =  (String)retTable1.getValue("J_1ICSTNO");
+								 J_1IEXCD       =  (String)retTable1.getValue("J_1IEXCD");
+								 J_1IEXDI       =  (String)retTable1.getValue("J_1IEXDI");
+								 J_1IPANNO      =  (String)retTable1.getValue("J_1IPANNO");
+								 J_1IEXRN       =  (String)retTable1.getValue("J_1IEXRN");
+								 J_1IEXCO       =  (String)retTable1.getValue("J_1IEXCO");
+								
+								
+								//out.println("::MANDT1::"+MANDT+"::::"+LIFNR+"::::"+EKORG+"::::"+ERDAT+"::::"+ERNAM+"::::"+WAERS+"::::"+MINBW+"::::"+ZTERM+"::::"+INCO1+"::::"+INCO2);	 
+													 
+													 
+								//openIBDItemsHT.put(itemNo,itemOpenQty);	 
+							}						 
+							while(retTable.nextRow());			 
+						}			
+					if(retCoun2 > 0)
+						{
+							do
+							{
+								NAMEV       =  (String)retTable2.getValue("NAMEV");					
+								NAME1ConInfo       =  (String)retTable2.getValue("NAME1");
+								 TELF1       =  (String)retTable2.getValue("TELF1");
+							}						 
+							while(retTable2.nextRow());			 
+						}
+					if(retCoun3 > 0)
+						{
+							do
+							{				
+								 BANKN       =  (String)retTable3.getValue("BANKN");
+								 
+								bankListRetObj.setFieldValue("VENDOR",(String)retTable3.getValue("LIFNR"));
+								bankListRetObj.setFieldValue("COUNTRY",(String)retTable3.getValue("BANKS"));
+								bankListRetObj.setFieldValue("KEY",(String)retTable3.getValue("BANKL"));
+								bankListRetObj.setFieldValue("ACCOUNT_CODE",BANKN);
+								bankListRetObj.addRow();
+							}						 
+							while(retTable3.nextRow());			 
+						}			
+					
+					if(retCoun4 > 0)
+						{
+							do
+							{
+								 BANKS       =  (String)retTable4.getValue("BANKS");
+								 BANKL       =  (String)retTable4.getValue("BANKL");					
+								 BANKA       =  (String)retTable4.getValue("BANKA");
+								 PROVZ       =  (String)retTable4.getValue("PROVZ");
+								 BRNCH       =  (String)retTable4.getValue("BRNCH");
+								 STRASBank       =  (String)retTable4.getValue("STRAS");
+								 ORT01Bank       =  (String)retTable4.getValue("ORT01");
+								 SWIFT = (String)retTable4.getValue("SWIFT");
+								 
+								 bankAddrRetObj.setFieldValue("KEY",BANKL);
+								bankAddrRetObj.setFieldValue("COUNTRY",BANKS);
+								bankAddrRetObj.setFieldValue("DATE","");
+								bankAddrRetObj.setFieldValue("BANK_NAME",BANKA);
+								bankAddrRetObj.setFieldValue("REGION",PROVZ);
+								bankAddrRetObj.setFieldValue("STREET",STRASBank);
+								bankAddrRetObj.setFieldValue("CITY",ORT01Bank);
+								bankAddrRetObj.setFieldValue("BRANCH",BRNCH);
+								bankAddrRetObj.setFieldValue("IFSC",(String)retTable4.getValue("SWIFT"));
+								bankAddrRetObj.setFieldValue("CURRENCY",WAERS);
+								bankAddrRetObj.addRow();
+									 
+							}						 
+							while(retTable4.nextRow());			 
+						}	
+					if(retCoun5 > 0)
+						{
+							do
+							{
+								 SMTP_ADDR        =  (String)retTable5.getValue("SMTP_ADDR");
+							}						 
+							while(retTable5.nextRow());			 
+						}			
+							
+	}
+	catch(Exception e){
+		out.println(":::::Exception:::::::"+e);
+	}
+	
+	
+	String title = "";
+	boolean titleChanged=false;
+	String titleStyle="";
+	try{
+	title =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_TITLE"));
+	}catch(Exception e){}
+
+	if(!title.equals(ANRED.trim())){
+	titleChanged=true;
+	titleStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String name3 = "";
+	boolean name3Changed=false;
+	String name3Style="";
+	try{
+	name3 =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_NAME3"));
+	}catch(Exception e){}
+	
+	if(!name3.equals(NAME3.trim())){
+		name3Changed=true;
+		name3Style="style='background-color:#F0E68C;width: 70px;'";
+	}
+
+	String name4 = "";
+	boolean name4Changed=false;
+	String name4Style="";
+	try{
+	name4 =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_NAME4"));
+	}catch(Exception e){}
+		
+	if(!name4.equals(NAME4.trim()))
+	{
+		name4Changed=true;
+		name4Style="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String street = "";
+	boolean streetChanged=false;
+	String streetStyle="";
+	try{
+	street =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_STREET"));
+	}catch(Exception e){}
+
+	if(!street.equals(STRAS.trim()))
+	{
+		streetChanged=true;
+		streetStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String city = "";
+	boolean cityChanged=false;
+	String cityStyle="";
+	try{
+	city =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_CITY"));
+	}catch(Exception e){}
+	
+	if(!city.equals(ORT01.trim()))
+	{
+		cityChanged=true;
+		cityStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String district = "";
+	boolean districtChanged=false;
+	String districtStyle="";
+	try{
+	district =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_DISTRICT"));
+	}catch(Exception e){}
+		
+	if(!district.equals(ORT02.trim()))
+	{
+		districtChanged=true;
+		districtStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String pin = "";
+	boolean pinChanged=false;
+	String pinStyle="";
+	try{
+	pin =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_PIN"));
+	}catch(Exception e){}
+
+	if(!pin.equals(PSTLZ.trim())){
+	pinChanged=true;
+	pinStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String landline = "";
+	boolean landlineChanged=false;
+	String landlineStyle="";
+	try{
+	landline =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_LANDLINE"));
+	}catch(Exception e){}
+
+	if(!landline.equals(TELF2.trim())){
+	landlineChanged=true;
+	landlineStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String mobile = "";
+	boolean mobileChanged=false;
+	String mobileStyle="";
+	try{
+	mobile =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_MOBILE"));
+	}catch(Exception e){}
+
+	if(!mobile.equals(TELF1.trim())){
+	mobileChanged=true;
+	mobileStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String fax = "";
+	boolean faxChanged=false;
+	String faxStyle="";
+	try{
+	fax =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_FAX"));
+	}catch(Exception e){}
+
+	if(!fax.equals(TELFX.trim())){
+	faxChanged=true;
+	faxStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String email = "";
+	boolean emailChanged=false;
+	String emailStyle="";
+	try{
+	email =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_EMAIL"));
+	}catch(Exception e){}
+
+	if(!email.equals(SMTP_ADDR.trim())){
+	emailChanged=true;
+	emailStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String email2 = "";
+		boolean email2Changed=false;
+		String email2Style="";
+		try{
+		email2 =checkNull(generalDataRetObj.getFieldValueString(0,"EVGD_EMAIL"));
+		}catch(Exception e){}
+	
+		if(!email2.equals(SMTP_ADDR.trim())){
+		email2Changed=true;
+		email2Style="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String vat = "";
+	boolean vatChanged=false;
+	String vatStyle="";
+	try{
+	vat =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_VAT"));
+	}catch(Exception e){}
+
+	if(!vat.equals(STCEG.trim())){
+	vatChanged=true;
+	vatStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String cst = "";
+	boolean cstChanged=false;
+	String cstStyle="";
+	try{
+	cst =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_CST"));
+	}catch(Exception e){}
+
+	if(!cst.equals(J_1ICSTNO.trim())){
+	cstChanged=true;
+	cstStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String pan = "";
+	boolean panChanged=false;
+	String panStyle="";
+	try{
+	pan =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_PAN_NO"));
+	}catch(Exception e){}
+
+	if(!pan.equals(J_1IPANNO.trim())){
+	panChanged=true;
+	panStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String servTax = "";
+	boolean servTaxChanged=false;
+	String servTaxStyle="";
+	try{
+	servTax =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_SRV_TAX"));
+	}catch(Exception e){}
+
+	if(!servTax.equals(J_1ISERN.trim())){
+	servTaxChanged=true;
+	servTaxStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String eccNo = "";
+	boolean eccNoChanged=false;
+	String eccNoStyle="";
+	try{
+	eccNo =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_ECC_NO"));
+	}catch(Exception e){}
+
+	if(!eccNo.equals(J_1IEXCD.trim())){
+	eccNoChanged=true;
+	eccNoStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String excRegNo = "";
+	boolean excRegNoChanged=false;
+	String excRegNoStyle="";
+	try{
+	excRegNo =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_EXC_REG_NO"));
+	}catch(Exception e){}
+
+	if(!excRegNo.equals(J_1IEXRN.trim())){
+	excRegNoChanged=true;
+	excRegNoStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String rangeSel = "";
+	boolean rangeSelChanged=false;
+	String rangeSelStyle="";
+	try{
+	rangeSel =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_EX_RANGE"));
+	}catch(Exception e){}
+
+	if(!rangeSel.equals(J_1IEXRG.trim())){
+	rangeSelChanged=true;
+	rangeSelStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String exDiv = "";
+	boolean exDivChanged=false;
+	String exDivStyle="";
+	try{
+	exDiv =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_EXC_DIV"));
+	}catch(Exception e){}
+
+	if(!exDiv.equals(J_1IEXDI.trim())){
+	exDivChanged=true;
+	exDivStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String commi = "";
+	boolean commiChanged=false;
+	String commiStyle="";
+	try{
+	commi =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_EX_COMM"));
+	}catch(Exception e){}
+
+	if(!commi.equals(J_1IEXCO.trim())){
+	commiChanged=true;
+	commiStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+	String minIndi = "";
+	boolean minIndiChanged=false;
+	String minIndiStyle="";
+	try{
+	minIndi =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_MINORITY_IND"));
+	}catch(Exception e){}
+
+	if(!minIndi.equals(MINDK.trim())){
+	minIndiChanged=true;
+	minIndiStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+
+	String gst = "";
+	boolean gstChanged=false;
+	String gstStyle="";
+	try{
+	gst =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_MINORITY_IND"));
+	}catch(Exception e){}
+
+	if(!gst.equals(MINDK.trim())){
+	gstChanged=true;
+	gstStyle="style='background-color:#F0E68C;width: 70px;'";
+	}	
+
+	String classi = "";
+	boolean classiChanged=false;
+	String classiStyle="";
+	try{
+	classi =checkNull(exciseDataRetObj.getFieldValueString(0,"EVED_MINORITY_IND"));
+	}catch(Exception e){}
+
+	if(!classi.equals(MINDK.trim())){
+	classiChanged=true;
+	classiStyle="style='background-color:#F0E68C;width: 70px;'";
+	}	
+	
+	
+	
+	String pTerms = "";
+	boolean pTermsChanged=false;
+	String pTermsStyle="";
+	try{
+	pTerms =checkNull(companyDataRetObj.getFieldValueString(0,"EVCD_PAY_TERMS"));
+	}catch(Exception e){}
+	if(!pTerms.equals(ZTERMComp.trim())){
+	pTermsChanged=true;
+	pTermsStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+
+	String paymMethod = "";
+	boolean paymMethodChanged=false;
+	String paymMethodStyle="";
+	try{
+	paymMethod =checkNull(companyDataRetObj.getFieldValueString(0,"EVCD_PAY_METHOD"));
+	}catch(Exception e){}
+	if(!paymMethod.equals(ZWELS.trim())){
+	paymMethodChanged=true;
+	paymMethodStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+
+	String creatDate = "";
+	boolean creatDateChanged=false;
+	String creatDateStyle="";
+	try{
+	creatDate =checkNull(companyDataRetObj.getFieldValueString(0,"EVCD_CREATION_DATE"));
+	}catch(Exception e){}
+	if(!creatDate.equals(CERDT)){
+	creatDateChanged=true;
+	creatDateStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+
+	String houseBank = "";
+	boolean houseBankChanged=false;
+	String houseBankStyle="";
+	try{
+	houseBank =checkNull(companyDataRetObj.getFieldValueString(0,"EVCD_HOUSE_BANK"));
+	}catch(Exception e){}
+	if(!houseBank.equals(HBKID.trim())){
+	houseBankChanged=true;
+	houseBankStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+
+	String schemaGroup = "";
+	boolean schemaGroupChanged=false;
+	String schemaGroupStyle="";
+	try{
+	schemaGroup =checkNull(companyDataRetObj.getFieldValueString(0,"EVCD_SCHEMA_GROUP"));
+	}catch(Exception e){}
+	if(!schemaGroup.equals(KALSK.trim())){
+	schemaGroupChanged=true;
+	schemaGroupStyle="style='background-color:#F0E68C;width: 70px;'";
+	}
+	
+							
+%>
+ <%@ include file="ezGetUserAuthDefaults.jsp"%>    
+  <%@ include file="ezHeader.jsp"%> 
+
+<Html>
+<Head>
+<style>
+.dashBoxHeader
+{
+	background-color: #3C8DBC;
+	color: azure;
+    	font-weight: bold;
+}
+.pinBoxHeader
+{
+	    float: right;
+}
+tr
+{
+	height: 39px;
+}
+input
+{
+	    border: none;
+}
+</style>
+
+</Head>
+<Body>
+ <form method="post"  name="myForm">
+<input type="hidden" name="defSoldTo" value="<%=defSoldTo%>">
+<input type="hidden" name="docId" value="<%=docId%>">
+<input type="hidden" name="SAPUSER" value="">
+<input type="hidden" name="SAPPASSWORD" value="">
+<!-- Content Wrapper. Contains page content -->
+      <Div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h4>
+            Vendor Request: <%=docId%>
+          </h4>
+        </section>
+
+        <!-- Main content -->  
+        <section class="content">  
+        
+
+<Div class="row">
+	<Div class=" col-md-12 col-sm-12 col-xs-12"> 
+		<Div class="box box-info collapsed-box">
+			<Div class="box-header ">
+				<h5>&nbsp;&nbsp;&nbsp;&nbsp<B>BASIC DETAILS</B></h5>
+				<Div class="box-tools pull-right">
+					<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>                
+				</Div>
+			</Div>
+			<Div class="box-body" style="display: block;">
+				<Div class="table-responsive">
+				<Table class="table no-margin">
+				<TBody>
+				<Tr>
+					<Th align=left>Vendor Code</Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="vendCode" id="vendCode" value="<%=LIFNR%>"  maxlength="10" required>
+					</Td>
+					<Th align=right>Company Code</Th>
+					<Td colspan="4" ><%=BUKRS%></Td>
+					<!--<Th align=right>Service Based</Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="serBased" id="serBased" value="<%=LEBRE%>"  maxlength="1">
+					</Td>-->
+					<!--<Th>ServAgntProcGrp</Th>
+					<Td colspan="4">
+					<Input readonly  type="text" style="text-transform: uppercase;" name="procGrp" id="procGrp" value="<%=DLGRP%>"  maxlength="3">																				
+					</Td>-->
+				</Tr>				
+				<Tr>
+					<Th align=left>Vendor Name</Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="venName" id="venName" value="<%=NAME1+NAME2%>"  maxlength="35">
+
+					</Td>
+					<Th align=right>Service Based</Th>
+					<Td colspan="4">
+					<%
+					String srvBasedStr="No";
+					if("X".equals(LEBRE))
+					{
+					srvBasedStr="Yes";
+					}
+					%>
+					<%=srvBasedStr%>
+						<Input readonly  type="hidden" style="text-transform: uppercase;" name="serBased" id="serBased" value="<%=LEBRE%>"  maxlength="1">
+					</Td>					
+					<!--<Th align=right>Coromandel Location</Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="corLoc" id="corLoc" value="<%=EKORG%>"  maxlength="4">
+
+					</Td>-->
+					<Th align=right>GR Based</Th>
+					<Td colspan="4">
+					<%
+					String grBasedStr="No";
+					if("X".equals(WEBRE))
+					{
+					grBasedStr="Yes";
+					}
+					%>
+					<%=grBasedStr%>
+						<Input readonly  type="hidden" style="text-transform: uppercase;" name="grBased" id="grBased" value="<%=WEBRE%>"  maxlength="1">
+
+					</Td>
+				</Tr>
+							
+				</TBody>               
+				</Table>
+				</Div>
+			<!-- /.table-responsive -->
+			</Div>       
+		</Div>
+
+		<Div class="box box-info collapsed-box">
+			<Div class="box-header ">
+			<h5>&nbsp;&nbsp;&nbsp;&nbsp<B>CONTACT DETAILS</B></h5>
+			<Div class="box-tools pull-right">
+				<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>                
+			</Div>
+			</Div>
+			<Div class="box-body" style="display: block;">
+			<Div class="table-responsive">
+			<Table class="table table-bordered">
+			<TBody>
+				<Tr>
+					<Th colspan="4">Title
+					<br>
+					<%
+						if(titleChanged)
+						{
+					%>
+						
+					<%
+						}
+					%>						
+					</Th>
+					<Td colspan="4">
+					<%=ANRED%>
+					</td>
+					<Td colspan="4"; <%=titleStyle%>>
+					
+					<br>
+						<%
+							if(titleChanged)
+							{
+						%>
+							<input type="hidden" name="titleSel" value="<%=title%>"><%=title%>
+						<%
+							}
+						%>
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">Name1</Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="name1" id="name1" value="<%=NAME1%>"  maxlength="35">
+
+					</Td>
+					<Td colspan="4">
+											
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">Name2</Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="name2" id="name2" value="<%=NAME2%>"  maxlength="35">
+											
+					</Td>
+					<Td colspan="4">
+											
+					</Td>
+				</Tr>
+				
+				<Tr>
+					<Th colspan="4">Addr1 / H.No
+					<br>
+					<%
+						if(name3Changed)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+						<%=NAME3%>				
+					</td>
+					<Td colspan="4" <%=name3Style%>>
+						
+					<br>
+						<%
+							if(name3Changed)
+							{
+						%>
+							<input type="hidden" name="addr1" value="<%=name3%>"><%=name3%>
+						<%
+							}
+						%>
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">Addr2
+					<br>
+					<%
+						if(name4Changed)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+						<%=NAME4%>				
+					</td>
+					<Td colspan="4" <%=name4Style%>>
+						
+						<br>
+						<%
+							if(name4Changed)
+							{
+						%>
+							<input type="hidden" name="addr2" value="<%=name4%>"><%=name4%>
+						<%
+							}
+						%>
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">Street
+					<br>
+					<%
+						if(streetChanged)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+						<%=STRAS%>				
+					</td>
+					<Td colspan="4" <%=streetStyle%>>
+						
+						<br>
+						<%
+							if(streetChanged)
+							{
+						%>
+							<input type="hidden" name="street" value="<%=street%>"><%=street%>
+						<%
+							}
+						%>					
+					</Td>
+				</Tr>
+				<Tr>
+					
+					<Th colspan="4">City
+					<br>
+					<%
+						if(cityChanged)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+						<%=ORT01%>				
+					</td>
+					<Td colspan="4" <%=cityStyle%>>
+						
+						<br>
+						<%
+							if(cityChanged)
+							{
+						%>
+							<input type="hidden" name="city" value="<%=city%>"><%=city%>
+						<%
+							}
+						%>
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">State</Th>
+					<Td colspan="4">
+					<Input readonly  type="text" style="text-transform: uppercase;" name="state" id="state" value="<%=REGIO%>"  maxlength="2">
+						<!--<select disabled  name="state" id="state">
+							<option value="<%=REGIO%>" selected><%=REGIO%></option>
+						</select>					-->
+
+					</Td>
+					<Td colspan="4">
+											
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">Country</Th>
+					<Td>
+					<Input readonly  type="text" style="text-transform: uppercase;" name="country" id="country" value="<%=LAND1%>"  maxlength="2">
+						<!--<select disabled  name="country" id="country">	
+							<option value="<%=LAND1%>" selected><%=LAND1%></option>
+						</select>					-->
+
+					</Td>
+					<Td colspan="4">
+											
+					</Td>
+				</Tr>
+				<Tr>
+					<Th colspan="4">District
+					<br>
+					<%
+						if(districtChanged)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+					<%=ORT02%>					
+					</td>
+					<Td colspan="4" <%=districtStyle%>>
+					
+						<br>
+						<%
+							if(districtChanged)
+							{
+						%>
+							<input type="hidden" name="district" value="<%=district%>"><%=district%>
+						<%
+							}
+						%>
+					</Td>
+				</tr>
+				<tr>
+
+					<Th colspan="4">Pin
+					<br>
+					<%
+						if(pinChanged)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+					<%=PSTLZ%>					
+					</td>
+					<Td colspan="4" <%=pinStyle%>>
+					
+						<br>
+						<%
+							if(pinChanged)
+							{
+						%>
+							<input type="hidden" name="pin" value="<%=pin%>"><%=pin%>
+						<%
+							}
+						%>
+
+					</Td>
+					</Tr>
+					<Tr>
+					<Th colspan="4">Landline
+					<br>
+					<%
+						if(landlineChanged)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+					<%=TELF2%>					
+					</td>
+					<Td colspan="4" <%=landlineStyle%>>
+					
+					<br>
+					<%
+						if(landlineChanged)
+						{
+					%>
+						<input type="hidden" name="landline" value="<%=landline%>"><%=landline%>
+					<%
+						}
+					%>
+
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">Mobile
+					<br>
+					<%
+						if(mobileChanged)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+					<%=TELF1%>					
+					</td>
+					<Td colspan="4" <%=mobileStyle%>>
+					
+					<br>
+					<%
+						if(mobileChanged)
+						{
+					%>
+						<input type="hidden" name="mobile" value="<%=mobile%>"><%=mobile%>
+					<%
+						}
+					%>
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">Fax
+					<br>
+					<%
+						if(faxChanged)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+					<%=TELFX%>					
+					</td>
+					<Td colspan="4" <%=faxStyle%>>
+					
+					<br>
+					<%
+						if(faxChanged)
+						{
+					%>
+						<input type="hidden" name="fax" value="<%=fax%>"><%=fax%>
+					<%
+						}
+					%>
+											
+					</Td>
+				</Tr>
+				 <Tr>
+					<Th colspan="4">EMail
+					<br>
+					<%
+						if(emailChanged)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+					<%=SMTP_ADDR%>					
+					</td>
+					<Td colspan="4" <%=emailStyle%>>
+					
+					<br>
+					<%
+						if(emailChanged)
+						{
+					%>
+						<input type="hidden" name="email" value="<%=email%>"><%=email%>
+					<%
+						}
+					%>
+					</Td>
+				</tr>
+				<Tr>
+					<Th colspan="4">EMail 2
+					<br>
+					<%
+						if(email2Changed)
+						{
+					%>
+						
+					<%
+						}
+					%></Th>
+					<Td colspan="4">
+										
+					</td>
+					<Td colspan="4" <%=emailStyle%>>
+					
+					<br>
+					<%
+						if(email2Changed)
+						{
+					%>
+						<input type="hidden" name="email2" value="<%=email2%>"><%=email2%>
+					<%
+						}
+					%>
+					</Td>
+				</tr>				
+				<tr>
+					<Th colspan="4">Contact Person 1<font size="1.5" color="red">*</font></Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="contPers1" id="contPers1" value="<%=NAMEV%>"  maxlength="10">
+					</Td>
+					<Td colspan="4">
+											
+					</Td>
+				</tr>
+				<tr>
+					<Th colspan="4">Contact Person 2<font size="1.5" color="red">*</font></Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="contPers2" id="contPers2" value="<%=NAME1ConInfo%>"  maxlength="10">
+					</Td>
+					<Td colspan="4">
+											
+					</Td>
+				</Tr>
+				
+			</TBody>               
+			</Table>
+			</Div>
+			<!-- /.table-responsive -->
+			</Div>       
+		</Div>            
+<Div class="box box-info collapsed-box">
+			<Div class="box-header ">
+			<h5>&nbsp;&nbsp;&nbsp;&nbsp<B>CONTACT DETAILS</B></h5>
+			<Div class="box-tools pull-right">
+				<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>                
+			</Div>
+			</Div>
+			<Div class="box-body" style="display: block;">
+			<Div class="table-responsive">
+			<Table class="table no-margin">
+			<TBody>
+				<Tr>
+					<Th>Title
+					<br>
+					<%
+						if(titleChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%>						
+					</Th>
+					<Td colspan="4" <%=titleStyle%>>
+					<%=ANRED%>
+					<br>
+						<%
+							if(titleChanged)
+							{
+						%>
+							<input type="hidden" name="titleSel" value="<%=title%>"><%=title%>
+						<%
+							}
+						%>
+					</Td>
+					<Th>Name1</Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="name1" id="name1" value="<%=NAME1%>"  maxlength="35">
+
+					</Td>
+					<Th>Name2</Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="name2" id="name2" value="<%=NAME2%>"  maxlength="35">
+											
+					</Td>
+				</Tr>
+				
+				<Tr>
+					<Th>Addr1 / H.No
+					<br>
+					<%
+						if(name3Changed)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=name3Style%>>
+						<%=NAME3%>
+					<br>
+						<%
+							if(name3Changed)
+							{
+						%>
+							<input type="hidden" name="addr1" value="<%=name3%>"><%=name3%>
+						<%
+							}
+						%>
+					</Td>
+
+					<Th>Addr2
+					<br>
+					<%
+						if(name4Changed)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=name4Style%>>
+						<%=NAME4%>
+						<br>
+						<%
+							if(name4Changed)
+							{
+						%>
+							<input type="hidden" name="addr2" value="<%=name4%>"><%=name4%>
+						<%
+							}
+						%>
+					</Td>
+					<Th>Street
+					<br>
+					<%
+						if(streetChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=streetStyle%>>
+						<%=STRAS%>
+						<br>
+						<%
+							if(streetChanged)
+							{
+						%>
+							<input type="hidden" name="street" value="<%=street%>"><%=street%>
+						<%
+							}
+						%>					
+					</Td>
+				</Tr>
+				<Tr>
+					
+					<Th>City
+					<br>
+					<%
+						if(cityChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=cityStyle%>>
+						<%=ORT01%>
+						<br>
+						<%
+							if(cityChanged)
+							{
+						%>
+							<input type="hidden" name="city" value="<%=city%>"><%=city%>
+						<%
+							}
+						%>
+					</Td>
+					<Th>State</Th>
+					<Td colspan="4">
+					<Input readonly  type="text" style="text-transform: uppercase;" name="state" id="state" value="<%=REGIO%>"  maxlength="2">
+						<!--<select disabled  name="state" id="state">
+							<option value="<%=REGIO%>" selected><%=REGIO%></option>
+						</select>					-->
+
+					</Td>
+					<Th>Country</Th>
+					<Td>
+					<Input readonly  type="text" style="text-transform: uppercase;" name="country" id="country" value="<%=LAND1%>"  maxlength="2">
+						<!--<select disabled  name="country" id="country">	
+							<option value="<%=LAND1%>" selected><%=LAND1%></option>
+						</select>					-->
+
+					</Td>
+				</Tr>
+				<Tr>
+					<Th>District
+					<br>
+					<%
+						if(districtChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=districtStyle%>>
+					<%=ORT02%>
+						<br>
+						<%
+							if(districtChanged)
+							{
+						%>
+							<input type="hidden" name="district" value="<%=district%>"><%=district%>
+						<%
+							}
+						%>
+					</Td>
+
+					<Th>Pin
+					<br>
+					<%
+						if(pinChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=pinStyle%>>
+					<%=PSTLZ%>
+						<br>
+						<%
+							if(pinChanged)
+							{
+						%>
+							<input type="hidden" name="pin" value="<%=pin%>"><%=pin%>
+						<%
+							}
+						%>
+
+					</Td>
+					</Tr>
+					<Tr>
+					<Th>Landline
+					<br>
+					<%
+						if(landlineChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=landlineStyle%>>
+					<%=TELF2%>
+					<br>
+					<%
+						if(landlineChanged)
+						{
+					%>
+						<input type="hidden" name="landline" value="<%=landline%>"><%=landline%>
+					<%
+						}
+					%>
+
+					</Td>
+					<Th>Mobile
+					<br>
+					<%
+						if(mobileChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=mobileStyle%>>
+					<%=TELF1%>
+					<br>
+					<%
+						if(mobileChanged)
+						{
+					%>
+						<input type="hidden" name="mobile" value="<%=mobile%>"><%=mobile%>
+					<%
+						}
+					%>
+					</Td>
+					<Th>Fax
+					<br>
+					<%
+						if(faxChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=faxStyle%>>
+					<%=TELFX%>
+					<br>
+					<%
+						if(faxChanged)
+						{
+					%>
+						<input type="hidden" name="fax" value="<%=fax%>"><%=fax%>
+					<%
+						}
+					%>
+											
+					</Td>
+				</Tr>
+				 <Tr>
+					<Th>EMail
+					<br>
+					<%
+						if(emailChanged)
+						{
+					%>
+						<b>Changed Value:</b>
+					<%
+						}
+					%></Th>
+					<Td colspan="4" <%=emailStyle%>>
+					<%=SMTP_ADDR%>
+					<br>
+					<%
+						if(emailChanged)
+						{
+					%>
+						<input type="hidden" name="email" value="<%=email%>"><%=email%>
+					<%
+						}
+					%>
+					</Td>
+					<Th>Contact Person 1<font size="1.5" color="red">*</font></Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="contPers1" id="contPers1" value="<%=NAMEV%>"  maxlength="10">
+					</Td>
+					<Th>Contact Person 2<font size="1.5" color="red">*</font></Th>
+					<Td colspan="4">
+						<Input readonly  type="text" style="text-transform: uppercase;" name="contPers2" id="contPers2" value="<%=NAME1ConInfo%>"  maxlength="10">
+					</Td>
+				</Tr>
+				
+			</TBody>               
+			</Table>
+			</Div>
+			<!-- /.table-responsive -->
+			</Div>       
+		</Div> 
+		<Div class="box box-info collapsed-box">
+		<Div class="box-header ">
+		<h5>&nbsp;&nbsp;&nbsp;&nbsp<B>STATUTORY</B></h5>
+		<Div class="box-tools pull-right">
+		<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+		</button>                
+		</Div>
+		</Div>
+		<Div class="box-body" style="display: block;">
+		<Div class="table-responsive">
+		<Table class="table no-margin">
+		<TBody>
+			<Tr>
+				<Th>VAT
+				<br>
+				<%
+					if(vatChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=vatStyle%>>
+				<%=STCEG%>
+				<br>
+				<%
+					if(vatChanged)
+					{
+				%>
+					<input type="hidden" name="vat" value="<%=vat%>"><%=vat%>
+				<%
+					}
+				%>
+				</Td>
+				<Th>CST
+				<br>
+				<%
+					if(cstChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=cstStyle%>>
+				<%=J_1ICSTNO%>
+				<br>
+				<%
+					if(cstChanged)
+					{
+				%>
+					<input type="hidden" name="cst" value="<%=cst%>"><%=cst%>
+				<%
+					}
+				%>
+				</Td>
+				
+				<Th>PAN
+				<br>
+				<%
+					if(panChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=panStyle%>>
+				<%=J_1IPANNO%>
+				<br>
+				<%
+					if(panChanged)
+					{
+				%>
+					<input type="hidden" name="pan" value="<%=pan%>"><%=pan%>
+				<%
+					}
+				%>
+				</Td>
+			</Tr>
+
+			<Tr>
+				<Th>Service Tax
+				<br>
+				<%
+					if(servTaxChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=servTaxStyle%>>
+				<%=J_1ISERN%>
+				<br>
+				<%
+					if(servTaxChanged)
+					{
+				%>
+					<input type="hidden" name="servTax" value="<%=servTax%>"><%=servTax%>
+				<%
+					}
+				%>
+				</Td>
+				
+				<Th>Ecc No<br>
+				<%
+					if(eccNoChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=eccNoStyle%>>
+				<%=J_1IEXCD%>
+				<br>
+				<%
+					if(eccNoChanged)
+					{
+				%>
+					<input type="hidden" name="eccNo" value="<%=eccNo%>"><%=eccNo%>
+				<%
+					}
+				%>
+				</Td>
+					
+				<Th>Exc. Reg No<br>
+				<%
+					if(excRegNoChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=excRegNoStyle%>>
+				<%=J_1IEXRN%>
+				<br>
+				<%
+					if(excRegNoChanged)
+					{
+				%>
+					<input type="hidden" name="excRegNo" value="<%=excRegNo%>"><%=excRegNo%>
+				<%
+					}
+				%>
+				</Td>
+					
+					
+			</Tr>
+			<Tr>	
+				<Th>Ex. Range<br>
+				<%
+					if(rangeSelChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=rangeSelStyle%>>
+				<%=J_1IEXRG%>
+				<br>
+				<%
+					if(rangeSelChanged)
+					{
+				%>
+					<input type="hidden" name="rangeSel" value="<%=rangeSel%>"><%=rangeSel%>
+				<%
+					}
+				%>
+				</Td>
+					<!--<select disabled  name="rangeSel" id="rangeSel">
+						<option value="<%=J_1IEXRG%>" selected><%=J_1IEXRG%></option>
+					</select>					-->
+					
+				<Th>Ex Division<br>
+				<%
+					if(exDivChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=exDivStyle%>>
+				<%=J_1IEXDI%>
+				<br>
+				<%
+					if(exDivChanged)
+					{
+				%>
+					<input type="hidden" name="exDiv" value="<%=exDiv%>"><%=exDiv%>
+				<%
+					}
+				%>
+				</Td>
+				
+				<Th>CommI<br>
+				<%
+					if(commiChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=commiStyle%>>
+				<%=J_1IEXCO%>
+				<br>
+				<%
+					if(commiChanged)
+					{
+				%>
+					<input type="hidden" name="commi" value="<%=commi%>"><%=commi%>
+				<%
+					}
+				%>
+				</Td>
+			</Tr>
+			<Tr>
+				<Th>Minority Indi<br>
+				<%
+					if(minIndiChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=minIndiStyle%>>
+				<%=MINDK%>
+				<br>
+				<%
+					if(minIndiChanged)
+					{
+				%>
+					<input type="hidden" name="minIndi" value="<%=minIndi%>"><%=minIndi%>
+				<%
+					}
+				%>
+					<!--<select disabled  name="minIndi" id="minIndi">
+						<option value="G001" selected><%=MINDK%></option>
+					</select>					-->
+				</Td>
+			
+				<Th>GST<br>
+				<%
+					if(gstChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=gstStyle%>>
+				
+				<br>
+				<%
+					if(gstChanged)
+					{
+				%>
+					<input type="hidden" name="gst" value="">
+				<%
+					}
+				%>
+					
+				</Td>
+			
+				<Th>Classification<br>
+				<%
+					if(classiChanged)
+					{
+				%>
+					<b>Changed Value:</b>
+				<%
+					}
+				%></Th>
+				<Td colspan="4" <%=classiStyle%>>
+				
+				<br>
+				<%
+					if(classiChanged)
+					{
+				%>
+					<input type="hidden" name="classi" value="">
+				<%
+					}
+				%>
+					
+				</Td>
+			</Tr>			
+		</TBody>               
+
+		</Table>
+		</Div>
+		<!-- /.table-responsive -->
+		</Div>       
+		</Div>
+
+
+
+<%
+	if(bankListRetObj!=null)
+	{
+		for(int k=0;k<bankListRetObj.getRowCount();k++)
+		{
+			String keyStr = checkNull(bankListRetObj.getFieldValueString(k,"KEY"));
+			BANKN = checkNull(bankListRetObj.getFieldValueString(k,"ACCOUNT_CODE"));
+			
+			int index = bankAddrRetObj.getRowId("KEY",keyStr);
+			
+			if(index>=0)
+			{
+				BANKL = checkNull(bankAddrRetObj.getFieldValueString(index,"KEY"));
+				BANKS = checkNull(bankAddrRetObj.getFieldValueString(index,"COUNTRY"));
+				BANKA = checkNull(bankAddrRetObj.getFieldValueString(index,"BANK_NAME"));
+				PROVZ = checkNull(bankAddrRetObj.getFieldValueString(index,"REGION"));
+				STRASBank = checkNull(bankAddrRetObj.getFieldValueString(index,"STREET"));
+				ORT01Bank = checkNull(bankAddrRetObj.getFieldValueString(index,"CITY"));
+				BRNCH = checkNull(bankAddrRetObj.getFieldValueString(index,"BRANCH"));
+				BKREF = checkNull(bankAddrRetObj.getFieldValueString(index,"IFSC"));
+				WAERS = checkNull(bankAddrRetObj.getFieldValueString(index,"CURRENCY"));
+
+			}
+String bankCountry = "";
+boolean bankCountryChanged=false;
+String bankCountryStyle="";
+
+String bankName = "";
+boolean bankNameChanged=false;
+String bankNameStyle="";
+
+String bankRegion = "";
+boolean bankRegionChanged=false;
+String bankRegionStyle="";
+
+String bankStreet = "";
+boolean bankStreetChanged=false;
+String bankStreetStyle="";
+
+String bankCity = "";
+boolean bankCityChanged=false;
+String bankCityStyle="";
+				
+String bankBranch = "";
+boolean bankBranchChanged=false;
+String bankBranchStyle="";
+
+String bankIFSCCode = "";
+boolean bankIFSCCodeChanged=false;
+String bankIFSCCodeStyle="";
+
+String bankACCode = "";
+boolean bankACCodeChanged=false;
+String bankACCodeStyle="";
+			if(bankMasterRetObj!=null)
+			{			
+				int bankIndex=-1;
+				bankIndex=bankMasterRetObj.getRowId("ebm_ac_code",BANKN);
+				//out.println(":::::::::"+BANKN+"::::::::bankIndex::::::::"+bankIndex);
+				try{
+				bankCountry =checkNull(bankMasterRetObj.getFieldValueString(bankIndex,"EBM_COUNTRY_KEY"));
+				}catch(Exception e){}
+			
+				if(!bankCountry.equals(BANKS.trim())){
+				bankCountryChanged=true;
+				bankCountryStyle="style='background-color:#F0E68C'";
+				}
+				
+				try{
+				bankName =checkNull(bankMasterRetObj.getFieldValueString(bankIndex,"EBM_BANK_NAME"));
+				}catch(Exception e){}
+				if(!bankName.equals(BANKA.trim())){
+				bankNameChanged=true;
+				bankNameStyle="style='background-color:#F0E68C'";
+				}
+				
+				try{
+				bankRegion =checkNull(bankMasterRetObj.getFieldValueString(bankIndex,"EBM_REGION"));
+				}catch(Exception e){}
+				if(!bankRegion.equals(PROVZ.trim())){
+				bankRegionChanged=true;
+				bankRegionStyle="style='background-color:#F0E68C'";
+				}
+				
+				try{
+				bankStreet =checkNull(bankMasterRetObj.getFieldValueString(bankIndex,"EBM_STREET"));
+				}catch(Exception e){}
+				if(!bankStreet.equals(STRASBank.trim())){
+				bankStreetChanged=true;
+				bankStreetStyle="style='background-color:#F0E68C'";
+				}
+				
+				try{
+				bankCity =checkNull(bankMasterRetObj.getFieldValueString(bankIndex,"EBM_CITY"));
+				}catch(Exception e){}
+				if(!bankCity.equals(ORT01Bank.trim())){
+				bankCityChanged=true;
+				bankCityStyle="style='background-color:#F0E68C'";
+				}
+				
+				try{
+				bankBranch =checkNull(bankMasterRetObj.getFieldValueString(bankIndex,"EBM_BRANCH"));
+				}catch(Exception e){}
+				if(!bankBranch.equals(BRNCH.trim())){
+				bankBranchChanged=true;
+				bankBranchStyle="style='background-color:#F0E68C'";
+				}
+				
+				try{
+				bankIFSCCode =checkNull(bankMasterRetObj.getFieldValueString(bankIndex,"EBM_IFSC_CODE"));
+				}catch(Exception e){}
+				if(!bankIFSCCode.equals(SWIFT.trim())){
+				bankIFSCCodeChanged=true;
+				bankIFSCCodeStyle="style='background-color:#F0E68C'";
+				}
+				
+				try{
+				bankACCode =checkNull(bankMasterRetObj.getFieldValueString(bankIndex,"ebm_ac_code"));
+				}catch(Exception e){}
+				if(!bankACCode.equals(BANKN.trim())){
+				bankACCodeChanged=true;
+				bankACCodeStyle="style='background-color:#F0E68C'";
+				}
+			}
+%>
+			<Div class="box box-info collapsed-box">            
+			<Div class="box-header">
+						    <h5>&nbsp;&nbsp;&nbsp;&nbsp<B>BANK(<%=BANKN%>)</B></h5>
+						    <Div class="box-tools pull-right">
+								    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+								    </button>                   
+				      </Div>
+				       </Div>
+					    <Div class="box-body" style="display: block;">
+				      <Div class="table-responsive">
+					<Table class="table no-margin">
+
+
+
+			<TBody><Tr>
+			<Th>
+				Country
+			<br>
+			<%
+				if(bankCountryChanged)
+				{
+			%>
+				<b>Changed Value:</b>
+			<%
+				}
+			%></Th>
+			<Td colspan="4" <%=bankCountryStyle%>>
+			<%=BANKS%>
+			<br>
+			<%
+				if(bankCountryChanged)
+				{
+			%>
+				<input type="hidden" name="bankCountry" value="<%=bankCountry%>"><%=bankCountry%>
+			<%
+				}
+			%>
+			</Td>
+			<Th>
+				Bank Name
+			<br>
+			<%
+				if(bankNameChanged)
+				{
+			%>
+				<b>Changed Value:</b>
+			<%
+				}
+			%></Th>
+			<Td colspan="4" <%=bankNameStyle%>>
+			<%=BANKA%>
+			<br>
+			<%
+				if(bankNameChanged)
+				{
+			%>
+				<input type="hidden" name="bankName" value="<%=bankName%>"><%=bankName%>
+			<%
+				}
+			%>
+			</Td>
+			<Th>
+				Region
+			<br>
+			<%
+				if(bankRegionChanged)
+				{
+			%>
+				<b>Changed Value:</b>
+			<%
+				}
+			%></Th>
+			<Td colspan="4" <%=bankRegionStyle%>>
+			<%=PROVZ%>
+			<br>
+			<%
+				if(bankRegionChanged)
+				{
+			%>
+				<input type="hidden" name="bankRegion" value="<%=bankRegion%>"><%=bankRegion%>
+			<%
+				}
+			%>
+
+			</Td>
+
+			</Tr>
+
+			<Tr><Th>
+				Street
+			<br>
+			<%
+				if(bankStreetChanged)
+				{
+			%>
+				<b>Changed Value:</b>
+			<%
+				}
+			%></Th>
+			<Td colspan="4" <%=bankStreetStyle%>>
+			<%=STRASBank%>
+			<br>
+			<%
+				if(bankStreetChanged)
+				{
+			%>
+				<input type="hidden" name="bankStreet" value="<%=bankStreet%>"><%=bankStreet%>
+			<%
+				}
+			%>
+
+			</Td>
+			<Th>
+				City
+			<br>
+			<%
+				if(bankCityChanged)
+				{
+			%>
+				<b>Changed Value:</b>
+			<%
+				}
+			%></Th>
+			<Td colspan="4" <%=bankCityStyle%>>
+			<%=ORT01Bank%>
+			<br>
+			<%
+				if(bankCityChanged)
+				{
+			%>
+				<input type="hidden" name="bankCity" value="<%=bankCity%>"><%=bankCity%>
+			<%
+				}
+			%>
+
+			</Td>
+			<Th>
+				Branch
+			<br>
+			<%
+				if(bankBranchChanged)
+				{
+			%>
+				<b>Changed Value:</b>
+			<%
+				}
+			%></Th>
+			<Td colspan="4" <%=bankBranchStyle%>>
+			<%=BRNCH%>
+			<br>
+			<%
+				if(bankBranchChanged)
+				{
+			%>
+				<input type="hidden" name="bankBranch" value="<%=bankBranch%>"><%=bankBranch%>
+			<%
+				}
+			%>
+
+			</Td>
+			</Tr>
+			<Tr>
+			<Th>
+				IFSC Code
+			<br>
+			<%
+				if(bankIFSCCodeChanged)
+				{
+			%>
+				<b>Changed Value:</b>
+			<%
+				}
+			%></Th>
+			<Td colspan="4" <%=bankIFSCCodeStyle%>>
+			<%=SWIFT%>
+			<br>
+			<%
+				if(bankIFSCCodeChanged)
+				{
+			%>
+				<input type="hidden" name="bankIFSCCode" value="<%=bankIFSCCode%>"><%=bankIFSCCode%>
+			<%
+				}
+			%>
+
+			</Td>
+
+
+			<Th>
+				AC Code
+			<br>
+			<%
+				if(bankACCodeChanged)
+				{
+			%>
+				<b>Changed Value:</b>
+			<%
+				}
+			%></Th>
+			<Td colspan="4" <%=bankACCodeStyle%>>
+			<%=BANKN%>
+			<br>
+			<%
+				if(bankACCodeChanged)
+				{
+			%>
+				<input type="hidden" name="bankACCode" value="<%=bankACCode%>"><%=bankACCode%>
+			<%
+				}
+			%>
+
+			</Td>
+			<Th>
+				Currency
+			</Th>
+			<Td colspan="4">	
+			<Input readonly  type="text" style="text-transform: uppercase;" name="bankCurrency" id="bankCurrency" value="<%=WAERS%>"  maxlength="3">
+			<!--<select disabled  name="bankCurrency" id="bankCurrency">			
+				<option value="<%=WAERS%>" selected><%=WAERS%></option>		
+			</select>	-->				
+
+
+			</Td>
+
+			 </Tr>
+			 </TBody>
+
+
+			</Table>
+				      </Div>
+				      <!-- /.table-responsive -->
+				    </Div>         		
+
+						    </Div>
+						    <!-- /.box-header -->
+
+			
+<%
+	}
+	}
+	if(retVenComm.getRowCount()>0)
+	{
+%>
+		<Div>            
+			 <Table class="table" style="width:100%">
+			<thead>
+				<th style="text-align:center;background-color: #f39c12 !important">Name</th>
+				<th style="text-align:center;background-color: #f39c12 !important">Comments Date</th>
+				<th style="text-align:center;background-color: #f39c12 !important">Comments</th>
+				        
+			</thead>
+			
+	        	<tbody>
+<%
+			//out.println("countcountcount"+retVenComm.getRowCount());
+			for(int s=0;s<retVenComm.getRowCount();s++)
+			{
+				String userid = checkNull(retVenComm.getFieldValueString(s,"EDC_USER_ID"));
+				String commentedOn = checkNull(retVenComm.getFieldValueString(s,"EDC_DATE"));
+				String comments = checkNull(retVenComm.getFieldValueString(s,"EDC_COMMENTS"));
+
+				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				Date date = formatter.parse(commentedOn);
+				formatter = new SimpleDateFormat("dd/MM/yyyy");
+				String commentedOnDate = formatter.format(date);
+				try
+				{
+				userid=Integer.parseInt(userid)+"";
+				}
+				catch(Exception e){userid = retVenComm.getFieldValueString(s,"EDC_USER_ID");}
+%>
+				
+				<tr>
+<%
+					int index=-1;
+					if(UserNamesRetObj!=null)
+					{
+
+						index=UserNamesRetObj.getRowId("EU_ID",userid);
+						userName=checkNull(UserNamesRetObj.getFieldValueString(index,"EU_FIRST_NAME"))+" "+checkNull(UserNamesRetObj.getFieldValueString(index,"EU_LAST_NAME"));
+
+					}
+%>
+						
+						<td align="center"><%=userName%></td>
+						<td align="center"><%=commentedOnDate%></td>
+						<td align="center"><%=comments%></td>
+				</tr>
+
+<%
+			}
+%>
+			
+			</tbody>
+  			</table>
+
+               </Div>
+<%
+	}
+%>
+               <Div class="box box-info collapsed-box">            
+	       			<Div class="box-header">
+	       				    <h5>&nbsp;&nbsp;&nbsp;&nbsp<B>Comments</B><font color = red>*</font></h5>
+	       		       </Div>
+	       	        
+	       			<div class="form-group">
+	       				  <textarea class="form-control" rows="5" placeholder="Enter Comments" name="comments" id="comments"></textarea>
+	       		       </div>
+               </Div>
+<!-- /.box-header -->	
+<Div class="col-xs-12 col-md-8 col-md-offset-5" >
+	<button type="button" class="btn btn-primary" onclick="funUploads()">View Uploads</button>
+	<%
+	if("OPEN".equals(status))
+	{
+	%>
+	<!--<button type="button" class="btn btn-primary" onclick="funPostToSAP()">Post To SAP</button>-->
+	<button type="button" class="btn btn-primary" onclick="funSubmit()">Approve</button>
+	<%
+	}
+	%>
+	 <button type="button" class="btn btn-primary" onclick="history.go(-1)">Back</button>  
+</Div>	
+	
+<script>
+function funDeleteRequest()
+{
+	var flag= confirm("Are you sure to delete the request");
+	if(flag)
+	{
+		document.myForm.action="ezDeleteRequest.jsp";
+		document.myForm.submit();
+	}
+}
+function funSubmit()
+{
+	if(document.myForm.comments.value=="")
+	{
+		alert("Please enter comments to post details to SAP");
+		document.getElementById("comments").focus();
+		return false;
+	}
+	document.myForm.action="ezSubmitVendDtls.jsp";
+	document.myForm.submit();
+}
+function funPostToSAP()
+{
+if(document.myForm.comments.value=="")
+{
+	alert("Please enter comments to post details to SAP");
+	document.getElementById("comments").focus();
+	return false;
+}
+	$.confirm({
+		title: 'Enter SAP Login Credentials',
+		content: '<table class="table"><tr><th>User Id:</th><td><input type="text" name="SAPUserId" id="SAPUserId"  placeholder="User Id" autocomplete="off" autofocus></td></tr><tr><th>Password:</th><td><input type="password" name="SAPPassword" id="SAPPassword"  autocomplete="new-password" placeholder="Password"></td></tr></table>',
+		buttons: {
+			DONE:{
+				btnClass: 'btn-success',
+		
+				action:function () {
+					var SAPUserId=document.getElementById("SAPUserId").value;
+					var SAPPassword=document.getElementById("SAPPassword").value;
+								
+					if(SAPUserId=="")
+					{
+						alert("Please enter user Id to post details to SAP");
+						document.getElementById("SAPUserId").focus();
+						return false;
+					}
+					if(SAPPassword=="")
+					{
+						alert("Please enter password to post details to SAP");
+						document.getElementById("SAPPassword").focus();
+						return false;
+					}
+					document.myForm.SAPUSER.value=SAPUserId;
+					document.myForm.SAPPASSWORD.value=SAPPassword;
+					document.myForm.action="ezPostVendDtlsToSAP.jsp";
+					document.myForm.submit();
+				}
+			},
+			CANCEL: {
+			   btnClass: 'btn-danger',
+			   action:function () {
+
+			   }
+			}
+		}
+	});
+	
+}
+function funUploads()
+{
+	var Url="ezViewUploads.jsp?docId=<%=docId%>";
+	
+
+	$.fancybox.open({
+		href : Url,
+		type : 'iframe',
+		padding : 5,
+		width:'80%',
+		height:400,
+		autoSize : false,
+		closeBtn : false,
+		helpers     : { 
+				overlay : {closeClick: false}
+				 }		
+	});
+}
+</script>
+
+
+        </section><!-- /.content -->
+      </Div><!-- /.content-wrapper --> 
+
+	</form>
+	</Body>
+
+</Html>
+  <%@ include file="ezFooter.jsp"%>
+  <link rel="stylesheet" href="library/fancybox2/jquery.fancybox.css" type="text/css" media="screen" />  
+  <script type="text/javascript" src="library/fancybox2/jquery.fancybox.js"></script>
+<script type="text/javascript" src="library/fancybox2/jquery.fancybox.pack.js"></script>
+      
+ <link rel="stylesheet" href="../../../../EzCommon/Library/plugins/jQuery/confirm.css" type="text/css" media="screen" />  
+    <script src="../../../../EzCommon/Library/plugins/jQuery/confirm.min.js"></script>

@@ -8,7 +8,7 @@ import com.ezc.aragenPR.webapp.model.shared.Auditable;
 
 public class UserForm extends Auditable<String> {
 	
-	private Long id;
+	private String id;
 	private String userId;
 	private String firstName;
 	private String lastName;
@@ -44,11 +44,11 @@ public class UserForm extends Auditable<String> {
 		this.group = group;
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

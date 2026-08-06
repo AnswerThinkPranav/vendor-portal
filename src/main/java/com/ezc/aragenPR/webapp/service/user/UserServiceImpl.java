@@ -33,6 +33,7 @@ import com.ezc.aragenPR.webapp.model.user.Privilages;
 import com.ezc.aragenPR.webapp.model.user.Roles;
 import com.ezc.aragenPR.webapp.model.user.UserDefaults;
 import com.ezc.aragenPR.webapp.model.user.Users;
+import com.ezc.aragenPR.webapp.model.user.UserType;
 import com.ezc.aragenPR.webapp.model.user.VerificationToken;
 import com.ezc.aragenPR.webapp.model.user.WorkGroup_Users;
 import com.ezc.aragenPR.webapp.model.user.Work_Groups;
@@ -129,10 +130,14 @@ public class UserServiceImpl implements IUserService{
 	        user.setEmail(accountDto.getEmail());
 	//        user.setUsing2FA(accountDto.isUsing2FA());
 	        user.setRoles(new ArrayList<Roles>(Arrays.asList(userRole)));
-			user.setVendorCode(accountDto.getVendorCode());
+			user.setVendorCode(accountDto.getVendorCode() != null ? accountDto.getVendorCode() : "");
 			user.setPrivileges(privileges);
-	        user.setUserId(accountDto.getUserId()); 
+	        user.setUserId(accountDto.getUserId());
 	        user.setEnabled(true);
+	        // EU_TYPE/EUG_ID are NOT NULL on the merged legacy EZC_USERS table; this creation form
+	        // is for internal/admin-managed accounts, so default to buyer unless the role is vendor.
+	        user.setUserType("ROLE_VEND".equals(accountDto.getRole()) ? UserType.VENDOR_SAP.getCode() : UserType.BUYER.getCode());
+	        user.setUserGroupId(0);
 	        
 	        log.info("Adding 3");
 	        log.info(":::::::accountDto:::::"+accountDto.getUserId());
@@ -396,7 +401,7 @@ public class UserServiceImpl implements IUserService{
 	    }
 	    
 	    @Override
-	    public Optional<Users> getUserByID(final long id) {
+	    public Optional<Users> getUserByID(final String id) {
 	        return userRepository.findById(id);
 	    }
 

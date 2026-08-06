@@ -56,7 +56,7 @@
         </a></li>
 
             <li class="nav-item"
-                sec:authorize="(hasRole('ROLE_REQ_CR')) ">
+                sec:authorize="hasAnyRole('ROLE_REQ_CR') or hasAuthority('ROLE_BUYER')">
                 <a href="#" class="nav-link"> <!-- <i class="nav-icon fas fa-chart-pie"></i> -->
                     <i class="nav-icon fas fa-shopping-cart"></i>
                     <p>
@@ -64,12 +64,12 @@
                     </p>
                 </a>
                 <ul class="nav nav-treeview">
-                    <li class="nav-item" sec:authorize="hasAnyRole('ROLE_REQ_CR')"><a
+                    <li class="nav-item" sec:authorize="hasAnyRole('ROLE_REQ_CR') or hasAuthority('ROLE_BUYER')"><a
                             th:href="@{/prCreate/add}" class="nav-link"> <i
                             class="far fas fa-plus nav-icon"></i>
                         <p>Create PR</p>
                     </a></li>
-                    <li class="nav-item" sec:authorize="hasAnyRole('ROLE_REQ_CR')"><a
+                    <li class="nav-item" sec:authorize="hasAnyRole('ROLE_REQ_CR') or hasAuthority('ROLE_BUYER')"><a
                             th:href="@{/prCreate/addService}" class="nav-link"> <i
                             class="far fas fa-plus nav-icon"></i>
                         <p>Create Service PR</p>
@@ -125,6 +125,89 @@
                         <p>Reservation List</p>
                     </a></li>
 
+                </ul>
+            </li>
+
+            <!-- Vendor Registration - legacy ezHeader.jsp v_UserType==2 branch (invite/manage vendors).
+                 Buyer-only: vendors don't register other vendors. Links point at routes not built yet. -->
+            <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-user-plus"></i>
+                    <p>
+                        Vendor Registration <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item"><a th:href="@{/vendorReg/invite}"
+                                            class="nav-link"> <i class="far fas fa-plus nav-icon"></i>
+                        <p>Invite Vendor</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/vendorReg/new}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>New</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/vendorReg/list}"
+                                            class="nav-link"> <i class="fas fa-list nav-icon"></i>
+                        <p>List</p>
+                    </a></li>
+                </ul>
+            </li>
+
+            <!-- RFQ - legacy ezHeader.jsp rfqs_L block. Buyer creates/manages; vendor responds via
+                 the shared List link (controller branches by role once built). -->
+            <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_BUYER','ROLE_VEND_SAP','ROLE_VEND_TEMP')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-file-alt"></i>
+                    <p>
+                        RFQ <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a
+                            th:href="@{/rfq/createFromPr}" class="nav-link"> <i
+                            class="far fas fa-plus nav-icon"></i>
+                        <p>Create From PR</p>
+                    </a></li>
+                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a
+                            th:href="@{/rfq/createFromMaterial}" class="nav-link"> <i
+                            class="far fas fa-plus nav-icon"></i>
+                        <p>Create From Material</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/rfq/list}"
+                                            class="nav-link"> <i class="fas fa-list nav-icon"></i>
+                        <p>RFQ List</p>
+                    </a></li>
+                </ul>
+            </li>
+
+            <!-- QCF - legacy ezHeader.jsp qcfs_L block. Buyer reviews/reports; vendor submits. -->
+            <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_BUYER','ROLE_VEND_SAP','ROLE_VEND_TEMP')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                    <p>
+                        QCF <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item"><a th:href="@{/qcf/list}"
+                                            class="nav-link"> <i class="fas fa-list nav-icon"></i>
+                        <p>QCF List</p>
+                    </a></li>
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_VEND_SAP','ROLE_VEND_TEMP')"><a
+                            th:href="@{/qcf/submit}" class="nav-link"> <i
+                            class="far fas fa-plus nav-icon"></i>
+                        <p>Submit QCF</p>
+                    </a></li>
+                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a
+                            th:href="@{/qcf/toAct}" class="nav-link"> <i
+                            class="fas fa-tasks nav-icon"></i>
+                        <p>To Act</p>
+                    </a></li>
+                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a
+                            th:href="@{/qcf/prPoReport}" class="nav-link"> <i
+                            class="fas fa-chart-bar nav-icon"></i>
+                        <p>PR/PO Report</p>
+                    </a></li>
                 </ul>
             </li>
 
