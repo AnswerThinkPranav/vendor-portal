@@ -5,9 +5,11 @@ import com.ezc.aragenPR.webapp.model.pr.EzPurchaseRequisitionHeader;
 import com.ezc.aragenPR.webapp.model.user.Roles;
 import com.ezc.aragenPR.webapp.model.user.UserDefaults;
 import com.ezc.aragenPR.webapp.model.user.Users;
+import com.ezc.aragenPR.webapp.model.vendorreg.CustomerFormHeader;
 import com.ezc.aragenPR.webapp.repository.pr.EzcPRHeaderRepository;
 import com.ezc.aragenPR.webapp.repository.reservation.EzcReservationHeaderRepo;
 import com.ezc.aragenPR.webapp.repository.ses.SESRepo;
+import com.ezc.aragenPR.webapp.repository.vendorreg.CustomerFormHeaderRepository;
 import com.ezc.aragenPR.webapp.security.PostLoginSessionSetupService;
 import com.ezc.aragenPR.webapp.security.UserSessionContext;
 import com.ezc.aragenPR.webapp.service.pr.EzcPRHeaderService;
@@ -48,6 +50,9 @@ public class DashboardController {
 
     @Autowired
     private IVendorPortalDashboardService vendorPortalDashboardService;
+
+    @Autowired
+    private CustomerFormHeaderRepository customerFormHeaderRepository;
 
     @GetMapping("/dashboard/*")
     public String showView(Principal principal, Authentication auth, Model model,
@@ -169,6 +174,22 @@ public class DashboardController {
             model.addAttribute("rfqToQuote", vendorPortalDashboardService.getRfqToQuoteCount(vendorCode));
             model.addAttribute("rfqToRequote", vendorPortalDashboardService.getRfqToRequoteCount(vendorCode));
         }
+
+        // The temp vendor's own registration doc id is the same value as their login id / SAP
+        // business partner placeholder (see IVendorRegistrationService.inviteVendor) - so this
+        // is a direct lookup, not a search, unlike the buyer's queue views.
+        String docId = userObj.getVendorCode();
+        model.addAttribute("docId", docId);
+        String status = customerFormHeaderRepository.findById(docId).map(CustomerFormHeader::getStatus).orElse(null);
+        String regStatusLabel = switch (status == null ? "" : status) {
+            case "INITIATED", "RESUBMITTED" -> "Complete Registration";
+            case "SUBMITTED" -> "Registration Under Approval";
+            case "REJECTED" -> "Registration Rejected";
+            case "APPROVED", "POSTED" -> "Registration Approved";
+            default -> "Complete Registration";
+        };
+        model.addAttribute("regStatusLabel", regStatusLabel);
+        model.addAttribute("regEditable", status == null || "INITIATED".equals(status) || "RESUBMITTED".equals(status));
 
         return "dashboard/tempVendorDashboard";
     }

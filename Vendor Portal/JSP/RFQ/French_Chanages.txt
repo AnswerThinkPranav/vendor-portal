@@ -1,0 +1,39 @@
+
+properties:
+===========
+D:\JUBLAPP\classesnew\EzVendorLabels_EN.properties
+
+D:\JUBLAPP\classesnew\EzVendorLabels_FR.properties
+
+To Do:
+=======
+ezVendReg--->menus need to be changed
+Financial Information Tab---->3 changes need to be done.
+Bank Details Tab---->Show Approval Hirarchy window to be done
+file name field
+upload Attachments field
+Query window
+ezBuyerWelcome.jsp--->3 pending queries tab 
+Query window--->SEND BUTTON
+
+------------------>ezSelectAuctionMat: MAterial window
+
+In ADWIVEDI Login Query window(Enter your query here))
+
+
+Changes in vendor Registration:(completed)
+================================
+
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezTempUserCreation.jsp
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezVNRList.jsp
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezListQueries.jsp
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezTempVendList.jsp
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezViewTempVend.jsp
+
+Domestic:
+========
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Misc\ezVendReg.jsp
+
+
+Labels:
+========

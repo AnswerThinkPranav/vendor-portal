@@ -1,0 +1,3 @@
+1.RFQ:7000000525 created sucessfully against the vendor: null[711183]
+
+2.RFQ:7000000526 created sucessfully against the vendor: null[711185]

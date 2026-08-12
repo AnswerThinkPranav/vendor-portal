@@ -1,0 +1,115 @@
+<HTML>
+<HEAD>
+<TITLE>Calculator</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#E3E9EC" TEXT="#000000" LINK="#0000FF" onLoad=ClearAll() scroll=No>
+
+<SCRIPT language="JavaScript">
+<!--
+
+var memory1 = 0
+var control = 0
+var InOperator = ""
+var FirstRound = 1
+
+function Digit(number) {
+	  var string_mem = "";
+	  if (control == 1){
+	    document.Calculator.Output.value = number;
+	    control = 0;
+	}
+	else{
+		string_mem = document.Calculator.Output.value;
+		string_mem = string_mem + number;
+		document.Calculator.Output.value = string_mem;
+	}
+}
+
+function ClearAll(){
+	document.Calculator.Output.value = "";
+	memory1 = 0;
+	FirstRound = 1;
+}
+
+function Calculate(Operator){
+	var memory2 = 0;
+	memory2 = parseFloat(document.Calculator.Output.value);
+	control = 1;
+	if (FirstRound == 1){
+		memory1 = parseFloat(document.Calculator.Output.value);
+		FirstRound = 0;
+	}
+	else{
+		if (InOperator == "+")
+			memory1 = (memory1 + memory2);
+		if (InOperator == "-")
+			memory1 = (memory1 - memory2);
+		if (InOperator == "*")
+			memory1 = (memory1 * memory2);
+		if (InOperator == "/")
+			memory1 = (memory1 / memory2);
+	}
+	InOperator = Operator;
+	document.Calculator.Output.value = memory1;
+}
+
+function SumUp(){
+	memory2 = parseFloat(document.Calculator.Output.value);
+	control = 1;
+	if (InOperator == "+"){
+		memory1 = (memory1 + memory2);
+	}
+	else if (InOperator == "-"){
+		memory1 = (memory1 - memory2);
+	}
+	else if (InOperator == "*"){
+		memory1 = (memory1 * memory2);
+	}
+	else if (InOperator == "/"){
+		memory1 = (memory1 / memory2);
+	}
+	InOperator = "";
+	document.Calculator.Output.value = memory1;
+}
+
+
+// -->
+</SCRIPT>
+
+<FORM NAME="Calculator">
+<CENTER><TABLE BORDER="1">
+<TR><TD COLSPAN="3" ALIGN="CENTER"><INPUT TYPE="text" NAME="Output" SIZE="12"></TD>
+<TD align="center"><INPUT TYPE="reset" NAME="Reset" VALUE=" C " onClick=ClearAll()></Td>
+</TR>
+
+<TR>
+<TD align="center"><INPUT TYPE="button" NAME="B1" VALUE=" 1 " onClick=Digit(1)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="B2" VALUE=" 2 " onClick=Digit(2)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="B3" VALUE=" 3 " onClick=Digit(3)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="Div" VALUE=" /  " onClick=Calculate("/")></TD>
+</TR>
+<TR>
+<TD align="center"><INPUT TYPE="button" NAME="B4" VALUE=" 4 " onClick=Digit(4)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="B5" VALUE=" 5 " onClick=Digit(5)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="B6" VALUE=" 6 " onClick=Digit(6)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="Mul" VALUE=" * " onClick=Calculate("*")></TD>
+</TR>
+<TR>
+<TD align="center"><INPUT TYPE="button" NAME="B7" VALUE=" 7 " onClick=Digit(7)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="B8" VALUE=" 8 " onClick=Digit(8)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="B9" VALUE=" 9 " onClick=Digit(9)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="Sub" VALUE=" -  " onClick=Calculate("-")></TD>
+</TR>
+<TR>
+<TD align="center"><INPUT TYPE="button" NAME="B9" VALUE=" 0 " onClick=Digit(0)></TD>
+<TD align="center"><INPUT TYPE="button" NAME="B9" VALUE="  . " onClick=Digit(".")></TD>
+<TD align="center"><INPUT TYPE="button" NAME="B9" VALUE=" = " onClick=SumUp()></TD>
+<TD align="center"><INPUT TYPE="button" NAME="Add" VALUE=" + "  onClick=Calculate("+")></TD>
+</TR>
+</TABLE>
+</CENTER>
+</FORM>
+
+</BODY>
+</HTML>

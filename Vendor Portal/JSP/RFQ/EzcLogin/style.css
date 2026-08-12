@@ -1,0 +1,160 @@
+BODY
+{
+    MARGIN: 0px
+}
+.maintable
+{
+    WIDTH: 100%;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: center
+}
+.maintable .footer
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10px;
+    PADDING-BOTTOM: 3px;
+    COLOR: white;
+    PADDING-TOP: 3px;
+    FONT-FAMILY: Verdana;
+    HEIGHT: 20px;
+    BACKGROUND-COLOR: #0d4f72;
+    TEXT-ALIGN: center
+}
+.maintable .footer A
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10px;
+    COLOR: powderblue;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.maintable .footer A:hover
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10px;
+    COLOR: lightcyan;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+.maintable .header
+{
+    WIDTH: 100%;
+    HEIGHT: 155px
+}
+.maintable .menu
+{
+    BACKGROUND-POSITION: left bottom;
+    BORDER-TOP: #0d4f72 2px solid;
+    BACKGROUND-IMAGE: url(menubg.gif);
+    WIDTH: 235px;
+    BACKGROUND-REPEAT: no-repeat;
+    TEXT-ALIGN: left
+}
+.maintable .menu .menutable
+{
+    WIDTH: 175px;
+    TEXT-ALIGN: right
+}
+.maintable .menu .menutable A
+{
+    PADDING-RIGHT: 35px;
+    BACKGROUND-POSITION: right center;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 11px;
+    BACKGROUND-IMAGE: url(bullet1.gif);
+    PADDING-BOTTOM: 2px;
+    WIDTH: 175px;
+    COLOR: #0d4f72;
+    PADDING-TOP: 2px;
+    BACKGROUND-REPEAT: no-repeat;
+    FONT-FAMILY: Verdana;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: none
+}
+.maintable .menu .menutable A:hover
+{
+    PADDING-RIGHT: 35px;
+    BACKGROUND-POSITION: right center;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 11px;
+    BACKGROUND-IMAGE: url(bullet2.gif);
+    PADDING-BOTTOM: 2px;
+    COLOR: #6791a7;
+    PADDING-TOP: 2px;
+    BACKGROUND-REPEAT: no-repeat;
+    FONT-FAMILY: Verdana;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: underline
+}
+.maintable .content .midimg
+{
+    BORDER-RIGHT: #0d4f72 2px;
+    BORDER-TOP: #0d4f72 2px;
+    BORDER-LEFT: #0d4f72 2px;
+    WIDTH: 200px;
+    BORDER-BOTTOM: #0d4f72 2px;
+    HEIGHT: 100%;
+    TEXT-ALIGN: left
+}
+.maintable .line1
+{
+    HEIGHT: 10px;
+    BACKGROUND-COLOR: #c2d3dc
+}
+.maintable .line2
+{
+    HEIGHT: 10px;
+    BACKGROUND-COLOR: #6791a7
+}
+.maintable .line3
+{
+    HEIGHT: 10px;
+    BACKGROUND-COLOR: #24607f
+}
+.maintable .header .header1
+{
+    BACKGROUND-POSITION: left top;
+    BACKGROUND-IMAGE: url(header1.gif);
+    WIDTH: 235px;
+    BACKGROUND-REPEAT: no-repeat;
+    HEIGHT: 155px;
+    TEXT-ALIGN: left
+}
+.maintable .header .header2
+{
+    HEIGHT: 155px
+}
+.maintable .content
+{
+    BORDER-TOP: #0d4f72 2px solid
+}
+.logintable
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10px;
+    COLOR: #0d4f72;
+    FONT-FAMILY: Verdana
+}
+.logintable .mylinks
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10px;
+    COLOR: gray;
+    TEXT-ALIGN: center
+}
+.logintable.mylinks A
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 9px;
+    COLOR: #ab9a54;
+    FONT-FAMILY: Verdana;
+    TEXT-DECORATION: none
+}
+.logintable.mylinks A:hover
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 9px;
+    COLOR: #eec621;
+    FONT-FAMILY: Verdana;
+    TEXT-DECORATION: underline
+}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'RFQ ' + ${details.rfqNo()}">RFQ Details</title>
+
+    <style>
+        .vr-breadcrumb { font-size: 13px; color: #6c7a91; margin-bottom: 18px; letter-spacing: .2px; }
+        .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
+
+        .vr-card { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08); overflow: hidden; width: 100%; margin: 0 0 24px 0; }
+        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; padding: 18px 28px; display: flex; justify-content: space-between; align-items: center; }
+        .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; }
+        .vr-card-header .vr-sub { opacity: .85; font-size: 13px; }
+
+        .vr-table-wrap { padding: 24px 28px; overflow-x: auto; }
+        table.vr-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+        table.vr-table thead th {
+            background: #325786; color: #fff; font-weight: 700;
+            font-size: 11.5px; letter-spacing: .3px; padding: 10px 12px; text-align: center; border-bottom: 2px solid #274263;
+        }
+        table.vr-table tbody td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #f0f2f7; }
+
+        .vr-alert { margin: 0 28px 20px 28px; padding: 12px 16px; border-radius: 10px; background: #fdecea; color: #c0392b; font-size: 13.5px; font-weight: 600; }
+        .vr-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 0 28px 24px 28px; }
+        .vr-btn { display: inline-block; border: none; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13.5px; cursor: pointer; text-decoration: none; }
+        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-btn-primary:hover { color: #fff; }
+        .vr-btn-light { background: #eef1f6; color: #33415c; }
+        .vr-btn-light:hover { color: #33415c; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="vr-breadcrumb">RFQs &nbsp;/&nbsp; <span class="current">RFQ Details</span></div>
+
+        <div class="vr-card">
+            <div class="vr-card-header">
+                <h4><i class="fa fa-globe"></i>&nbsp; RFQ : <span th:text="${details.rfqNo()}"></span></h4>
+                <div class="vr-sub">RFQ Date: <span th:text="${details.rfqDate()}"></span></div>
+            </div>
+
+            <div class="vr-table-wrap">
+                <table class="vr-table">
+                    <thead>
+                    <tr>
+                        <th>Line</th>
+                        <th>PR No</th>
+                        <th>Material</th>
+                        <th>Description</th>
+                        <th>UOM</th>
+                        <th>Qty</th>
+                        <th>Plant</th>
+                        <th>Remarks</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${details.lineItems()}">
+                        <td th:text="${item.lineNo()}"></td>
+                        <td th:text="${item.prNo()}"></td>
+                        <td th:text="${item.material()}"></td>
+                        <td th:text="${item.materialDesc()}"></td>
+                        <td th:text="${item.uom()}"></td>
+                        <td th:text="${item.qty()}"></td>
+                        <td th:text="${item.plant()}"></td>
+                        <td th:text="${item.remarks()}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-alert" th:if="${details.expired()}">This RFQ has expired.</div>
+
+            <div class="vr-actions">
+                <a class="vr-btn vr-btn-light" th:href="@{/rfq/list(type=${type},rfqType=${rfqType})}">
+                    <i class="fa fa-arrow-left"></i> Go Back
+                </a>
+                <a class="vr-btn vr-btn-primary" th:if="${!details.alreadyQuoted()} and ${!details.expired()}"
+                   th:href="@{/rfq/quote/{rfqNo}(rfqNo=${details.rfqNo()})}">
+                    <i class="fa fa-money"></i> Quote
+                </a>
+                <a class="vr-btn vr-btn-primary" th:if="${details.alreadyQuoted()}"
+                   th:href="@{/rfq/quote/{rfqNo}(rfqNo=${details.rfqNo()})}">
+                    <i class="fa fa-eye"></i> View Quotation
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

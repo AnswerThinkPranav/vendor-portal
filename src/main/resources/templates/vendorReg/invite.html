@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Invite Vendor</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        .vr-breadcrumb {
+            font-size: 13px;
+            color: #6c7a91;
+            margin-bottom: 18px;
+            letter-spacing: .2px;
+        }
+        .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
+
+        .vr-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08);
+            overflow: hidden;
+            width: 100%;
+            margin: 0 0 24px 0;
+        }
+        .vr-card-header {
+            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%);
+            color: #fff;
+            padding: 18px 28px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; }
+        .vr-card-header p { margin: 2px 0 0 0; opacity: .85; font-size: 13px; }
+        .vr-temp-id-badge {
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 999px;
+            padding: 6px 16px;
+            font-size: 12.5px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .vr-temp-id-badge small { font-weight: 400; opacity: .8; margin-left: 4px; }
+        .vr-card-body { padding: 20px 28px 4px 28px; }
+
+        .vr-section-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--orange-color);
+            margin: 0 0 10px 0;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .vr-section-title:not(:first-child) { margin-top: 20px; }
+        .vr-section-title i { font-size: 14px; }
+
+        .vr-field { margin-bottom: 12px; }
+        .vr-field label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #33415c;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .vr-field label .req { color: var(--orange-color); margin-left: 2px; }
+        .vr-field .form-control,
+        .vr-field .select2-container .select2-selection--single {
+            border-radius: 9px;
+            border: 1px solid #dde3ec;
+            height: 38px;
+            box-shadow: none;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .vr-field .select2-container .select2-selection--single .select2-selection__rendered { line-height: 36px; }
+        .vr-field .select2-container .select2-selection--single .select2-selection__arrow { height: 36px; }
+        .vr-field .form-control:focus {
+            border-color: var(--blue-color);
+            box-shadow: 0 0 0 3px rgba(3, 56, 130, 0.12);
+        }
+        .vr-field .form-control.is-invalid,
+        .vr-field .select2-container--invalid .select2-selection--single {
+            border-color: #e0523f !important;
+        }
+        .vr-error-text {
+            font-size: 12px;
+            color: #e0523f;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .vr-auth-grid { display: flex; gap: 14px; flex-wrap: wrap; }
+        .vr-auth-option {
+            flex: 1 1 220px;
+            border: 1.5px solid #dde3ec;
+            border-radius: 11px;
+            padding: 11px 16px;
+            cursor: pointer;
+            transition: all .15s ease;
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .vr-auth-option:hover { border-color: #b9c6da; }
+        .vr-auth-option.checked {
+            border-color: var(--blue-color);
+            background: rgba(3, 56, 130, 0.05);
+        }
+        .vr-auth-option input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--blue-color); }
+        .vr-auth-option .vr-auth-title { font-weight: 600; font-size: 13.5px; color: #1f2a3c; }
+        .vr-auth-option .vr-auth-desc { font-size: 12px; color: #7c879b; margin-top: 1px; }
+
+        .vr-card-footer {
+            padding: 14px 28px 18px 28px;
+            display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+            border-top: 1px solid #eef1f6;
+            margin-top: 14px;
+        }
+        .vr-btn-primary {
+            background: linear-gradient(120deg, var(--blue-color), #0a4fae);
+            border: none;
+            border-radius: 10px;
+            padding: 11px 30px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: .2px;
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+        .vr-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(3,56,130,.25); color: #fff; }
+        .vr-btn-primary:disabled { opacity: .65; transform: none; box-shadow: none; }
+
+        .vr-alert {
+            display: none;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 14px;
+            margin-bottom: 22px;
+            align-items: center; gap: 10px;
+        }
+        .vr-alert.success { background: #e7f7ee; color: #1c7c4d; border: 1px solid #b9ecce; }
+        .vr-alert.error { background: #fdecea; color: #c0392b; border: 1px solid #f7c9c2; }
+        .vr-alert i { font-size: 18px; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="vr-breadcrumb">Vendor Registration &nbsp;/&nbsp; <span class="current">Invite Vendor</span></div>
+
+        <div class="vr-card">
+            <div class="vr-card-header">
+                <div>
+                    <h4>Invite Vendor</h4>
+                    <p>Create a temporary vendor login and grant RFQ / Registration access</p>
+                </div>
+                <div class="vr-temp-id-badge" id="tempIdBadge" th:attr="data-next-id=${nextTempVendorId}">
+                    Next Temp Vendor ID: <span th:text="${nextTempVendorId}"></span><small>(confirmed on save)</small>
+                </div>
+            </div>
+
+            <div class="vr-card-body">
+                <div class="vr-alert success" id="successAlert"><i class="fas fa-check-circle"></i> <span></span></div>
+                <div class="vr-alert error" id="errorAlert"><i class="fas fa-exclamation-circle"></i> <span></span></div>
+
+                <form id="inviteVendorForm" autocomplete="off">
+
+                    <div class="vr-section-title"><i class="fas fa-user"></i> Vendor Details</div>
+                    <div class="row">
+                        <div class="col-md-6 vr-field">
+                            <label>Vendor Name <span class="req">*</span></label>
+                            <input type="text" class="form-control" id="userName" maxlength="35">
+                            <div class="vr-error-text">Please enter the Vendor Name</div>
+                        </div>
+                        <div class="col-md-6 vr-field">
+                            <label>Vendor Email <span class="req">*</span></label>
+                            <input type="text" class="form-control" id="eMail" maxlength="240">
+                            <div class="vr-error-text">Please enter the Vendor Email</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 vr-field">
+                            <label>Vendor Contact</label>
+                            <input type="text" class="form-control" id="contactNo" maxlength="15">
+                        </div>
+                    </div>
+
+                    <div class="vr-section-title"><i class="fas fa-sitemap"></i> Classification</div>
+                    <div class="row">
+                        <div class="col-md-6 vr-field">
+                            <label>Purchase Org <span class="req">*</span></label>
+                            <select class="form-control select2" id="purOrg" style="width:100%">
+                                <option value="" selected>Select Purchase Org</option>
+                                <option th:each="o : ${purOrgOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                            <div class="vr-error-text">Please select a Purchase Org</div>
+                        </div>
+                        <div class="col-md-6 vr-field">
+                            <label>Company Code <span class="req">*</span></label>
+                            <select class="form-control select2" id="compCode" style="width:100%">
+                                <option value="" selected>Select Company Code</option>
+                                <option th:each="o : ${compCodeOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                            <div class="vr-error-text">Please select a Company Code</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 vr-field">
+                            <label>Account Group <span class="req">*</span></label>
+                            <select class="form-control select2" id="venGrp" style="width:100%">
+                                <option value="" selected>Select Account Group</option>
+                                <option th:each="o : ${venGrpOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                            <div class="vr-error-text">Please select an Account Group</div>
+                        </div>
+                        <div class="col-md-6 vr-field">
+                            <label>Vendor Type <span class="req">*</span></label>
+                            <select class="form-control select2" id="venType" style="width:100%">
+                                <option value="">Select Schema</option>
+                                <option value="IN" selected>Domestic</option>
+                                <option value="IM">International</option>
+                            </select>
+                            <div class="vr-error-text">Please select a Vendor Type</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 vr-field">
+                            <label>Plant <span class="req">*</span></label>
+                            <select class="form-control select2" id="selPlant" style="width:100%">
+                                <option value="" selected>Select Plant</option>
+                                <option th:each="o : ${plantOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                            <div class="vr-error-text">Please select a Plant</div>
+                            <small class="text-muted" th:if="${#lists.isEmpty(plantOptions)}">
+                                No plants are authorized for your account yet (EZC_USER_DEF_KEY_VALUES / PLANT).
+                            </small>
+                        </div>
+                        <div class="col-md-6 vr-field">
+                            <label>Category <span class="req">*</span></label>
+                            <select class="form-control select2" id="selCategory" style="width:100%">
+                                <option value="" selected>Select Category</option>
+                                <option th:each="o : ${categoryOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                            <div class="vr-error-text">Please select a Category</div>
+                            <small class="text-muted" th:if="${#lists.isEmpty(categoryOptions)}">
+                                No categories are authorized for your account yet (EZC_USER_DEF_KEY_VALUES / CATEGORY).
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="vr-section-title"><i class="fas fa-key"></i> Authorization</div>
+                    <div class="vr-auth-grid">
+                        <label class="vr-auth-option" id="rfqOption" for="RFQ">
+                            <input type="checkbox" id="RFQ">
+                            <div>
+                                <div class="vr-auth-title">RFQ</div>
+                                <div class="vr-auth-desc">Allow this vendor to respond to RFQs</div>
+                            </div>
+                        </label>
+                        <label class="vr-auth-option checked" id="vendRegOption" for="VENREG">
+                            <input type="checkbox" id="VENREG" checked>
+                            <div>
+                                <div class="vr-auth-title">Vendor Registration Form</div>
+                                <div class="vr-auth-desc">Allow this vendor to complete self-registration</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="vr-error-text" id="authError">Please select at least one authorization (RFQ or Vendor Registration Form)</div>
+
+                </form>
+            </div>
+
+            <div class="vr-card-footer">
+                <button type="button" class="btn btn-light" onclick="resetInviteForm()">Reset</button>
+                <button type="button" class="vr-btn-primary" id="saveBtn" onclick="submitInviteVendor()">
+                    <i class="fas fa-paper-plane"></i>&nbsp; Create User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script>
+        $(function () {
+            $('.select2').select2({ theme: 'bootstrap4' });
+
+            $('#rfqOption input, #vendRegOption input').on('change', function () {
+                $(this).closest('.vr-auth-option').toggleClass('checked', this.checked);
+            });
+        });
+
+        function clearErrors() {
+            $('.vr-error-text').hide();
+            $('.form-control').removeClass('is-invalid');
+            $('.select2-container').removeClass('select2-container--invalid');
+            $('#successAlert, #errorAlert').hide();
+        }
+
+        function showFieldError(fieldId) {
+            const $field = $('#' + fieldId);
+            $field.addClass('is-invalid');
+            $field.next('.select2-container').addClass('select2-container--invalid');
+            $field.closest('.vr-field').find('.vr-error-text').show();
+        }
+
+        function resetInviteForm() {
+            // Reload rather than reset-in-place so the "Next Temp Vendor ID" preview is
+            // re-read from the server (it may have moved on if another invite was saved).
+            window.location.reload();
+        }
+
+        function submitInviteVendor() {
+            clearErrors();
+
+            const payload = {
+                userName: $('#userName').val().trim(),
+                email: $('#eMail').val().trim(),
+                contactNo: $('#contactNo').val().trim(),
+                purOrg: $('#purOrg').val(),
+                compCode: $('#compCode').val(),
+                venGrp: $('#venGrp').val(),
+                venType: $('#venType').val(),
+                selPlant: $('#selPlant').val(),
+                selCategory: $('#selCategory').val(),
+                rfqAuth: $('#RFQ').is(':checked'),
+                vendRegAuth: $('#VENREG').is(':checked')
+            };
+
+            let hasError = false;
+
+            if (!payload.userName) { showFieldError('userName'); hasError = true; }
+            if (!payload.email) { showFieldError('eMail'); hasError = true; }
+            if (!payload.compCode) { showFieldError('compCode'); hasError = true; }
+            if (!payload.purOrg) { showFieldError('purOrg'); hasError = true; }
+            if (!payload.venGrp) { showFieldError('venGrp'); hasError = true; }
+            if (!payload.venType) { showFieldError('venType'); hasError = true; }
+            if (!payload.selPlant) { showFieldError('selPlant'); hasError = true; }
+            if (!payload.selCategory) { showFieldError('selCategory'); hasError = true; }
+            if (!payload.rfqAuth && !payload.vendRegAuth) { $('#authError').show(); hasError = true; }
+
+            if (hasError) {
+                return;
+            }
+
+            const $btn = $('#saveBtn');
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>&nbsp; Saving...');
+
+            fetch('/vendorReg/invite', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [$('meta[name="_csrf_header"]').attr('content')]: $('meta[name="_csrf"]').attr('content')
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
+                .then(function (result) {
+                    if (result.ok) {
+                        $('#successAlert span').text(result.body.message);
+                        $('#successAlert').css('display', 'flex');
+                        $('#tempIdBadge').text('Temp Vendor ID: ' + result.body.docId);
+                    } else {
+                        $('#errorAlert span').text(result.body.message || 'Failed to invite vendor.');
+                        $('#errorAlert').css('display', 'flex');
+                    }
+                })
+                .catch(function () {
+                    $('#errorAlert span').text('Unexpected error while saving. Please try again.');
+                    $('#errorAlert').css('display', 'flex');
+                })
+                .finally(function () {
+                    $btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i>&nbsp; Create User');
+                });
+        }
+    </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,453 @@
+MRP PR 	    --> 10616503 Fixed Indi
+
+Non MRP PRs --> 110008160
+
+
+120033541 --> Non MRP  & release strategy
+
+3001 --> JGL - Roorkee - Dosage
+
+
+Without version --> 
+
+10616503 
+
+120033555
+
+With Version:
+
+
+
+120033532
+
+Vendors:
+===========
+User Id		309905
+Password	Portal@123
+
+
+User Id		801238
+Password	Portal@123
+
+
+LAST PO PRICE:
+
+Material: 7502000153
+
+Plant: 3001
+
+puchase org: 3001
+
+======================================
+IMPORT PO:
+==========
+9100000286
+
+DOMESTIC PO
+============
+4100028027
+
+
+
+110008172
+
+========================================
+
+7000000037 --> IMP
+
+7000000046 --> DOM
+
+========================================
+line	
+Material	
+Description
+HSN/SAC
+Qty
+Per
+UOM
+MRP Price
+Basic Price
+Currency
+Conditions
+Total
+Remarks
+Delivery Date
+Warranty
+=========================================
+Comments
+=========================================
+Payment Terms
+Inco Terms
+HSN/SAC
+Currency
+
+=========================================
+1.RFQ:7000000053 created sucessfully against the vendor: 0000801238
+
+2.RFQ:7000000054 created sucessfully against the vendor: 0000309905
+
+
+=========================================
+WF 
+==========================================
+
+SUBMIT:
+=========
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Request\ezSaveAuctionWF.jsp
+
+UPDATE:
+=========
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Request\ezUpdateAuctionWF.jsp
+
+
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Request\ezAuctionReport.jsp
+
+
+=========================================
+	SELECT DISTINCT ERH_COLLETIVE_RFQ_NO,EWDHH_NEXT_PARTICIPANT,NEXT_PART FROM EZC_RFQ_HEADER A INNER JOIN EZC_WF_DOC_HISTORY_HEADER B ON A.ERH_COLLETIVE_RFQ_NO=B.EWDHH_DOC_ID 
+	LEFT OUTER JOIN (SELECT EWWU_GROUP,GROUP_CONCAT(CONCAT(EU_ID,'[',EU_FIRST_NAME,']')) AS NEXT_PART  FROM EZC_WF_WORKGROUP_USERS,EZC_USERS
+	 WHERE EWWU_USER=EU_ID AND TRIM(EWWU_USER) IN (SELECT EUDKV_USER_ID FROM EZC_USER_DEF_KEY_VALUES WHERE EUDKV_KEY='PLANT' AND EUDKV_VALUE IN ('3001')) 
+	 AND EWWU_USER IN (SELECT EUDKV_USER_ID FROM EZC_USER_DEF_KEY_VALUES WHERE EUDKV_KEY='CATEGORY' AND EUDKV_VALUE IN ('ENG_SER','RM_PM')) 
+	 GROUP BY EWWU_GROUP) AS C ON B.EWDHH_NEXT_PARTICIPANT=C.EWWU_GROUP  WHERE A.ERH_PLANT IN ('3001') AND A.ERH_CATEGORY IN ('ENG_SER','RM_PM') AND 
+ B.EWDHH_WF_STATUS IN ('SUBMITTED','REJECTED') AND  B.EWDHH_NEXT_PARTICIPANT IN ('LEADBUYER') AND B.EWDHH_CREATED_ON BETWEEN STR_TO_DATE('01/04/2020 12:01','%d/%m/%Y %H:%i') AND STR_TO_DATE('04/09/2021 23:59','%d/%m/%Y %H:%i')
+ 
+ ========================================
+ 
+ SELECT COUNT(DISTINCT(A.ERH_COLLETIVE_RFQ_NO)) FROM EZC_RFQ_HEADER A INNER JOIN EZC_WF_DOC_HISTORY_HEADER B ON A.ERH_COLLETIVE_RFQ_NO=B.EWDHH_DOC_ID 
+ LEFT OUTER JOIN (SELECT EWWU_GROUP,GROUP_CONCAT(CONCAT(EU_ID,'[',EU_FIRST_NAME,']')) AS NEXT_PART  FROM EZC_WF_WORKGROUP_USERS,EZC_USERS
+  WHERE EWWU_USER=EU_ID AND TRIM(EWWU_USER) IN (SELECT EUDKV_USER_ID FROM EZC_USER_DEF_KEY_VALUES WHERE EUDKV_KEY='PLANT' AND EUDKV_VALUE IN ('3001')) 
+  AND EWWU_USER IN (SELECT EUDKV_USER_ID FROM EZC_USER_DEF_KEY_VALUES WHERE EUDKV_KEY='CATEGORY' AND EUDKV_VALUE IN ('ENG_SER','RM_PM')) 
+  GROUP BY EWWU_GROUP) AS C ON B.EWDHH_NEXT_PARTICIPANT=C.EWWU_GROUP  WHERE A.ERH_PLANT IN ('3001') AND A.ERH_CATEGORY IN ('ENG_SER','RM_PM') AND 
+ B.EWDHH_WF_STATUS IN ('SUBMITTED','REJECTED') AND  B.EWDHH_NEXT_PARTICIPANT IN ('PUR_PERSON') AND B.EWDHH_CREATED_ON BETWEEN STR_TO_DATE('01/04/2020 12:01','%d/%m/%Y %H:%i') AND STR_TO_DATE('04/09/2021 23:59','%d/%m/%Y %H:%i')
+ 
+ 
+ =========================================
+ D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\Request\ezAuctionList.jsp
+ 
+ ======================================================================================================================================
+1.RFQ:7000000117 created sucessfully against the vendor: 0000801238
+
+2.RFQ:7000000118 created sucessfully against the vendor: 0000309905
+
+=======================================================================================================================================
+1.RFQ:7000000119 created sucessfully against the vendor: 0000801238
+
+2.RFQ:7000000120 created sucessfully against the vendor: 0000309905
+===========================================================================================================================================
+
+
+BUYER --> TEST_RRK
+LEAD BUYER --> RRKLDBUY
+SITEFI --> RRKSITEFI
+
+WF:
+====
+
+1	PUR_PERSON	TEST_RRK[Pradeep Negi]		Submit
+2	LEADBUYER	RRKLDBUY[RRK Lead Buyer]	Submit
+3	SITEFI		RRKSITEFI[RRK Site FI]		Submit
+4	SITEHD		RRKSITEHD[RRK Site Head]	Approve
+
+
+================================================================================
+IMPORT
+=======
+RFQ(s) added under QCF: 3050000030
+
+1.RFQ:7000000159 created sucessfully against the vendor: 0000801238
+
+2.RFQ:7000000160 created sucessfully against the vendor: 0000309905
+
+===============================
+RFQ(s) added under QCF: 3010000013
+
+1.RFQ:7000000161 created sucessfully against the vendor: 0000801238
+
+2.RFQ:7000000162 created sucessfully against the vendor: 0000309905
+
+
+====================================
+
+select * from ezc_mat_budget_price where EMBP_FIN_YEAR='FY-21-22' and EMBP_PLANT='3001' and embp_month='09' and EMBP_MATERIAL in('10000014681')
+
+====================================
+
+RFQ(s) added under QCF: 1020000007
+
+1.RFQ:7000000223 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+2.RFQ:7000000224 created sucessfully against the vendor: A B S BUILD CARE[310700]
+
+===================================================================================================
+
+SERVICE
+=========
+
+PR: 120085575
+
+Linne: 10
+
+RFQ(s) added under QCF: 3120000001
+
+1.RFQ:7000000233 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+2.RFQ:7000000234 created sucessfully against the vendor: A B S BUILD CARE[310700]
+
+
+IMPORT:
+=======
+
+PR: 0140024743
+
+
+RFQ(s) added under QCF: 3130000003
+
+1.RFQ:7000000237 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+2.RFQ:7000000238 created sucessfully against the vendor: A B S BUILD CARE[310700]
+
+
+================================
+
+RFQ(s) added under QCF: 3130000004
+
+1.RFQ:7000000243 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+2.RFQ:7000000244 created sucessfully against the vendor: 3M Electro And Communication India[601140]
+
+
+
+========================
+create table ezc_qcf_comments (
+EQC_CODE VARCHAR(10) DEFAULT NULL,
+EQC_COMMENT_NO VARCHAR(10) DEFAULT NULL,
+EQC_USER VARCHAR(50) DEFAULT NULL,
+EQC_DATE DATETIME DEFAULT NULL,
+EQC_COMMENTS LONGTEXT,
+EQC_EXT1 VARCHAR(300) DEFAULT NULL,
+EQC_EXT2 VARCHAR(300) DEFAULT NULL,
+EQC_EXT3 LONGTEXT,
+EQC_DEST_USER VARCHAR(50) DEFAULT NULL,
+EQC_TYPE VARCHAR(10) DEFAULT NULL,
+EQC_QUERY_MAP VARCHAR(10) DEFAULT NULL,
+EQC_ITEM_NO VARCHAR(10) DEFAULT NULL,
+EQC_REASON_CODE VARCHAR(1000) DEFAULT NULL
+)
+==================================================================================================
+
+0011263858/0011263860/0011263861/0011264473¥00010 --> 000000050000000212
+0011264791¥00010 --> 000000050000003217
+
+================================================================================================
+
+Materails:
+==========
+PR	:	0011265125
+
+MatNo 	:	7320000049
+
+Budget Price	: 1022.08
+
+===================================
+
+PR	:	0011265126
+
+MatNo 	:	7320000055
+
+Budget Price	: 3530.00
+
+
+
+Vendors:
+========
+
+801542  TLC PHARMA TECH 
+
+310149	3A ANALYTIKS 
+
+=============================================================================================
+RFQ(s) added under QCF: 3130000008
+
+1.RFQ:7000000289 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+2.RFQ:7000000290 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+===========
+
+IMPORT
+======
+
+RFQ(s) added under QCF: 3030000002
+
+1.RFQ:7000000291 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+2.RFQ:7000000292 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+========================
+
+select * from ezc_currency where EC_CURR_KEY='USDN'
+select * from ezc_currency_desc where ECD_CURR_KEY='USDN'
+
+========================
+select * from ezc_qcf_comments where EQC_QUERY_MAP='0'
+insert into ezc_qcf_comments (EQC_CODE,EQC_COMMENT_NO,EQC_USER,EQC_DATE,EQC_COMMENTS,EQC_EXT1,EQC_EXT2,EQC_EXT3,EQC_DEST_USER,EQC_TYPE,EQC_QUERY_MAP,EQC_ITEM_NO,EQC_REASON_CODE) values('3130000004','1','DEBAMOYM',NOW(),'test','','QCF','','3130000004','QUERY','0','','')
+desc ezc_qcf_comments;
+
+select cast(max(EQC_COMMENT_NO) as unsigned) as MAXNO from ezc_qcf_comments where EQC_CODE='3000000000';
+
+SELECT EQC_COMMENT_NO,SUM(CAST(EQC_QUERY_MAP AS SIGNED)) QUERY_STATUS FROM EZC_QCF_COMMENTS WHERE EQC_CODE='3130000004' AND EQC_TYPE='QUERY' AND EQC_USER='DEBAMOYM'  GROUP BY EQC_COMMENT_NO ORDER BY CAST(EQC_COMMENT_NO AS SIGNED)
+
+
+
+
+
+lineAttachString in loop>>>>>
+
+
+================================================
+RFQ(s) added under QCF: 3030000005
+
+1.RFQ:7000000305 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+2.RFQ:7000000306 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+
+RFQ(s) added under QCF: 3030000006
+
+1.RFQ:7000000307 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+2.RFQ:7000000308 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+==================================================
+
+
+
+
+
+RFQ(s) added under QCF: 3030000006
+
+1.RFQ:7000000307 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+2.RFQ:7000000308 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+========================
+
+Material Type:
+===============
+
+ZSPR
+ZCON
+
+================
+IMP
+=============
+
+QCF: 3130000010
+
+7000000337
+7000000338
+
+======================
+
+RFQ(s) added under QCF: 3130000012
+
+1.RFQ:7000000350 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+2.RFQ:7000000351 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+
+150009250
+
+150009254
+
+================================================================================================
+select *  from ezc_rfq_header where ERH_rfq_no='7000000081'
+select *  from ezc_rfq_header where ERH_colletive_rfq_no='1150000001'
+
+select * from ezc_rfq_details where erd_rfq_no in (select erh_rfq_no  from ezc_rfq_header where ERH_colletive_rfq_no='1150000001')
+
+select * from ezc_rfq_item_conditions where eric_rfq_no in (select erh_rfq_no  from ezc_rfq_header where ERH_colletive_rfq_no='1150000001')
+
+select * from ezc_rfq_quote_history where erqh_rfq_no in (select erh_rfq_no  from ezc_rfq_header where ERH_colletive_rfq_no='1150000001')
+
+select * from ezc_rfq_services where ers_srv_rfq in (select erh_rfq_no  from ezc_rfq_header where ERH_colletive_rfq_no='1150000001')
+
+select * from ezc_rfq_prs where erp_qcf_no in('1150000001')
+
+select * from ezc_document_comments where edc_doc_id in (select erh_rfq_no  from ezc_rfq_header where ERH_colletive_rfq_no='1150000001')
+
+select * from EZC_UPLOAD_DOCUMENT where eud_doc_no in (select erh_rfq_no  from ezc_rfq_header where ERH_colletive_rfq_no='1150000001')
+
+select * from ezc_wf_doc_history_header where ewdhh_doc_id='1150000001'
+
+select * from ezc_wf_audit_trail where ewat_doc_id='1150000001'
+
+=========================================================================================================================================
+
+
+select count(*) from ezc_master_key_values where emkv_master_type='PMNT_TERM'
+
+
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> SQL: DELETE FROM EZC_RFQ_SERVICES WHERE ERS_SRV_RFQ IN ('7000000283','7000000284')
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> Update count = 0
+21/10/07 01:46:55 [WARN ] -  FW >>> DB >>> Warnings = null
+21/10/07 01:46:55 [DEBUG] - DELETE
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> SQL: DELETE FROM EZC_RFQ_QUOTE_HISTORY WHERE ERQH_RFQ_NO IN ('7000000283','7000000284')
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> Update count = 0
+21/10/07 01:46:55 [WARN ] -  FW >>> DB >>> Warnings = null
+21/10/07 01:46:55 [DEBUG] - DELETE
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> SQL: DELETE FROM EZC_RFQ_ITEM_CONDITIONS WHERE ERIC_RFQ_NO IN ('7000000283','7000000284')
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> Update count = 0
+21/10/07 01:46:55 [WARN ] -  FW >>> DB >>> Warnings = null
+21/10/07 01:46:55 [DEBUG] - DELETE
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> SQL: DELETE FROM EZC_RFQ_DETAILS WHERE ERD_RFQ_NO IN ('7000000283','7000000284')
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> Update count = 4
+21/10/07 01:46:55 [WARN ] -  FW >>> DB >>> Warnings = null
+21/10/07 01:46:55 [DEBUG] - DELETE
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> SQL: DELETE FROM EZC_RFQ_HEADER WHERE ERH_RFQ_NO IN ('7000000283','7000000284')
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> Update count = 2
+21/10/07 01:46:55 [WARN ] -  FW >>> DB >>> Warnings = null
+21/10/07 01:46:55 [DEBUG] - DELETE
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> SQL: DELETE FROM EZC_RFQ_PRS WHERE ERP_QCF_NO IN ('3130000005')
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> Update count = 2
+21/10/07 01:46:55 [WARN ] -  FW >>> DB >>> Warnings = null
+21/10/07 01:46:55 [DEBUG] - DELETE
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> SQL: DELETE FROM EZC_UPLOAD_DOCUMENT WHERE EUD_DOC_TYPE='RFQ' AND EUD_DOC_NO IN ('7000000283','7000000284')
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> Update count = 0
+21/10/07 01:46:55 [WARN ] -  FW >>> DB >>> Warnings = null
+21/10/07 01:46:55 [DEBUG] - DELETE
+21/10/07 01:46:55 [INFO ] -  FW >>> DB >>> SQL: DELETE FROM EZC_DOCUMENT_COMMENTS WHERE EDC_DOC_TYPE='RFQ' AND EDC_DOC_ID IN ('7000000283','7000000284')
+
+
+
+
+RFQ(s) added under QCF: 1190000002
+
+1.RFQ:7000000384 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+2.RFQ:7000000385 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+
+RFQ(s) added under QCF: 1020000011
+
+1.RFQ:7000000386 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+2.RFQ:7000000387 created sucessfully against the vendor: 3A ANALYTIKS[310149]
+
+
+========================================================================================================
+
+GSTIN: 32AABCU9603R1ZW
+
+
+
+
+
+
+
+
+
+
+
+
+

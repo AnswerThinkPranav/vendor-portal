@@ -87,8 +87,14 @@ public class SecurityConfiguration {
                 .requestMatchers("/invalidSession*").anonymous()
                 .requestMatchers("/user/updatePassword*","/user/savePassword*","/updatePassword*")
                 .hasAuthority("CHANGE_PASSWORD_PRIVILEGE")
-                .requestMatchers("/user/**","/priceapr/**","/modal/**").fullyAuthenticated()	
-                
+                .requestMatchers("/user/**","/priceapr/**","/modal/**").fullyAuthenticated()
+                // Catch-all: anything not explicitly matched above (e.g. /dashboard/**,
+                // /vendorReg/**, /rfq/**, /qcf/**) still requires a real authenticated
+                // session. Without this, an anonymous/expired-session request was falling
+                // through unauthenticated instead of being redirected to /login, and
+                // controllers casting the anonymous "anonymousUser" principal to Users
+                // threw a ClassCastException instead of failing gracefully.
+                .anyRequest().authenticated()
                 //.hasAuthority("READ_PRIVILEGE")
                 .and()
             .formLogin()

@@ -1,0 +1,392 @@
+<html>
+<head>
+	<title> -- Powered by EzCommerce Inc</title>
+	<link rel="stylesheet" href="../../Library/Styles/ezThemeBlue.css">
+	<script src="../../Library/JavaScript/Calender.js">
+</script>
+<script>
+var totTabs=3;
+
+
+
+
+function showTab(tabno)
+{
+
+	for(var z=1;z<=totTabs;z++)
+	{
+		obj=document.getElementById("Div"+z);
+		if(tabno==z)
+		{
+			obj.style.visibility="visible"
+
+			tabfun(z,document.ezForm)
+		}
+		else
+		{
+			obj.style.visibility="hidden"
+		}
+	}
+}
+function setBack()
+{
+	document.location.replace("../Misc/ezMenuFrameset.htm");
+}
+function funSubmit(stat)
+{
+	document.ezForm.action="ezConfirm.htm"
+	document.ezForm.submit()
+}
+function checkShow()
+{
+
+if (document.ezForm.chkShow.checked)
+{
+	document.ezForm.chkHide.checked=false;
+}
+else{
+	document.ezForm.chkHide.checked=true;
+}
+
+}
+function checkHide()
+{
+
+if (document.ezForm.chkHide.checked)
+{
+	document.ezForm.chkShow.checked=false;
+}
+else{
+	document.ezForm.chkShow.checked=true;
+}
+
+}
+
+function selectAll()
+{
+    var	len='6'
+	if(isNaN(len))
+	{
+		if(document.ezForm.chk1.checked)
+		{
+			document.ezForm.chk1.checked=false
+		}else{
+			document.ezForm.chk1.checked=true
+		}
+	}
+	else
+	{
+	for(i=0;i<len;i++)
+	{	if(document.ezForm.chkId.checked)
+		document.ezForm.chk1[i].checked=true
+		else
+		document.ezForm.chk1[i].checked=false
+	}
+	}
+}
+
+function displaySpecs()
+	{
+		newWindow=window.open("ezSpecDetails.htm","Mywin","resizable=no,left=250,top=100,height=350,width=500,status=no,toolbar=no,menubar=no,location=no");
+	}
+
+function displayDates()
+	{
+		newWindow=window.open("ezDateDetails.html","Mywin","resizable=no,left=250,top=100,height=350,width=500,status=no,toolbar=no,menubar=no,location=no");
+	}
+
+</script>
+
+<script src="../../Library/JavaScript/ezTabs.js">
+</script>
+</head>
+<body  scroll=no>
+<form method="post"  name="ezForm">
+<br>
+<table align=center border="1"  borderColorDark=#ffffff borderColorLight=#000000 cellpadding="2" class="displayheaderback" cellspacing="0" width="100%">
+<Tr><Th>Request Details of Auction: B0009</Th></Tr>
+</table>
+<table>
+<table align=center border="1"  borderColorDark=#ffffff borderColorLight=#000000 cellpadding="2" class="displayheaderback" cellspacing="0" width="100%">
+<!--<tr>
+    <th align = "right" width = "8%">Start Date</th>
+    <td width = "11%">04.12.2003</td>
+    
+    <th align = "right" width = "9%">End Date</th>
+    <td width = "16%" valign = "center">04.12.2003</td>
+    
+</tr>
+
+<tr>
+    <th align = "right" width = "8%" title = "Extension Time">Ext. Time</th>
+    <td width = "11%">15&nbsp;Minutes
+    </td>
+    <th align = "right" width = "10%" title = "Number of Extensions">No. of Exts.</th>
+    <td width = "6%">2</td>
+
+
+    <th align = "right" width = "10%">Bid Decrement</th>
+    <td width = "16%">
+    	2 %
+    </td>
+    <th align = "right" width = "8%">Bid Variance</th>
+    <td width = "15%">
+    	8 %
+    </td>
+</tr>
+
+-->
+
+<tr>
+    <th width="16%">Auction Name</th>
+    <td width="16%">Auction For Plant1</td>
+    <th width="16%">Buyer Name</th>
+    <td width="16%">Mr.Pramod</td>
+    <th width="16%">Evaluation Type</th>
+    <td width="16%">Rank</td>
+</tr>
+<tr>
+    <th width="16%">Start Date</th>
+    <td width="16%">07.21.2003 16.30</td>
+    <th width="16%">End Date</th>
+    <td width="16%">07.21.2003 18.30</td>
+    <th width="16%">No of Items</th>
+    <td width="16%">4</td>
+    
+</tr><tr>
+
+    <th>Extension Time</th>
+    <td>
+	5 &nbsp;mins
+</td>
+    <th title="No.of Extensions">No.of Exts</th>
+    <td>3
+   </td>
+<th>Currency</th>
+	<td>INR Indian Rupee
+</td>
+ 
+</tr>
+<tr>
+	<th>Bid Variance Type</th>
+	<td>Percentage</td>
+	
+	  <th>Min Bid Variance</th>
+   <td>2</td>
+   <th>Max Bid Variance</th><td>6</td>
+	
+	
+</tr>
+</table>
+<Table   align=center border=0 borderColorDark=#ffffff borderColorLight=#000000 cellPadding=2 cellSpacing=0 class="displayheaderback"  width=100% valign=top>
+	<Tr>
+		<Td width=100% align=center class="blankcell">
+		 <Table  cellSpacing=0 cellPadding=0 width=100%  class="displayheaderback"  border=0>
+		      <Tr>
+			     <Td vAlign=bottom height=27 width=100%   class="blankcell">
+			     <Table  cellSpacing=0 cellPadding=0 border=0  class="displayheaderback" >
+			     <Tr>
+			     <Td  class="blankcell"  width=10 >
+			     		<IMG height=27 name=startBack  src="../../Images/TabsImages/tab_front_left.gif" width=15 border=0></Td>
+
+				      <Td  class="blankcell"  id='tab1_1'  background=../../Images/TabsImages/tab_fill_front.gif><a href="javascript:showTab(1)" class = "subclass" title="Material" style="text-decoration:none">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Material&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></Td>
+				      <Td  class="blankcell"  width=10><IMG height=27 name='tab1_2'  src="../../Images/TabsImages/tab_front_right.gif" width=15 border=0></Td>
+				      <Td  class="displayheaderback"  width=10><IMG height=27 name='tab1_3'  src="../../Images/TabsImages/tab_back1_left.gif" width=15  border=0></Td>
+
+				      <Td  class="blankcell"  id='tab2_1'  background=../../Images/TabsImages/tab_fill_back.gif><a href="javascript:showTab(2)" class = "subclass" title="Terms and Conditions" style="text-decoration:none">Terms and Conditions</a></Td>
+				      <Td  class="blankcell"  width=10><IMG height=27 name='tab2_2'  src="../../Images/TabsImages/tab_back_right.gif" width=15 border=0></Td>
+				      <Td  class="blankcell"  width=10><IMG height=27 name='tab2_3'  src="../../Images/TabsImages/tab_back2_left.gif" width=15  border=0></Td>
+
+
+				      <Td  class="blankcell"   id='tab3_1' background=../../Images/TabsImages/tab_fill_back.gif><a href="javascript:showTab(3)" class = "subclass" title="Suppliers"  style="text-decoration:none">Suppliers</a></Td>
+				      <Td  class="blankcell"  width=10><IMG height=27  name='tab3_2' src="../../Images/TabsImages/tab_back_right.gif" width=15 border=0></Td>
+				      <Td  class="blankcell"  width=12><IMG height=27  name='tab3_3' src="../../Images/TabsImages/tab_back_end.gif" width=12 border=0></Td>
+
+			    </Tr>
+			  </Table >
+		    </Td>
+		   <!-- <Td  class="blankcell"  vAlign=center align=right height=45>&nbsp; </Td>-->
+		 </Tr>
+		 </Table >
+</Td>
+</Tr>
+</Table >
+<div id="div1" style="position:absolute;visibility:visible;overflow:auto;height:60%;width:100%" align="center">
+<Table  align=center border=1 borderColorDark=#ffffff borderColorLight=#000000 cellPadding=0 cellSpacing=0  width=100%>
+<tr>
+	<th width = "22%">Name</th>
+	<th width = "14%">Specifications</th>
+	<th width = "12%">UOM</th>
+	<th width = "14%">Qty.</th>
+	<!--<th width = "14%">Delivery Terms</th>-->
+	<th width = "14%">Required Date</th>
+	<th width = "24%">Start Price (INR)</th>
+</tr>
+<tr>
+	<td width = "22%">Erythromycin</td>
+	<td width = "14%" align="center"><a href = "JavaScript:void(0)" alt = "Click Here for Material Specifications" onclick="JavaScript:displaySpecs()">View</a></td>
+	<td width = "12%">kg</td>
+	<td width = "14%" align="right">90</td>
+	<!--<td width = "14%"><a href = "JavaScript:void(0)" alt = "Click Here for Delivery Terms">View</a>&nbsp;Freight Free</td>-->
+	<td width = "14%" align="center"><a href="JavaScript:displayDates()">view</a></td>
+	<td width = "24%" align="right">700000.00</td>
+</tr>
+<tr>
+	<td width = "22%">Zinc</td>
+	<td width = "14%" align="center"><a href = "JavaScript:void(0)" alt = "Click Here for Material Specifications" onclick="JavaScript:displaySpecs()">View</a></td>
+	<td width = "12%">tons</td>
+	<td width = "14%" align="right">2</td>
+	<!--<td width = "14%" ><a href = "JavaScript:void(0)" alt = "Click Here for Delivery Terms">View</a>&nbsp;Insured Freight Free</td>-->
+	<td width = "14%" align="center">08.05.2003</td>
+	<td width = "24%" align="right">100000.00</td>
+</tr>
+<tr>
+	<td width = "22%">Calcium</td>
+	<td width = "14%" align="center"><a href = "JavaScript:void(0)" alt = "Click Here for Material Specifications" onclick="JavaScript:displaySpecs()">View</a></td>
+	<td width = "12%">kg</td>
+	<td width = "14%" align="right">100</td>
+	<!--<td width = "14%"><a href = "JavaScript:void(0)" alt = "Click Here for Delivery Terms">View</a>&nbsp;Freight Free</td>-->
+	<td width = "14%" align="center">08.06.2003</td>
+	<td width = "20%" align="right">90000.00</td>
+</tr>
+<tr>
+	<td width = "22%">Iron</td>
+	<td width = "14%" align="center"><a href = "JavaScript:void(0)" alt = "Click Here for Material Specifications" onclick="JavaScript:displaySpecs()">View</a></td>
+	<td width = "12%">kg</td>
+	<td width = "14%" align="right">200</td>
+	<!--<td width = "14%"><a href = "JavaScript:void(0)" alt = "Click Here for Delivery Terms">View</a>&nbsp;Insured Freight Free</td>-->
+	<td width = "14%" align="center">08.05.2003</td>
+	<td width = "20%" align="right">40000.00</td>
+</tr>
+<tr>
+	<td width = "22%">Paracetamol</td>
+	<td width = "14%" align="center"><a href = "JavaScript:void(0)" alt = "Click Here for Material Specifications" onclick="JavaScript:displaySpecs()">View</a></td>
+	<td width = "12%">kg</td>
+	<td width = "14%" align="right">100</td>
+	<!--<td width = "14%"><a href = "JavaScript:void(0)" alt = "Click Here for Delivery Terms">View</a>&nbsp;Insured Freight Free</td>-->
+	<td width = "14%" align="center">08.05.2003</td>
+	<td width = "20%" align="right">30000.00</td>
+</tr>
+</Table>
+</div>
+<div id="div2" style="position:absolute;visibility:hidden;overflow:auto;height:55%;width:100%" align="center">
+<fieldset name="fieldset1" value="" style="width:100%;top:70%;height:22%" align="center">
+	<legend><font color = "#336699" face = arial size = "2"><b>Delivery & Payment Terms</b></font></legend>
+<Table  align=center border=1 borderColorDark=#ffffff borderColorLight=#000000 cellPadding=2 cellSpacing=0 width="100%">
+	<Tr>
+		<Th width="25%" align="right">Delivery Terms</Th>
+		<Td>
+			Freight Free			
+		</Td>
+		<Th width="25%" align="right">Payment Terms</Th>
+		<Td>
+
+			12 days net
+		</Td>
+	</Tr>
+	</Table>
+</fieldset>
+<fieldset name="fieldset1" value="" style="width:100%;top:70%;height:22%" align="center">
+	<legend><font color = "#336699" face = arial size = "2"><b>Terms and Conditions</b></font></legend>
+<Table  align=center border=1 borderColorDark=#ffffff borderColorLight=#000000 cellPadding=2 cellSpacing=0 width="100%">
+<Tr>
+	<Th width="25%" align="right">Packing Instructions</Th>
+	<Td></Td>
+</Tr>
+<Tr>
+	<Th width="25%" align="right">Label Instructions</Th>
+	<Td></Td>
+</Tr>
+
+<Tr>
+	<Th width="25%" align="right">Inspection Clauses</Th>
+	<Td></Td>
+</Tr>
+<Tr>
+	<Th align="right" width="25%">Handling Specifications</Th>
+	<Td></Td>
+</Tr>
+<Tr>
+	<Th align="right" width="25%">Regulatory Requirments</Th>
+	<Td></Td>
+</Tr>
+<Tr>
+	<Th align="right" width="25%">Documents Required</Th>
+	<Td></Td>
+</Tr>
+<Tr>
+	<Th align="right" width="25%">Others</Th>
+	<Td></Td>
+</Tr>
+</Table>
+</fieldset>
+</div>
+<div id="div3" style="position:absolute;visibility:hidden;overflow:auto;height:55%;width:100%" align="center">
+<Table  align=center border=1 borderColorDark=#ffffff borderColorLight=#000000 cellPadding=2 cellSpacing=0 width=100%>
+<Tr>
+	<th width = "4%"><input type=Checkbox name=chkId disabled title = "Select / Deselect All"></th>
+	<th width="24%">Supplier ID</th>
+	<th width="24%">Supplier Name</th>
+	<th width="24%">Alias Name</th>
+	<th width="24%">Evaluation Factor in %</th>
+</Tr>
+<Tr>
+	<td width = "5%" align = "center"><input type=Checkbox name="chk1" checked disabled></td>
+	<td>SELLER1</td>
+	<td>Seller1 Name</td>
+	<td>AAA12</td>
+	<td>2</td>
+</Tr>
+<Tr>
+	<td width = "5%" align = "center"><input type=Checkbox name="chk1" checked disabled></td>
+	<td>SELLER2</td>
+	<td>Seller2 Name</td>
+	<td>BBB12</td>
+	<td>3</td>
+</Tr>
+<Tr>
+	<td width = "5%" align = "center"><input type=Checkbox name="chk1" disabled></td>
+	<td>SELLER3</td>
+	<td>Seller3 Name</td>
+	<td>CCC12</td>
+	<td>1</td>
+</Tr>
+<Tr>
+	<td width = "5%" align = "center"><input type=Checkbox name="chk1" checked disabled></td>
+	<td>SELLER4</td>
+	<td>Seller4 Name</td>
+	<td>DDD12</td>
+	<td>2</td>
+</Tr>
+<Tr>
+	<td width = "5%" align = "center"><input type=Checkbox name="chk1" disabled readonly></td>
+	<td>SELLER5</td>
+	<td>Seller5 Name</td>
+	<td>EEE12</td>
+	<td>5</td>
+</Tr>
+<Tr>
+	<td width = "5%" align = "center"><input type=Checkbox  disabled name="chk1" checked ></td>
+	<td>SELLER6</td>
+	<td>Seller6 Name</td>
+	<td>FFF12</td>
+	<td>8</td>
+</Tr>
+</Table>
+</div>
+<div style="position:absolute;top:91%;width:100%">
+<table align="center">
+<tr>
+	<Td class=blankcell>
+		<img src="../../Images/back.gif" style="cursor:hand"  border=0 onclick='document.location.replace("ezCreateAuctionHeader.htm")'>
+		<img src="../../Images/create.gif" style="cursor:hand"  border=0 onclick='document.location.replace("ezConfirmInvite.htm")'>
+		<img src="../../Images/cancel.gif" style="cursor:hand"  border=0 onclick='JavaScript:history.go(-1)'>
+		
+	</Td>
+</tr>
+</table>
+</div>
+</table>
+</form>
+</body>
+</html>

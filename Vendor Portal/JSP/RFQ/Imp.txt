@@ -1,0 +1,462 @@
+function calcBot(chkStr,chkRfq,chkLine,chkQcf)
+{ 
+		//alert("IN CALCBOTNEW");
+		var chkObj = document.myForm.selVen;
+		
+		var len = document.myForm.rfqItem.length;
+		//alert("length"+len);		
+
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+		var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+chkLine);
+
+var Count='<%=rfqLen%>';
+
+		var chkCount = 0;
+		var chkTotCount = 0;
+		
+		for(i=0;i<Count;i++)
+		{
+			if(Count==1)
+			{
+				if(chkObj.checked)
+				{
+					chkTotCount ++;
+					if(chkRfq === chkObj.value)
+					{
+
+						chkCount++;
+					}
+				}
+			}
+			else
+			{
+				if(chkObj[i].checked)
+				{
+					chkTotCount ++;
+					if(chkRfq === chkObj[i].value)
+					{
+
+						chkCount++;
+					}	
+				}
+			}
+		}
+		if(chkCount == 0)
+		{
+			alert("Please Select the vendor");
+			itemQtyObj.value=0;
+			return;				
+
+		}
+
+		//alert("chkStr"+chkStr);
+		//alert("chkRfq"+chkRfq);
+		//alert("chkLine"+chkLine);
+		//alert("itemQtyObj"+itemQtyObj.value);
+		
+		if(itemQtyObj.value=='')
+		{
+			alert("Enter Recommended Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		var prItemQtyObj = eval("document.myForm.prItemQty"+chkLine);
+		//alert("prItemQtyObjNew"+prItemQtyObj.value);
+		
+		if( parseFloat(itemQtyObj.value) > parseFloat(prItemQtyObj.value))
+		{
+			alert("Recommended Qty should not be greater than PR Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		var lineTotQty=0;
+<%
+		for(int j=0;j<rfqHash.size();j++)
+		{
+			String  rfqChk = (String)rfqHash.get(j+1);
+%> 
+			var rfqChk= '<%=rfqChk%>';
+			//alert("rfqChk>>>"+rfqChk);
+			var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+chkLine);
+			//alert("lineQtyObj>>>"+lineQtyObj.value);
+			lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+<%
+		}
+%>
+		//alert("lineTotQty>>>"+lineTotQty);
+		if(lineTotQty > prItemQtyObj.value)
+		{
+			alert("Total Line Qty should not be greater than PR Qty at line"+chkLine);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}	
+		var Count='<%=rfqLen%>';
+		//alert("Count"+Count);		
+		
+		var botTotVal=0;
+		var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);		
+		//alert("chkTotCount=="+chkTotCount);
+		
+		for(var i=0;i<chkCount;i++)
+		{
+			if(isNaN(len))
+			{
+					var k=0;	
+					var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+					//alert("itemQtyObj>>>>"+itemQtyObj.value);
+					var itemPriceObj = eval("document.myForm.itemPrice"+chkRfq+((k+1)*10));
+					//alert("itemPriceObj"+itemPriceObj.value);
+					var itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 
+					//alert("itemValObj"+parseFloat(itemValObj));
+					var totalQuantity=parseFloat(itemQtyObj.value).toFixed(2);
+					var totPriceVal=parseFloat(itemValObj).toFixed(2);
+
+					//alert("totalQuantity>>>"+totalQuantity);
+
+					//DISC
+
+					var valTypeDISCObj = eval("document.myForm.valTypeDISC"+chkRfq+((k+1)*10));
+					//alert("valTypeDISCObj"+valTypeDISCObj.value);
+					var itemDISCObj = eval("document.myForm.itemDISC"+chkRfq+((k+1)*10));
+
+					if(valTypeDISCObj.value == "P")
+						botDISCVal = (((totPriceVal) * itemDISCObj.value)/100).toFixed(2);
+					else if(valTypeDISCObj.value == "V")
+						botDISCVal = itemDISCObj.value;
+					else if(valTypeDISCObj.value == "Q")
+						botDISCVal = itemDISCObj.value * parseFloat(totalQuantity);
+					else
+						botDISCVal = 0;				
+
+					var botSupVal = parseFloat(totPriceVal)- parseFloat(botDISCVal); 
+					//alert("botSupVal>>>"+botSupVal);
+
+					//PKFW
+					var valTypePKFWObj = eval("document.myForm.valTypePKFW"+chkRfq+((k+1)*10));
+					//alert("valTypePKFWObj"+valTypePKFWObj.value);
+					var itemPKFWObj = eval("document.myForm.itemPKFW"+chkRfq+((k+1)*10));
+
+
+					if(valTypePKFWObj.value == "P")
+						botPKGVal = (((botSupVal) * itemPKFWObj.value)/100).toFixed(2);
+					else if(valTypePKFWObj.value == "V")
+						botPKGVal = itemPKFWObj.value;
+					else if(valTypePKFWObj.value == "Q")
+						botPKGVal = itemPKFWObj.value * parseFloat(totalQuantity);
+					else
+						botPKGVal = 0;				
+
+					//FRT
+					var valTypeFRTObj = eval("document.myForm.valTypeFRT"+chkRfq+((k+1)*10));
+					//alert("valTypeFRTObj"+valTypeFRTObj.value);
+					var itemFRTObj = eval("document.myForm.itemFRT"+chkRfq+((k+1)*10));
+
+
+					if(valTypeFRTObj.value == "P")
+						botFRTVal = (((botSupVal) * itemFRTObj.value)/100).toFixed(2);
+					else if(valTypeFRTObj.value == "V")
+						botFRTVal = itemFRTObj.value;
+					else if(valTypeFRTObj.value == "Q")
+						botFRTVal = itemFRTObj.value * parseFloat(totalQuantity);
+					else
+						botFRTVal = 0;	
+
+					//OTH
+					var botOTHVal=0;
+					if(parseFloat(totalQuantity)>0)
+					{
+						var itemOTHObj = eval("document.myForm.itemOTH"+chkRfq+((k+1)*10));
+						botOTHVal = (itemOTHObj.value) /parseFloat(totalQuantity);
+					}
+					//alert("botOTHVal>>>"+botOTHVal)* ;
+
+					//FOB
+					var valTypeFOBObj = eval("document.myForm.valTypeFOB"+chkRfq+((k+1)*10));
+					//alert("valTypeFOBObj"+valTypeFOBObj.value);
+					var itemFOBObj = eval("document.myForm.itemFOB"+chkRfq+((k+1)*10));
+
+					if(valTypeFOBObj.value == "P")
+						botFOBVal = (((botSupVal) * itemFOBObj.value)/100).toFixed(2);
+					else if(valTypeFOBObj.value == "V")
+						botFOBVal = itemFOBObj.value;
+					else if(valTypeFOBObj.value == "Q")
+						botFOBVal = itemFOBObj.value * parseFloat(totalQuantity);
+					else
+						botFOBVal = 0;	
+
+					//BFRT
+					var valTypeBFRTObj = eval("document.myForm.valTypeBFRT"+chkRfq+((k+1)*10));
+					//alert("valTypeBFRTObj"+valTypeBFRTObj.value);
+					var itemBFRTObj = eval("document.myForm.itemBFRT"+chkRfq+((k+1)*10));
+
+
+					if(valTypeBFRTObj.value == "P")
+						botBFRTVal = (((botSupVal) * itemBFRTObj.value)/100).toFixed(2);
+					else if(valTypeBFRTObj.value == "V")
+						botBFRTVal = itemBFRTObj.value;
+					else if(valTypeBFRTObj.value == "Q")
+						botBFRTVal = itemBFRTObj.value * parseFloat(totalQuantity);
+					else
+						botBFRTVal = 0;
+
+					//INS
+					var valTypeINSObj = eval("document.myForm.valTypeINS"+chkRfq+((k+1)*10));
+					//alert("valTypeINSObj"+valTypeINSObj.value);
+					var itemINSObj = eval("document.myForm.itemINS"+chkRfq+((k+1)*10));
+
+
+					if(valTypeINSObj.value == "P")
+						botINSVal = (((botSupVal) * itemINSObj.value)/100).toFixed(2);
+					else if(valTypeINSObj.value == "V")
+						botINSVal = itemINSObj.value;
+					else if(valTypeINSObj.value == "Q")
+						botINSVal = itemINSObj.value * parseFloat(totalQuantity);
+					else 
+						botINSVal = 0;
+
+					var botNetVal = parseFloat(botSupVal) + parseFloat(botPKGVal)+ parseFloat(botFRTVal)+ parseFloat(botOTHVal)+ parseFloat(botFOBVal)+ parseFloat(botBFRTVal)+ parseFloat(botINSVal);
+					//alert("botNetVal>>"+botNetVal)
+
+					//CUSTOMS
+					var valTypeCUSTObj = eval("document.myForm.valTypeCUST"+chkRfq+((k+1)*10));
+					var itemCUSTObj = eval("document.myForm.itemCUST"+chkRfq+((k+1)*10));
+
+					if(valTypeCUSTObj.value == "P")
+						botBCDVal = (((botNetVal) * itemCUSTObj.value)/100).toFixed(2);
+					else
+						botBCDVal = 0;
+
+
+					//alert("botBCDVal>>"+botBCDVal)	;
+
+					//SWC
+					var valTypeSWCObj = eval("document.myForm.valTypeSWC"+chkRfq+((k+1)*10));
+					var itemSWCObj = eval("document.myForm.itemSWC"+chkRfq+((k+1)*10));
+
+					if(valTypeSWCObj.value == "P")
+						botSWCVal = (((botBCDVal) * itemSWCObj.value)/100).toFixed(2);	
+					else
+						botSWCVal = 0;
+
+					//alert("botSWCVal>>"+botSWCVal);
+
+					//CLR
+					var valTypeCLRObj = eval("document.myForm.valTypeCLR"+chkRfq+((k+1)*10));
+					//alert("valTypeCLRObj"+valTypeCLRObj.value);
+					var itemCLRObj = eval("document.myForm.itemCLR"+chkRfq+((k+1)*10));
+
+					if(valTypeCLRObj.value == "P")
+						botCLRVal = (((parseFloat(botNetVal) + parseFloat(botBCDVal) +parseFloat(botSWCVal))* parseFloat(itemCLRObj.value))/100).toFixed(2); 						
+					else if(valTypeCLRObj.value == "V")
+						botCLRVal = itemCLRObj.value;
+					else if(valTypeCLRObj.value == "Q")
+						botCLRVal = itemCLRObj.value * parseFloat(totalQuantity);
+					else
+						botCLRVal = 0;
+
+					//alert("botCLRVal>>"+botCLRVal);
+
+					var botItemVal = parseFloat(botNetVal) + parseFloat(botBCDVal)+ parseFloat(botSWCVal); 
+
+					//alert("botItemVal>>>"+botItemVal);
+
+					//TAX
+
+
+					var itemTAXObj = eval("document.myForm.itemTAX"+chkRfq+((k+1)*10));
+					//alert("itemTAXObj>>>"+itemTAXObj.value);
+					botTAXVal = (((botItemVal) * itemTAXObj.value)/100).toFixed(2);
+
+					//alert("botTAXVal>>>"+botTAXVal);
+
+					botTotVal = botTotVal + ( parseFloat(botItemVal) + parseFloat(botCLRVal) + parseFloat(botTAXVal)); 				
+			
+			}
+			else
+			{
+				for(var k=0;k<Count;k++)
+				{
+					var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+					//alert("itemQtyObj>>>>"+itemQtyObj.value);
+					var itemPriceObj = eval("document.myForm.itemPrice"+chkRfq+((k+1)*10));
+					//alert("itemPriceObj"+itemPriceObj.value);
+					var itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 
+					//alert("itemValObj"+parseFloat(itemValObj));
+					var totalQuantity=parseFloat(itemQtyObj.value).toFixed(2);
+					var totPriceVal=parseFloat(itemValObj).toFixed(2);
+
+					//alert("totalQuantity>>>"+totalQuantity);
+
+					//DISC
+
+					var valTypeDISCObj = eval("document.myForm.valTypeDISC"+chkRfq+((k+1)*10));
+					//alert("valTypeDISCObj"+valTypeDISCObj.value);
+					var itemDISCObj = eval("document.myForm.itemDISC"+chkRfq+((k+1)*10));
+
+					if(valTypeDISCObj.value == "P")
+						botDISCVal = (((totPriceVal) * itemDISCObj.value)/100).toFixed(2);
+					else if(valTypeDISCObj.value == "V")
+						botDISCVal = itemDISCObj.value;
+					else if(valTypeDISCObj.value == "Q")
+						botDISCVal = itemDISCObj.value * parseFloat(totalQuantity);
+					else
+						botDISCVal = 0;				
+
+					var botSupVal = parseFloat(totPriceVal)- parseFloat(botDISCVal); 
+					//alert("botSupVal>>>"+botSupVal);
+
+					//PKFW
+					var valTypePKFWObj = eval("document.myForm.valTypePKFW"+chkRfq+((k+1)*10));
+					//alert("valTypePKFWObj"+valTypePKFWObj.value);
+					var itemPKFWObj = eval("document.myForm.itemPKFW"+chkRfq+((k+1)*10));
+
+
+					if(valTypePKFWObj.value == "P")
+						botPKGVal = (((botSupVal) * itemPKFWObj.value)/100).toFixed(2);
+					else if(valTypePKFWObj.value == "V")
+						botPKGVal = itemPKFWObj.value;
+					else if(valTypePKFWObj.value == "Q")
+						botPKGVal = itemPKFWObj.value * parseFloat(totalQuantity);
+					else
+						botPKGVal = 0;				
+
+					//FRT
+					var valTypeFRTObj = eval("document.myForm.valTypeFRT"+chkRfq+((k+1)*10));
+					//alert("valTypeFRTObj"+valTypeFRTObj.value);
+					var itemFRTObj = eval("document.myForm.itemFRT"+chkRfq+((k+1)*10));
+
+
+					if(valTypeFRTObj.value == "P")
+						botFRTVal = (((botSupVal) * itemFRTObj.value)/100).toFixed(2);
+					else if(valTypeFRTObj.value == "V")
+						botFRTVal = itemFRTObj.value;
+					else if(valTypeFRTObj.value == "Q")
+						botFRTVal = itemFRTObj.value * parseFloat(totalQuantity);
+					else
+						botFRTVal = 0;	
+
+					//OTH
+					var botOTHVal=0;
+					if(parseFloat(totalQuantity)>0)
+					{
+						var itemOTHObj = eval("document.myForm.itemOTH"+chkRfq+((k+1)*10));
+						botOTHVal = (itemOTHObj.value) /parseFloat(totalQuantity);
+					}
+					//alert("botOTHVal>>>"+botOTHVal)* ;
+
+					//FOB
+					var valTypeFOBObj = eval("document.myForm.valTypeFOB"+chkRfq+((k+1)*10));
+					//alert("valTypeFOBObj"+valTypeFOBObj.value);
+					var itemFOBObj = eval("document.myForm.itemFOB"+chkRfq+((k+1)*10));
+
+					if(valTypeFOBObj.value == "P")
+						botFOBVal = (((botSupVal) * itemFOBObj.value)/100).toFixed(2);
+					else if(valTypeFOBObj.value == "V")
+						botFOBVal = itemFOBObj.value;
+					else if(valTypeFOBObj.value == "Q")
+						botFOBVal = itemFOBObj.value * parseFloat(totalQuantity);
+					else
+						botFOBVal = 0;	
+
+					//BFRT
+					var valTypeBFRTObj = eval("document.myForm.valTypeBFRT"+chkRfq+((k+1)*10));
+					//alert("valTypeBFRTObj"+valTypeBFRTObj.value);
+					var itemBFRTObj = eval("document.myForm.itemBFRT"+chkRfq+((k+1)*10));
+
+
+					if(valTypeBFRTObj.value == "P")
+						botBFRTVal = (((botSupVal) * itemBFRTObj.value)/100).toFixed(2);
+					else if(valTypeBFRTObj.value == "V")
+						botBFRTVal = itemBFRTObj.value;
+					else if(valTypeBFRTObj.value == "Q")
+						botBFRTVal = itemBFRTObj.value * parseFloat(totalQuantity);
+					else
+						botBFRTVal = 0;
+
+					//INS
+					var valTypeINSObj = eval("document.myForm.valTypeINS"+chkRfq+((k+1)*10));
+					//alert("valTypeINSObj"+valTypeINSObj.value);
+					var itemINSObj = eval("document.myForm.itemINS"+chkRfq+((k+1)*10));
+
+
+					if(valTypeINSObj.value == "P")
+						botINSVal = (((botSupVal) * itemINSObj.value)/100).toFixed(2);
+					else if(valTypeINSObj.value == "V")
+						botINSVal = itemINSObj.value;
+					else if(valTypeINSObj.value == "Q")
+						botINSVal = itemINSObj.value * parseFloat(totalQuantity);
+					else 
+						botINSVal = 0;
+
+					var botNetVal = parseFloat(botSupVal) + parseFloat(botPKGVal)+ parseFloat(botFRTVal)+ parseFloat(botOTHVal)+ parseFloat(botFOBVal)+ parseFloat(botBFRTVal)+ parseFloat(botINSVal);
+					//alert("botNetVal>>"+botNetVal)
+
+					//CUSTOMS
+					var valTypeCUSTObj = eval("document.myForm.valTypeCUST"+chkRfq+((k+1)*10));
+					var itemCUSTObj = eval("document.myForm.itemCUST"+chkRfq+((k+1)*10));
+
+					if(valTypeCUSTObj.value == "P")
+						botBCDVal = (((botNetVal) * itemCUSTObj.value)/100).toFixed(2);
+					else
+						botBCDVal = 0;
+
+
+					//alert("botBCDVal>>"+botBCDVal)	;
+
+					//SWC
+					var valTypeSWCObj = eval("document.myForm.valTypeSWC"+chkRfq+((k+1)*10));
+					var itemSWCObj = eval("document.myForm.itemSWC"+chkRfq+((k+1)*10));
+
+					if(valTypeSWCObj.value == "P")
+						botSWCVal = (((botBCDVal) * itemSWCObj.value)/100).toFixed(2);	
+					else
+						botSWCVal = 0;
+
+					//alert("botSWCVal>>"+botSWCVal);
+
+					//CLR
+					var valTypeCLRObj = eval("document.myForm.valTypeCLR"+chkRfq+((k+1)*10));
+					//alert("valTypeCLRObj"+valTypeCLRObj.value);
+					var itemCLRObj = eval("document.myForm.itemCLR"+chkRfq+((k+1)*10));
+
+					if(valTypeCLRObj.value == "P")
+						botCLRVal = (((parseFloat(botNetVal) + parseFloat(botBCDVal) +parseFloat(botSWCVal))* parseFloat(itemCLRObj.value))/100).toFixed(2); 						
+					else if(valTypeCLRObj.value == "V")
+						botCLRVal = itemCLRObj.value;
+					else if(valTypeCLRObj.value == "Q")
+						botCLRVal = itemCLRObj.value * parseFloat(totalQuantity);
+					else
+						botCLRVal = 0;
+
+					//alert("botCLRVal>>"+botCLRVal);
+
+					var botItemVal = parseFloat(botNetVal) + parseFloat(botBCDVal)+ parseFloat(botSWCVal); 
+
+					//alert("botItemVal>>>"+botItemVal);
+
+					//TAX
+
+
+					var itemTAXObj = eval("document.myForm.itemTAX"+chkRfq+((k+1)*10));
+					//alert("itemTAXObj>>>"+itemTAXObj.value);
+					botTAXVal = (((botItemVal) * itemTAXObj.value)/100).toFixed(2);
+
+					//alert("botTAXVal>>>"+botTAXVal);
+
+					botTotVal = botTotVal + ( parseFloat(botItemVal) + parseFloat(botCLRVal) + parseFloat(botTAXVal)); 				
+				}
+			}	
+		}
+	
+		botTotVal=(parseFloat(botTotVal)).toFixed(2); 
+		//alert("botTotVal out>>>"+botTotVal);
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+		botDocObj.value = (parseFloat(botDocObj.value) - parseFloat(botTotValObj.value)).toFixed(2); 
+		botTotValObj.value = botTotVal;
+		botDocObj.value = (parseFloat(botDocObj.value) + parseFloat(botTotVal)).toFixed(2); 
+
+}

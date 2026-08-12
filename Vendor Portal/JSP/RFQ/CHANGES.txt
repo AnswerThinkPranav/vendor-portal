@@ -1,0 +1,12 @@
+Vendor Quote:
+=============
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\RFQ\ezPostQuote.jsp
+D:\apache-tomee-webprofile-1.7.2\webapps\JUBLAPP\EzWeb\EzCommerce\EzVendor\Vendor2\JSPs\RFQ\ezQuotationSave.jsp
+
+
+SRC:
+=====
+D:\workspace\JUBL\src\ezc\ezpreprocurement\params\EziRFQHeaderTableRow.java
+D:\workspace\JUBL\src\ezc\ezpreprocurement\params\EziRFQDetailsTableRow.java
+D:\workspace\JUBL\src\ezc\ezapp\v2\EzPreProcurementInputConversion.java
+D:\workspace\JUBL\src\ezc\ezapp\v2\ezpreprocurement\db\EzPreProcurementResource.java

@@ -1,0 +1,539 @@
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','1001','JGL HO_R&D Pur. Org.','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','1008','JGL Telangana','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','1100','JBSL - PO Org','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','2001','JGL NNJ Pur.Org.','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','3001','JGL Roorkee Pur.Org.','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','4101','Jub Pur.Org. Cadista','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','4150','Jubi Pharma Holdings','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','4405','Jubilant Draiximage','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','4470','JP South Africa POrg','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','4500','Jub Pur.Org. JDI','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','5000','Referance Purch. Org','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','6201','PSI Supply Pur.Org','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','7300','POrg JHS-LLC Spokane','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','7501','Jub Pur.Org. JHSGP','','','');
+insert into EZC_MASTER_KEY_VALUES values('PUR_ORG','9000','JDR - Jub Pur.Org.','','','');
+
+
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','1001','JUBILANT LIFE SCIENCES','','','');
+
+1001	JUBILANT LIFE SCIENCES
+
+
+insert into EZC_MASTER_KEY_VALUES values('DOC_TYPE','NB','Purchase Requisition','','','');
+insert into EZC_MASTER_KEY_VALUES values('DOC_TYPE','ZH01','JL-Stock Materials','','','');
+insert into EZC_MASTER_KEY_VALUES values('DOC_TYPE','ZH02','JL -Consumables/Serv','','','');
+insert into EZC_MASTER_KEY_VALUES values('DOC_TYPE','ZH03','JL -Asset','','','');
+insert into EZC_MASTER_KEY_VALUES values('DOC_TYPE','ZH04','JL -Maintenance','','','');
+insert into EZC_MASTER_KEY_VALUES values('DOC_TYPE','ZH05','JL-Project','','','');
+insert into EZC_MASTER_KEY_VALUES values('DOC_TYPE','ZH07','JL-Ext Manufacturing','','','');
+
+
+insert into EZC_MASTER_KEY_VALUES values('ITEM_CAT','K','Consignment','','','');
+insert into EZC_MASTER_KEY_VALUES values('ITEM_CAT','L','Subcontracting','','','');
+insert into EZC_MASTER_KEY_VALUES values('ITEM_CAT','S','Third-party','','','');
+insert into EZC_MASTER_KEY_VALUES values('ITEM_CAT','U','Stock transfer','','','');
+insert into EZC_MASTER_KEY_VALUES values('ITEM_CAT','D','Service','','','');
+insert into EZC_MASTER_KEY_VALUES values('ITEM_CAT','','Standard','','','');
+
+SELECT * from EZC_MASTER_KEY_VALUES where EMKV_MASTER_TYPE='ACCT_ASN_CAT'
+
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','A','Asset','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','B','MTS prod./sales ord.','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','C','Sales order','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','D','Indiv.cust./project','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','E','Ind. cust. w. KD-CO','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','F','Order','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','G','MTS prod./project','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','K','Cost center','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','M','Ind. cust. w/o KD-CO','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','N','Network','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','P','Project','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','Q','Proj. make-to-order','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','T','All new aux.acc.ass.','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','U','Unknown','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','X','All aux.acct.assgts.','','','');
+insert into EZC_MASTER_KEY_VALUES values('ACCT_ASN_CAT','Z','Free of cost','','','');
+
+
+==================================================================================================================================
+select * from ezc_user_defaults where eud_user_id='TEST_NNJ'
+insert into ezc_user_defaults values('TEST_NNJ','NOT','','PLANT','2001#2002#2003#2004','D','N')
+insert into ezc_user_defaults values('TEST_RND','NOT','','PLANT','1001#1002#1003#1004#1005','D','N')
+insert into ezc_user_defaults values('TEST_LOGI','NOT','','PLANT','3001','D','N')
+insert into ezc_user_defaults values('JUBLBUYER','NOT','','PLANT','1001#1002#1003#1004#1005#2001#2002#2003#2004#3001','D','N')
+
+==================================================================================================================================
+
+select * from ezc_plants
+
+==================================================================================================================================
+
+DB:
+====
+CREATE TABLE `ezc_rfq_services` (
+  `ERS_SRV_PR` varchar(10) NOT NULL,
+  `ERS_SRV_PR_ITEM` decimal(3,0) NOT NULL,
+  `ERS_SRV_LINE` decimal(3,0) NOT NULL,
+  `ERS_SRV_PKG` varchar(10) DEFAULT NULL,
+  `ERS_SRV_RFQ` varchar(10) NOT NULL,
+  `ERS_SRV_RFQ_ITEM` decimal(3,0) NOT NULL,
+  `ERS_SRV_ACT` varchar(18) DEFAULT NULL,
+  `ERS_SRV_DESC` varchar(50) DEFAULT NULL,
+  `ERS_SRV_ITEM_TEXT` varchar(2000) DEFAULT NULL,
+  `ERS_SRV_LINE_TEXT` varchar(2000) DEFAULT NULL,
+  `ERS_SRV_QTY` decimal(15,3) DEFAULT NULL,
+  `ERS_SRV_UOM` varchar(10) DEFAULT NULL,
+  `ERS_SRV_PRICE` decimal(15,4) DEFAULT NULL,
+  `ERS_SRV_SAC` varchar(10) DEFAULT NULL,
+  `ERS_SRV_GST` varchar(10) DEFAULT NULL,
+  `ERS_SRV_EXT1` varchar(20) DEFAULT NULL,
+  `ERS_SRV_EXT2` varchar(20) DEFAULT NULL,
+  `ERS_SRV_EXT3` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`ERS_SRV_PR`,`ERS_SRV_PR_ITEM`,`ERS_SRV_LINE`,`ERS_SRV_RFQ`,`ERS_SRV_RFQ_ITEM`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE EZC_RFQ_DETAILS ADD COLUMN ERD_PO_QTY decimal(15,3) AFTER ERD_QUANTITY;
+
+ALTER TABLE EZC_RFQ_DETAILS ADD COLUMN ERD_PO_NO VARCHAR(10) AFTER ERD_QUANTITY;
+
+ALTER TABLE EZC_RFQ_DETAILS MODIFY COLUMN ERD_REMARKS VARCHAR(2000) 
+
+ALTER TABLE EZC_RFQ_DETAILS ADD COLUMN ERD_WARRANTY VARCHAR(500) 
+
+ALTER TABLE EZC_RFQ_DETAILS ADD COLUMN ERD_DOC_TYPE VARCHAR(10) 
+
+==================================================================================================
+
+ALTER TABLE EZC_RFQ_HEADER ADD COLUMN ERH_LD_CLAUSE VARCHAR(200)
+
+ALTER TABLE EZC_RFQ_HEADER ADD COLUMN ERH_PLANT VARCHAR(4)
+
+ALTER TABLE EZC_RFQ_HEADER ADD COLUMN ERH_COMP_CODE VARCHAR(4)
+
+ALTER TABLE EZC_RFQ_HEADER ADD COLUMN ERH_CATEGORY VARCHAR(10)
+
+ALTER TABLE EZC_RFQ_HEADER ADD COLUMN ERH_WF_STATUS VARCHAR(10)
+
+ALTER TABLE EZC_RFQ_HEADER ADD COLUMN ERH_FINAL_VALUE decimal(10,2)
+
+===================================================================================================
+desc ezc_rfq_header
+
+ALTER TABLE EZC_RFQ_HEADER ADD COLUMN ERH_LD_STATUS CHAR(1) AFTER ERH_LD_CLAUSE;
+ALTER TABLE EZC_RFQ_HEADER ADD COLUMN ERH_PG_STATUS CHAR(1) AFTER ERH_LD_STATUS;
+
+
+D:\workspace\JUBL\src\ezc\ezpreprocurement\params\EziRFQDetailsTableRow.java
+D:\workspace\JUBL\src\ezc\ezapp\v2\EzPreProcurementInputConversion.java
+D:\workspace\JUBL\src\ezc\ezapp\v2\ezpreprocurement\db\EzPreProcurementResource.java
+
+
+========================================================================================================
+
+CREATE TABLE EZC_MAT_BUDGET_PRICE(
+EMBP_FIN_YEAR		VARCHAR(8),
+EMBP_PLANT		VARCHAR(4),
+EMBP_MATERIAL		VARCHAR(40),
+EMBP_DESCRIPTION	VARCHAR(50),
+EMBP_BASIC_PRICE	VARCHAR(15),
+EMBP_LANDED_PRICE	VARCHAR(15),
+EMBP_FY_START_DATE	DATETIME,
+EMBP_FY_END_DATE	DATETIME,
+EMBP_EXT1		VARCHAR(15),	
+EMBP_EXT2		VARCHAR(15),	
+CONSTRAINT EZC_MAT_BUDGET_PRICE_PK1 PRIMARY KEY (EMBP_FIN_YEAR,EMBP_PLANT,EMBP_MATERIAL));
+
+select * from EZC_MAT_BUDGET_PRICE
+
+INSERT INTO EZC_MAT_BUDGET_PRICE VALUES('FY-21-22','P111','TEST1','TEST MATERIAL1','10.00','12.00',CONVERT('2021-04-01 01:00',datetime),CONVERT('2022-03-31 23:00',datetime),'',''); 
+INSERT INTO EZC_MAT_BUDGET_PRICE VALUES('FY-21-22','P111','TEST2','TEST MATERIAL2','10.00','12.00',CONVERT('2021-04-01 01:00',datetime),CONVERT('2022-03-31 23:00',datetime),'',''); 
+INSERT INTO EZC_MAT_BUDGET_PRICE VALUES('FY-21-22','3001','000000007502000153','Label Irbesart Tab 150mg BT100','15.00','20.00',CONVERT('2021-04-01 01:00',datetime),CONVERT('2022-03-31 23:00',datetime),'',''); 
+INSERT INTO EZC_MAT_BUDGET_PRICE VALUES('FY-21-22','3001','000000007504001325','Pt Crt Azithromycin 500mg 1x3`s Unicorn','25.00','20.00',CONVERT('2021-04-01 01:00',datetime),CONVERT('2022-03-31 23:00',datetime),'',''); 
+
+===================================================================================================================
+COMPANY CODE:
+===================================================================================================================
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','0001','SAP A.G.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','0MB1','IS-B Musterbank Deutschl.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','1000','JUBILANT PHARMOVA LIMTED','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','1001','JUBILANT LIFE SCIENCES','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','1100','JUBILANT BUSINESS SERVICE','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','2000','Jubilant First Trust Hea','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','2001','Jubilant Employees Welfar','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','2100','Asia Healthcare Developme','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','3000','Jubilant Infrastructure','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4000','Jubilant Pharma Pte.Ltd.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4100','Cadista Holdings Inc.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4101','Jubilant Cadista Pharma','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4150','Jubil Pharma Holdings Inc','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4200','Jubilant Life Sciences(','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4300','JLSI Pte Ltd.,','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4400','Draximage Ltd. Cyprus','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4401','Draximage Ltd.Ireland','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4402','Draximage LLC,U.S.A','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4403','Jubilant Draximage (USA)','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4404','Deprenyl Inc.USA','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4405','Jubilant DraxImage Ltd.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4406','Jubilant Pharma Aus Pty','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4407','Jubilant Pharma SA (Pty)','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4408','JUBILANT PHARMA UK LTD','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4409','Jubilant Drax Radiop Inc.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4500','Jubilant DraxImage Inc.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4501','6963196 Canada Inc','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4502','6981364 Canada Inc','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4503','Draximage Gen.Partnership','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4504','DAHI Animal Health (UK) L','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4505','Draximage (UK) Ltd.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4600','Jubilant Life Sciences (','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4601','4601 Jubilant Biosys (BV','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4610','Jubilant Biosys (Singapo','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4620','Jubilant Drug Development','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4630','Jubilant Biosys Ltd.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4631','Jubilant Discovery Servi ','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4640','Jubilant Chemsys Ltd.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4641','Jubilant Clinsys Ltd.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4700','Jubilant Innovation (BVI','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4710','Jubilant Innovation Pte.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4720','Jubilant Innovation (Ind','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4730','Jubilant Innovation (USA','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','4800','Jubilant Life Sciences(S','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','5000','Jubilant Generics Limited','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','6000','Jubilant Pharma NV','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','6100','Jubilant Pharmaceuticals','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','6200','PSI Supply NV','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','7000','Jubilant Pharma Holdings','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','7100','Jubilant Clinsys Inc.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','7200','HSL Holdings Inc.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','7300','Jubilant HollisterStier','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','7400','Draxis Pharma Inc','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','7500','Draxis Pharma LLC','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','7501','Jubilant HollisterStier','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','7600','Generic Pharmaceuticals H','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','8000','Jubilant Life Sciences (','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','9000','Jubilant Drax Radiop Inc.','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','AR01','Country Template AR','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','ARG1','Country Template AR','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','AT01','Country Template AT','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','AU01','Country Template AU','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','BE01','Country Template BE','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','BR01','Country Template BR','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','CA01','Country Template CA','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','CH01','Country Template CH','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','CL01','Country Template CL','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','CN01','Country Template CN','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','CO01','Country Template CO','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','COPY','Copy from CC.0001','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','CZ01','Country Template CZ','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','DE01','Country Template DE','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','DE02','Country Template DE','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','DK01','Country Template DK','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','ES01','Country Template ES','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','FI01','Country Template FI','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','FR01','Country Template FR','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','GB01','Country Template GB','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','HK01','Country Template HK','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','HU01','Country Template HU','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','ID01','Country Template ID','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','IE01','Country Template IE','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','IN01','India Model Company, IN  ','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','IT01','Country Template IT','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','JP01','Country Template JP','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','KR01','Country Template KR','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','KZ01','Country Template KZ','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','LU01','Country Template LU','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','MX01','Country Template MX','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','MX03','Country Template MX','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','MY01','Country Template MY','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','NL01','Country Template NL','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','NO01','Country Template NO','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','NZ01','Country Template NZ','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','PE01','Country Template PE','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','PH01','Country Template PH','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','PL01','Country Template PL','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','PT01','Country Template PT','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','RECO','Sondereigentum (WEG)','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','REOB','Referenz Objektmandate','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','RERF','WEG Referenzbuchungskreis','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','RU01','Country Template RU','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','SE01','Country Template SE','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','SG01','SAP Asia','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','SK01','Country Template SK','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','TH01','Country Template TH','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','TR01','Country Template TR','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','TW01','Country Template TW','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','UA01','Country Template UA','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','US01','Country Template US','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','VE01','Country Template VE','','','');
+insert into EZC_MASTER_KEY_VALUES values('COMP_CODE','ZA01','Country Template ZA','','','');
+
+
+============================================================================================================
+INCTERMS
+==============
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','CFR','Costs and freight','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','CIF','Costs, insurance & freight','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','CIP','Carriage and insurance paid to','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','CPT','Carriage paid to','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','DAF','Delivered at frontier','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','DAP','Delivered at Place','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','DAT','Delivered at Terminal','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','DDP','Delivered Duty Paid','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','DDU','Delivered Duty Unpaid','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','DEQ','Delivered ex quay (duty paid)','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','DES','Delivered ex ship','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','EXW','Ex Works','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','FAS','Free Alongside Ship','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','FCA','Free Carrier','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','FH','Free house','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','FOB','Free on board','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','FOR','Free on Road','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','P08','Delivery in one day','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','RSH','Courier patient order not mail','','','');
+insert into EZC_MASTER_KEY_VALUES values ('INCO_TERM','UN','Not Free','','','');
+
+
+==============================================================================================================
+PAYMENT TERMS
+===============
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0001','Within 10 days Due net','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0002','Within 14 days 2 % cash discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0003','Within 14 days 3 % cash discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0004','Payable immediately Due net','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0005','Payable immediately Due net','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0006','Before End of the month 4 % cash discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0007','For incoming invoices until 15 of the month','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0008','For incoming invoices until 15 of the month','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','0009','Payable in 3 partial amounts','','','');
+============================
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','A01','CASH AGAINST DOCUMENTS','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','A02','100% Advance Against Proforma','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','A03','100% Advance with Order','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','A04','100% Against Despatch Document','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','A05','100% Against BG/PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','BT01','30 DAYS FROM DATE OF BT AGREEMENT','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','BT02','60 DAYS FROM DATE OF BT AGREEMENT','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','BT03','90 DAYS FROM DATE OF BT AGREEMENT','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','BT04','120 DAYS FROM DATE OF BT AGREEMENT','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','BT05','150 DAYS FROM DATE OF BT AGREEMENT','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','BT06','180 DAYS FROM DATE OF BT AGREEMENT','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C01','IMMDTLY FROM DATE OF MATL RECPT,SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C02','7 DAYS FROM DATE OF MATL RECEIPT , SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C03','15 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C04','30 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C05','45 DAYS FROM DATE OF MATL RECEPT , SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C06','60 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C07','90 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C08','120 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C09','150 DAYS FROM DATE OF MATL RECEPT, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C10','180 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL ','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C11','7 DAYS FROM DATE OF INVOICE , SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C12','15 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C13','30 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C14','45 DAYS FROM DATE OF INVOICE , SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C15','60 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C16','90 DAYS FROM DATE OF INVOICE SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C17','120 DAYSFROM DATE OF INVOICE, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C18','150 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C19','180 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C20','75 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C30','30 DAYS FROM AWB DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','C35','MSME-35 DAYS FROM DATE OF INVOICE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA01','DA/DP SIGHT','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA02','DA 30 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA03','DA 45 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA04','DA 60 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA05','DA 90 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA06','DA 120 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA07','DA 150 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA08','DA 180 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA09','DA 15 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','DA11','DA 100 DAYS FROM DATE OF BL/AWB DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','J0','Payable immediately Due net','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','J050','LC 60 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC01','LC SIGHT','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC02','LC 30 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC03','LC 45 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC04','LC 60 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC05','LC 90 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC06','LC 120 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC07','LC 150 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC08','LC 180 DAYS FROM INVOICE DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC09','LC SIGHT BT Date','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC10','LC 30 DAYS FROM BT DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC11','LC 45 DAYS FROM BT DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC12','LC 60 DAYS FROM BT DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC13','LC 90 DAYS FROM BT DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC14','LC 120 DAYS FROM BT DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC15','LC 150 DAYS FROM BT DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC16','LC 180 DAYS FROM BT DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC17','LC 60 DAYS FROM BL/AWB DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC18','LC 90 DAYS FROM BL/AWB DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC19','LC 75 DAYS FROM BL/AWB DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC20','LC 120 DAYS FROM BL/AWB DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','LC24','LC 100 DAYS FROM BL/AWB DATE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX01','100% on COD Basis','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX02','100% on Completion of work','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX03','10%ABG+70%supply+10%ins+10%PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX04','100% CAD Basis','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX05','100% Cheque agt. delivery','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX06','15% agst BG,75% 30 days matl recpt,10% agst PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX07','20% agst BG,70% 30 days matl recpt,10% agst PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX08','20%ABG/70%-Lc60daysUsance/10%P','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX09','20%Adv.Ag.ABG,80+Tx-15dyFm Rp','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX10','25% agst BG,65% 30 days matl recpt,10% agst PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX11','70%30days+15%+tax Insat+15%PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX12','80%runing Bill+10%Test+10%Hand','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX13','85%within 30days from dely,15%agst PBG for 3years','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX14','90% within 30days from delivery, 10% against PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX15','90% within15 days from MRN dt & 10% against PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX16','90%order+100%tx-30day/10%PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX17','10% against BG, 80% against Prof Inv, 10% PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX18','10%ABG/80%-30day del/10%ComPBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX19','10% aginst ABG, 85% after work completion, 5% PBG ','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX20','25% ADVANCE & 75% AGT DESP DOC','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX21','25%ADVANCE 75%AGAINST DESP.DOC','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX22','90%-15day MRN & 10% on Comm-PB','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX23','50% Adv. & Bal 50% after 15 day','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX24','95% Against work completion, 5% Performance BG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX25','20%ABG/70%+Tx-15day del/10%Com','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX26','20%ABG/70%+Tx-agt Recpt/10%PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX27','90%agtPI/100%Tx-15days/10%PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX38','90% LC at sight,10% against PBG for 1 year','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX39','50% adv with PO & bal 50% against Performa invoice','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX40','50% advance & 50% on completion of work','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX41','20%Ad.ABG,60%dlivry&10% instltn,10% PBG 1Yr','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX42','50% on receipt, 35% after installation, 15% PBG','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX43','50% after 45 days on Material receipt','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','MX44','80% Delivry of matl with in 15D & 20% aftr instltn','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT01','TT ADVANCE','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT02','TT 7 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT03','TT15 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT04','TT30 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT05','TT45 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT06','TT60 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT07','TT90 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT08','TT120 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT09','TT150 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','TT10','TT180 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y001','Immediate payment without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y010','Net due within 10 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y015','Net due within 15 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y016','Net due within 40 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y020','Net due in 20 days with 1% discount in 10 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y030','Net due in 30 days with 1% discount in 10 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y045','Net Due within 45 days with 4% discount on Immedia','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y050','50% due immediately and 50% due net 30 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y075','75% due immediately and 25% due net 30 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y120','Net Due within 20 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y130','Net Due  in 30 days with 2% discount in 15 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y135','Net Due within 35 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y175','Net Due within 75 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y220','Net Due in 20 days with 2% disount in 10 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y230','Net Due in 30 days with 2% disount in 10 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y250','Net Due within 50 days with 5% Discount on Immedia','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y260','Net Due within 60 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y330','Net Due within 30 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y410','Net Due within 30 days with 4% discount in 10 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y420','Net Due within 30 days with 4% discount in 20 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y445','Net Due within 45 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y505','Net Due within 30 days with 5% discount in 5 days ','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y510','Net Due within 30 days with 5% discount in 10 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y520','Net Due within 30 days with 5% discount in 20 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y521','Before 15 next month,2%','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y522','within 14 days,2%','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y523','Payable in 3 installments','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y524','1% 15 days,net 30','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y525','1% 20 days,net 30','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y526','1.5% 15 days,net 30','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y527','2% 10 days,net 30','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y528','2% 15 days, net 30','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y529','2% 30 days, net 120','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y530','3% 20 days,net 25','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y531','Pay upon receipt','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y532','Net 7 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y533','Net 15 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y534','Net 25 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y535','Net 45 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y536','Net 90 Days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y537','Net 30 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y538','Net 60 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y539','3% 10 days,net 30','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y540','80% Advance & 20% with in 45 Days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y541','2% 20 Days, Net 45','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y542','Net 50 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y543','1% 10 Net 30','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y544','Net 31 days','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y545','2% 64 Days, Net 65','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y546','2% 20, Net 30','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y547','0.5% 33 Net 34','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y548','Due First of Month','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y601','60 days from B/L date','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Y602','90 days from B/L date','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YEE0','Immediate payment without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YEOM','Net Due at the end of the month without any discou','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YINS','Immediate payment without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YNT0','Immediate payment without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YNT1','Net Due within 10 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YNT5','Net Due within 5 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YQRD','Immediate payment without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YRFD','Immediate refund without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','YTAX','Immediat Tax payment without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Z015','Net due within 15 days without any discount','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Z025','Pay prior to shipment','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Z029','2% 15 days, net 16 from date of invoice','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Z031','2% 97 days, Net 98 days from date of invoice','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Z034','Payable in 5 partial amounts','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Z035','90% advance & 10% after 45 days of invoice','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Z065','Payable immediately Due net','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','Z066','Free of Cost','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','ZA01','90 days from AWB date','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','ZF10','Payable on every 10th day of next month','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','ZF15','Payable on every 10th day of next month','','','');
+insert into EZC_MASTER_KEY_VALUES values ('PMNT_TERM','ZPV1','Early Payment-PV','','','');
+
+==========================
+
+VENDOR ACCOUNT GROUP  (XK01)
+
+================================
+SELECT * from EZC_MASTER_KEY_VALUES where EMKV_MASTER_TYPE IN('VEN_GRP')
+================================
+
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0001','Vendor','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0002','Goods supplier','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0003','Alternative payee','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0004','Invoicing Party','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0005','Forwarding agent','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0006','Ordering address','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0007','Plants','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0012','Hierarchy Node','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','0100','Vendor distribution center','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','CPD','One-time vend.(int.no.assgnmt)','','','')
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','CPDL','One-time vend.(ext.no.assgnmt)','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','DARL','Lender','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','KRED','Vendor (int.number assgnmnt)','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','LIEF','Vendor (ext.number assgnmnt)','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','MNFR','Manufacturer (ext.no.assgnmnt)','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','REIS','Commercial traveller','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','VERT','Representative','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z001','Suppliers - Raw Materials','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z002','Suppliers - Packing Materials','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z003','Suppliers - General','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z004','Suppliers - Contractors','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z005','Suppliers - Transporter','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z006','Suppliers - Capital','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z007','Suppliers - Capital Contractor','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z008','Suppliers - Stores Supply','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z009','Suppliers - HO locations','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z010','Suppliers - Subsidiary Comp','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z011','SUPPLIERS - Trading','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z012','SUPPLIERS - Import RM','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z013','SUPPLIERS - Import Packing','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z014','SUPPLIERS - Import Capital','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z015','Supplier-Customer Sample','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z016','Supplier-GST Partner','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','Z017','Supplier - Ancillaries','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','ZEMI','Employees-India','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','ZEMM','Employees-Canada','','','');
+insert into EZC_MASTER_KEY_VALUES values ('VEN_GRP','ZEMP','Employees','','','');

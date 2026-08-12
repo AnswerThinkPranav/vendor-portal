@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Quotation ' + ${form.rfqNo()}">Vendor Quotation</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        .vr-breadcrumb { font-size: 13px; color: #6c7a91; margin-bottom: 18px; letter-spacing: .2px; }
+        .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
+
+        .vr-card { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08); overflow: hidden; width: 100%; margin: 0 0 24px 0; }
+        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; padding: 18px 28px; }
+        .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; }
+
+        .vr-grid { display: grid; grid-template-columns: 200px 1fr 200px 1fr; border-top: 1px solid #eef1f6; }
+        .vr-grid-label { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; font-weight: 700; font-size: 12.5px; padding: 12px 16px; display: flex; align-items: center; }
+        .vr-grid-value { padding: 10px 16px; display: flex; align-items: center; border-bottom: 1px solid #eef1f6; font-size: 13.5px; }
+        .vr-grid-value select, .vr-grid-value textarea { width: 100%; border-radius: 8px; border: 1px solid #dde3ec; padding: 6px 10px; font-size: 13.5px; }
+        .vr-radio-inline { display: flex; align-items: center; gap: 8px; margin-right: 18px; font-weight: 600; font-size: 13px; }
+
+        .vr-table-wrap { padding: 24px 28px; overflow-x: auto; }
+        table.vr-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        table.vr-table thead th {
+            background: #325786; color: #fff; font-weight: 700;
+            font-size: 11px; letter-spacing: .3px; padding: 9px 10px; text-align: center; border-bottom: 2px solid #274263; white-space: nowrap;
+        }
+        table.vr-table tbody td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #f0f2f7; white-space: nowrap; }
+        table.vr-table tbody td input, table.vr-table tbody td select { width: 100px; border-radius: 7px; border: 1px solid #dde3ec; padding: 5px 8px; font-size: 12.5px; }
+        .vr-cond-btn { border: none; background: #eaf1fd; color: #2054a6; border-radius: 7px; padding: 6px 10px; cursor: pointer; }
+        .vr-cond-btn:hover { background: #d5e3fb; }
+
+        .vr-comments-wrap { padding: 0 28px 24px 28px; }
+        .vr-comments-wrap textarea { width: 100%; border-radius: 10px; border: 1px solid #dde3ec; padding: 10px 14px; font-size: 13.5px; }
+
+        .vr-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 0 28px 24px 28px; }
+        .vr-btn { display: inline-block; border: none; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13.5px; cursor: pointer; text-decoration: none; }
+        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-btn-primary:hover { color: #fff; }
+        .vr-btn-light { background: #eef1f6; color: #33415c; }
+        .vr-btn-light:hover { color: #33415c; }
+
+        .vr-cond-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        .vr-cond-table th { background: #325786; color: #fff; text-align: left; padding: 9px 12px; font-size: 11.5px; }
+        .vr-cond-table td { padding: 9px 12px; background: #f4f7fc; }
+        .vr-cond-table td select, .vr-cond-table td input { width: 100%; border-radius: 7px; border: 1px solid #dde3ec; padding: 6px 8px; }
+        .vr-cond-total-row td { background: #00c0ef; color: #fff; font-weight: 700; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="vr-breadcrumb">RFQs &nbsp;/&nbsp; <span class="current">Vendor Quotation</span></div>
+
+        <form id="quoteForm" onsubmit="return false;">
+        <div class="vr-card">
+            <div class="vr-card-header"><h4>Vendor Quotation</h4></div>
+
+            <div class="vr-grid">
+                <div class="vr-grid-label">RFQ Ref No</div>
+                <div class="vr-grid-value" th:text="${form.rfqNo()}"></div>
+                <div class="vr-grid-label">RFQ Date</div>
+                <div class="vr-grid-value" th:text="${form.rfqDate()}"></div>
+
+                <div class="vr-grid-label">Quotation End Date</div>
+                <div class="vr-grid-value" th:text="${form.closingDate()}"></div>
+                <div class="vr-grid-label">Qtn. Date</div>
+                <div class="vr-grid-value" th:text="${form.qtnDate()}"></div>
+
+                <div class="vr-grid-label">Payment Terms</div>
+                <div class="vr-grid-value">
+                    <select id="paymentTerms">
+                        <option value="">Select Payment Terms</option>
+                        <option th:each="o : ${form.paymentTermsOptions()}" th:value="${o.value()}" th:text="${o.label()}"
+                                th:selected="${o.value() == form.paymentTerms()}"></option>
+                    </select>
+                </div>
+                <div class="vr-grid-label">Inco Terms</div>
+                <div class="vr-grid-value">
+                    <select id="incoTerms1">
+                        <option value="">Select Inco Terms</option>
+                        <option th:each="o : ${form.incoTermsOptions()}" th:value="${o.value()}" th:text="${o.label()}"
+                                th:selected="${o.value() == form.incoTerms1()}"></option>
+                    </select>
+                </div>
+
+                <div class="vr-grid-label">LD Clause Applicable</div>
+                <div class="vr-grid-value">
+                    <label class="vr-radio-inline"><input type="radio" name="ldApp" value="Y" onchange="toggleClause('ld')" th:checked="${form.ldStatus() == 'Y'}"> Yes</label>
+                    <label class="vr-radio-inline"><input type="radio" name="ldApp" value="N" onchange="toggleClause('ld')" th:checked="${form.ldStatus() != 'Y'}"> No</label>
+                </div>
+                <div class="vr-grid-label" id="ldClauseLabel" style="display:none">LD Clause</div>
+                <div class="vr-grid-value" id="ldClauseValue" style="display:none">
+                    <textarea id="ldTxt" rows="2" maxlength="500" th:text="${form.ldClause()}"></textarea>
+                </div>
+
+                <div class="vr-grid-label">Performance Guarantee</div>
+                <div class="vr-grid-value">
+                    <label class="vr-radio-inline"><input type="radio" name="pgApp" value="Y" onchange="toggleClause('pg')" th:checked="${form.pgStatus() == 'Y'}"> Yes</label>
+                    <label class="vr-radio-inline"><input type="radio" name="pgApp" value="N" onchange="toggleClause('pg')" th:checked="${form.pgStatus() != 'Y'}"> No</label>
+                </div>
+                <div class="vr-grid-label" id="pgClauseLabel" style="display:none">Remarks</div>
+                <div class="vr-grid-value" id="pgClauseValue" style="display:none">
+                    <textarea id="pgTxt" rows="2" maxlength="500" th:text="${form.pgClause()}"></textarea>
+                </div>
+            </div>
+
+            <div class="vr-table-wrap">
+                <table class="vr-table" id="itemsTable">
+                    <thead>
+                    <tr>
+                        <th>Line</th><th>Material</th><th>Description</th><th>Mat Grp</th><th>HSN/SAC</th>
+                        <th>Qty</th><th>Per</th><th>UOM</th><th>MRP Price</th><th>Basic Price</th>
+                        <th>Currency</th><th>Conditions</th><th>Total</th><th>Remarks</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${form.items()}" th:attr="data-line=${item.lineNo()}">
+                        <td th:text="${item.lineNo()}"></td>
+                        <td th:text="${item.material()}"></td>
+                        <td th:text="${item.materialDesc()}" style="white-space:normal;min-width:180px;text-align:left"></td>
+                        <td th:text="${item.matGroup()}"></td>
+                        <td><input type="text" th:id="'hsn' + ${item.lineNo()}" th:value="${item.hsnCode()}" maxlength="20"></td>
+                        <td th:text="${item.qty()}"></td>
+                        <td><input type="number" th:id="'perQty' + ${item.lineNo()}" th:value="${item.perQty()}" min="0" style="width:70px" th:attr="onchange='recalc(' + ${item.lineNo()} + ')'"></td>
+                        <td th:text="${item.uom()}"></td>
+                        <td><input type="number" th:id="'mrp' + ${item.lineNo()}" th:value="${item.mrpPrice()}" min="0" style="width:90px"></td>
+                        <td><input type="number" th:id="'price' + ${item.lineNo()}" th:value="${item.price()}" min="0" style="width:90px" th:attr="onchange='recalc(' + ${item.lineNo()} + ')'"></td>
+                        <td>
+                            <select th:id="'curr' + ${item.lineNo()}" style="width:80px">
+                                <option value="INR" th:selected="${item.currency() == 'INR' or item.currency() == null}">INR</option>
+                                <option value="USD" th:selected="${item.currency() == 'USD'}">USD</option>
+                                <option value="EUR" th:selected="${item.currency() == 'EUR'}">EUR</option>
+                            </select>
+                        </td>
+                        <td><button type="button" class="vr-cond-btn" th:attr="onclick='openConditions(' + ${item.lineNo()} + ')'"><i class="fa fa-sliders"></i> Conditions</button></td>
+                        <td><span th:id="'total' + ${item.lineNo()}">0.00</span></td>
+                        <td><input type="text" th:id="'remarks' + ${item.lineNo()}" th:value="${item.remarks()}" style="width:130px"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-comments-wrap">
+                <label style="font-weight:700;font-size:13px;color:#4b5876">Comments</label>
+                <textarea id="comments" rows="2" placeholder="Enter Comments"></textarea>
+            </div>
+
+            <div class="vr-actions">
+                <a class="vr-btn vr-btn-light" th:href="@{/rfq/view/{rfqNo}(rfqNo=${form.rfqNo()})}"><i class="fa fa-arrow-left"></i> Go Back</a>
+                <button type="button" class="vr-btn vr-btn-primary" onclick="submitQuote()"><i class="fa fa-check"></i> Submit Quote</button>
+            </div>
+        </div>
+        </form>
+    </div>
+
+    <!-- Item Conditions modal -->
+    <div class="modal fade" id="condModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Item Conditions <span id="condModalLine"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <table class="vr-cond-table">
+                        <tr><th>Cn Type</th><th>Name</th><th>Value</th><th>Currency</th><th>Amount</th></tr>
+                        <tr>
+                            <td>Price</td>
+                            <td>Basic Price</td>
+                            <td><span id="cPrice"></span></td>
+                            <td><span id="cCurr"></span></td>
+                            <td><span id="cBasicAmt"></span></td>
+                        </tr>
+                        <tr>
+                            <td>Discount</td>
+                            <td>
+                                <select id="cDiscType">
+                                    <option value="">-- Select --</option>
+                                    <option value="P">Discount % on Gross</option>
+                                    <option value="Q">Discount/Quantity</option>
+                                </select>
+                            </td>
+                            <td><input type="number" id="cDiscValue" value="0" min="0"></td>
+                            <td><span id="cCurr2"></span></td>
+                            <td><span id="cDiscAmt">0.00</span></td>
+                        </tr>
+                        <tr>
+                            <td>Pkg &amp; Fwd</td>
+                            <td>
+                                <select id="cPkfwType">
+                                    <option value="">-- Select --</option>
+                                    <option value="P">P&amp;F% on Net</option>
+                                    <option value="Q">P&amp;F QTY</option>
+                                </select>
+                            </td>
+                            <td><input type="number" id="cPkfwValue" value="0" min="0"></td>
+                            <td><span id="cCurr3"></span></td>
+                            <td><span id="cPkfwAmt">0.00</span></td>
+                        </tr>
+                        <tr>
+                            <td>Freight</td>
+                            <td>
+                                <select id="cFrtType">
+                                    <option value="">-- Select --</option>
+                                    <option value="P">Freight %</option>
+                                    <option value="V">Freight (Value)</option>
+                                    <option value="Q">Freight/Quantity</option>
+                                </select>
+                            </td>
+                            <td><input type="number" id="cFrtValue" value="0" min="0"></td>
+                            <td><span id="cCurr4"></span></td>
+                            <td><span id="cFrtAmt">0.00</span></td>
+                        </tr>
+                        <tr class="vr-cond-total-row"><td colspan="2">Net Value</td><td></td><td><span id="cCurr5"></span></td><td><span id="cNetVal">0.00</span></td></tr>
+                        <tr>
+                            <td>GST</td>
+                            <td>Within State</td>
+                            <td>
+                                <select id="cGst">
+                                    <option value="0">0</option>
+                                    <option value="3">3</option>
+                                    <option value="5">5</option>
+                                    <option value="12">12</option>
+                                    <option value="18" selected>18</option>
+                                    <option value="28">28</option>
+                                </select>
+                            </td>
+                            <td><span id="cCurr6"></span></td>
+                            <td><span id="cGstAmt">0.00</span></td>
+                        </tr>
+                        <tr class="vr-cond-total-row"><td colspan="2">Gross Value</td><td></td><td><span id="cCurr7"></span></td><td><span id="cGrossVal">0.00</span></td></tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="vr-btn vr-btn-primary" onclick="saveConditions()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script th:inline="javascript">
+        var lineState = {};
+        var currentLine = null;
+
+        function initLine(lineNo) {
+            lineState[lineNo] = {
+                disc: { type: '', value: 0 },
+                pkfw: { type: '', value: 0 },
+                frt: { type: '', value: 0 },
+                gst: 18
+            };
+        }
+        /*[# th:each="item : ${form.items()}"]*/
+        initLine([[${item.lineNo()}]]);
+        /*[/]*/
+
+        function toggleClause(kind) {
+            var checked = document.querySelector('input[name="' + (kind === 'ld' ? 'ldApp' : 'pgApp') + '"]:checked');
+            var show = checked && checked.value === 'Y';
+            document.getElementById(kind + 'ClauseLabel').style.display = show ? 'flex' : 'none';
+            document.getElementById(kind + 'ClauseValue').style.display = show ? 'flex' : 'none';
+        }
+        toggleClause('ld');
+        toggleClause('pg');
+
+        function round2(n) {
+            return Math.round((n + Number.EPSILON) * 100) / 100;
+        }
+        function condAmount(cond, base, qty, perQty) {
+            if (!cond || !cond.type || cond.value === undefined || cond.value === null || cond.value === '') return 0;
+            var val = parseFloat(cond.value) || 0;
+            if (cond.type === 'P') return round2(base * val / 100);
+            if (cond.type === 'V') return round2(val);
+            if (cond.type === 'Q') return round2((val * qty) / perQty);
+            return 0;
+        }
+        function calcLine(lineNo) {
+            var qty = parseFloat($('td:eq(5)', $('tr[data-line="' + lineNo + '"]')).text()) || 0;
+            var perQty = parseFloat($('#perQty' + lineNo).val()) || 1;
+            if (perQty === 0) perQty = 1;
+            var price = parseFloat($('#price' + lineNo).val()) || 0;
+            var st = lineState[lineNo];
+
+            var basicValue = round2((qty / perQty) * price);
+            var discVal = condAmount(st.disc, basicValue, qty, perQty);
+            var netAfterDisc = basicValue - discVal;
+            var pkfwVal = condAmount(st.pkfw, netAfterDisc, qty, perQty);
+            var frtVal = condAmount(st.frt, netAfterDisc, qty, perQty);
+            var netValue = round2(basicValue - discVal + pkfwVal + frtVal);
+            var gst = parseFloat(st.gst) || 0;
+            var taxVal = round2(netValue * gst / 100);
+            var grossValue = round2(netValue + taxVal);
+
+            return { qty: qty, perQty: perQty, price: price, basicValue: basicValue, discVal: discVal, pkfwVal: pkfwVal, frtVal: frtVal, netValue: netValue, taxVal: taxVal, grossValue: grossValue };
+        }
+        function recalc(lineNo) {
+            var calc = calcLine(lineNo);
+            $('#total' + lineNo).text(calc.grossValue.toFixed(2));
+        }
+        /*[# th:each="item : ${form.items()}"]*/
+        recalc([[${item.lineNo()}]]);
+        /*[/]*/
+
+        function openConditions(lineNo) {
+            currentLine = lineNo;
+            var st = lineState[lineNo];
+            var calc = calcLine(lineNo);
+            var curr = $('#curr' + lineNo).val();
+
+            $('#condModalLine').text(lineNo);
+            $('#cPrice').text(calc.price.toFixed(2));
+            $('#cBasicAmt').text(calc.basicValue.toFixed(2));
+            $('#cCurr,#cCurr2,#cCurr3,#cCurr4,#cCurr5,#cCurr6,#cCurr7').text(curr);
+
+            $('#cDiscType').val(st.disc.type);
+            $('#cDiscValue').val(st.disc.value);
+            $('#cPkfwType').val(st.pkfw.type);
+            $('#cPkfwValue').val(st.pkfw.value);
+            $('#cFrtType').val(st.frt.type);
+            $('#cFrtValue').val(st.frt.value);
+            $('#cGst').val(st.gst);
+
+            updateModalCalc();
+            $('#condModal').modal('show');
+        }
+        function updateModalCalc() {
+            var qty = parseFloat($('td:eq(5)', $('tr[data-line="' + currentLine + '"]')).text()) || 0;
+            var perQty = parseFloat($('#perQty' + currentLine).val()) || 1;
+            if (perQty === 0) perQty = 1;
+            var price = parseFloat($('#price' + currentLine).val()) || 0;
+            var basicValue = round2((qty / perQty) * price);
+
+            var disc = { type: $('#cDiscType').val(), value: $('#cDiscValue').val() };
+            var discVal = condAmount(disc, basicValue, qty, perQty);
+            var netAfterDisc = basicValue - discVal;
+
+            var pkfw = { type: $('#cPkfwType').val(), value: $('#cPkfwValue').val() };
+            var pkfwVal = condAmount(pkfw, netAfterDisc, qty, perQty);
+
+            var frt = { type: $('#cFrtType').val(), value: $('#cFrtValue').val() };
+            var frtVal = condAmount(frt, netAfterDisc, qty, perQty);
+
+            var netValue = round2(basicValue - discVal + pkfwVal + frtVal);
+            var gst = parseFloat($('#cGst').val()) || 0;
+            var taxVal = round2(netValue * gst / 100);
+            var grossValue = round2(netValue + taxVal);
+
+            $('#cDiscAmt').text(discVal.toFixed(2));
+            $('#cPkfwAmt').text(pkfwVal.toFixed(2));
+            $('#cFrtAmt').text(frtVal.toFixed(2));
+            $('#cNetVal').text(netValue.toFixed(2));
+            $('#cGstAmt').text(taxVal.toFixed(2));
+            $('#cGrossVal').text(grossValue.toFixed(2));
+        }
+        $(document).on('change', '#cDiscType,#cDiscValue,#cPkfwType,#cPkfwValue,#cFrtType,#cFrtValue,#cGst', updateModalCalc);
+
+        function saveConditions() {
+            var st = lineState[currentLine];
+            st.disc = { type: $('#cDiscType').val(), value: parseFloat($('#cDiscValue').val()) || 0 };
+            st.pkfw = { type: $('#cPkfwType').val(), value: parseFloat($('#cPkfwValue').val()) || 0 };
+            st.frt = { type: $('#cFrtType').val(), value: parseFloat($('#cFrtValue').val()) || 0 };
+            st.gst = parseFloat($('#cGst').val()) || 0;
+            recalc(currentLine);
+            $('#condModal').modal('hide');
+        }
+
+        function submitQuote() {
+            var paymentTerms = $('#paymentTerms').val();
+            var incoTerms1 = $('#incoTerms1').val();
+            if (!paymentTerms) { alert('Please select Payment Terms.'); return; }
+            if (!incoTerms1) { alert('Please select Inco Terms.'); return; }
+
+            var items = [];
+            var anyPriced = false;
+            $('#itemsTable tbody tr').each(function () {
+                var lineNo = $(this).data('line') + '';
+                var price = parseFloat($('#price' + lineNo).val());
+                if (price > 0) { anyPriced = true; }
+                var st = lineState[lineNo];
+                items.push({
+                    lineNo: lineNo,
+                    qty: parseFloat($('td:eq(5)', $(this)).text()) || 0,
+                    perQty: parseFloat($('#perQty' + lineNo).val()) || 1,
+                    price: isNaN(price) ? 0 : price,
+                    mrpPrice: parseFloat($('#mrp' + lineNo).val()) || null,
+                    currency: $('#curr' + lineNo).val(),
+                    hsnCode: $('#hsn' + lineNo).val(),
+                    discount: st.disc.type ? st.disc : null,
+                    pkgFwd: st.pkfw.type ? st.pkfw : null,
+                    freight: st.frt.type ? st.frt : null,
+                    gstPercent: st.gst
+                });
+            });
+            if (!anyPriced) { alert('Please enter the price for at least one material.'); return; }
+            if (!confirm('Are you sure you want to submit the Quote?')) { return; }
+
+            var payload = {
+                paymentTerms: paymentTerms,
+                incoTerms1: incoTerms1,
+                ldApplicable: $('input[name="ldApp"]:checked').val() === 'Y',
+                ldClause: $('#ldTxt').val(),
+                pgApplicable: $('input[name="pgApp"]:checked').val() === 'Y',
+                pgClause: $('#pgTxt').val(),
+                comments: $('#comments').val(),
+                items: items
+            };
+
+            $.ajax({
+                url: '/rfq/api/quote/' + /*[[${form.rfqNo()}]]*/ '' + '/submit',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content') },
+                data: JSON.stringify(payload),
+                success: function (resp) {
+                    alert(resp.message || 'Quotation submitted successfully.');
+                    window.location.href = '/rfq/view/' + /*[[${form.rfqNo()}]]*/ '';
+                },
+                error: function (xhr) {
+                    var msg = 'Failed to submit quotation.';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+                    alert(msg);
+                }
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

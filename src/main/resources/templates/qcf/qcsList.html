@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title>QCS List</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        .vr-breadcrumb { font-size: 13px; color: #6c7a91; margin-bottom: 18px; letter-spacing: .2px; }
+        .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
+
+        .vr-card { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08); overflow: hidden; width: 100%; margin: 0 0 24px 0; }
+        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; padding: 18px 28px; }
+        .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; }
+        .vr-card-header p { margin: 2px 0 0 0; opacity: .85; font-size: 13px; }
+
+        .vr-filter-bar {
+            display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
+            padding: 18px 28px; border-bottom: 1px solid #eef1f6; background: #fbfcfe;
+        }
+        .vr-filter-field { display: flex; flex-direction: column; gap: 4px; }
+        .vr-filter-field label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #7c879b; }
+        .vr-filter-field .form-control { border-radius: 9px; border: 1px solid #dde3ec; height: 36px; font-size: 13.5px; box-shadow: none; }
+        .vr-go-btn {
+            background: linear-gradient(120deg, var(--blue-color), #0a4fae); border: none; border-radius: 9px;
+            padding: 8px 20px; font-weight: 600; color: #fff; height: 36px; font-size: 13.5px;
+        }
+        .vr-go-btn:hover { color: #fff; transform: translateY(-1px); }
+
+        .vr-table-wrap { padding: 6px 28px 24px 28px; overflow-x: auto; }
+        table.vr-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        table.vr-table thead th {
+            background: #325786; color: #fff; font-weight: 700;
+            font-size: 11px; letter-spacing: .3px; padding: 10px 12px; text-align: center; border-bottom: 2px solid #274263;
+        }
+        table.vr-table tbody td { padding: 9px 12px; text-align: center; }
+        table.vr-table tbody tr td:first-child a { font-weight: 700; color: #1c2733; }
+        .vr-status-pill { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; }
+        .vr-note { font-size: 12px; color: #8b96ab; padding: 0 28px 14px 28px; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="vr-breadcrumb">RFQs &nbsp;/&nbsp; <span class="current">QCS List</span></div>
+
+        <div class="vr-card">
+            <div class="vr-card-header">
+                <h4>QCS List</h4>
+                <p>QCFs already submitted into the approval workflow</p>
+            </div>
+
+            <form class="vr-filter-bar" id="filterForm" onsubmit="return false;">
+                <div class="vr-filter-field">
+                    <label>Status</label>
+                    <select class="form-control" id="f_wfStatus">
+                        <option value="ALL" th:selected="${wfStatus == 'ALL'}">All</option>
+                        <option value="SUBMITTED" th:selected="${wfStatus == 'SUBMITTED'}">Submitted</option>
+                        <option value="APPROVED" th:selected="${wfStatus == 'APPROVED'}">Approved</option>
+                        <option value="REJECTED" th:selected="${wfStatus == 'REJECTED'}">Rejected</option>
+                    </select>
+                </div>
+                <div class="vr-filter-field">
+                    <button type="button" class="vr-go-btn" onclick="reloadTable()">Go <i class="fa fa-paper-plane"></i></button>
+                </div>
+            </form>
+
+            <p class="vr-note">Approve/Reject routing isn't wired up yet, so only "Submitted" has real data today.</p>
+
+            <div class="vr-table-wrap">
+                <table class="vr-table" id="qcsTable" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>QCF No</th>
+                        <th>Title</th>
+                        <th>Doc Value</th>
+                        <th>No of Vendors (Qtn Sent)</th>
+                        <th>No of Vendors (Selected)</th>
+                        <th>Plant</th>
+                        <th>Changed On</th>
+                        <th>Buyer</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script th:src="@{/resources/lte3dot2/plugins/datatables/jquery.dataTables.min.js}"></script>
+    <script th:src="@{/resources/lte3dot2/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js}"></script>
+    <script th:inline="javascript">
+        var qcsTable = null;
+
+        function statusClass(status) {
+            var map = { SUBMITTED: '#eaf1fd', APPROVED: '#e7f7ee', REJECTED: '#fdecea' };
+            return 'vr-status-pill" style="background:' + (map[status] || '#eef1f6');
+        }
+
+        $(function () {
+            qcsTable = $('#qcsTable').DataTable({
+                serverSide: true,
+                processing: true,
+                pageLength: 10,
+                order: [ [6, 'desc'] ],
+                ajax: {
+                    url: '/qcf/qcsList/datatable',
+                    data: function (d) {
+                        d.wfStatus = $('#f_wfStatus').val();
+                    }
+                },
+                columns: [
+                    { data: 'qcfNo', render: function (qcfNo) {
+                        return '<a href="/qcf/compare/' + qcfNo + '?type=Sub">' + qcfNo + '</a>';
+                    } },
+                    { data: 'qcfTitle' },
+                    { data: 'docValue' },
+                    { data: 'noOfVendorsSent' },
+                    { data: 'noOfVendorsReceived' },
+                    { data: 'plant' },
+                    { data: 'expiryDate' },
+                    { data: 'createdBy' },
+                    { data: 'status', render: function (status) {
+                        return '<span class="' + statusClass(status) + '">' + status + '</span>';
+                    } }
+                ],
+                language: { searchPlaceholder: 'Search...', search: '' }
+            });
+        });
+
+        function reloadTable() {
+            qcsTable.ajax.reload();
+        }
+    </script>
+</div>
+</body>
+</html>

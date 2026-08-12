@@ -1,0 +1,2503 @@
+<%@ include file="../Misc/ezGetUserAuthDefaults.jsp"%> 
+<%@ include file="../Misc/ezCommonMethods.jsp"%> 
+<%@ include file="../Misc/ezWFCommonMethods.jsp"%> 
+<%@ include file="../Misc/ezHeader.jsp"%> 
+<%@include file="../../../Includes/JSPs/Rfq/iSelectFields.jsp"%> 
+<%@include file="../../../Includes/JSPs/Rfq/iQuoteIMPRFQDetails.jsp"%>           
+<%@ include file="../Misc/ezGetJGLVendorsList.jsp"%>    
+<%@ include file="../../../Includes/JSPs/Misc/iDocComments.jsp"%> 
+<%@ include file="../../../Includes/JSPs/Misc/iCommonMethods.jsp"%>  
+<%//@ include file="../../../Includes/JSPs/Inbox/iGetUploadDocs.jsp"%>
+<%@ include file="../../../Includes/JSPs/Inbox/iGetUploadList.jsp"%> 
+<%@ page import="ezc.ezutil.*"%>
+<%@ page import="java.text.*" %>
+<%@ page import ="ezc.ezpreprocurement.params.*,ezc.ezparam.*,java.util.*" %>           
+<jsp:useBean id="rfqManager" class="ezc.ezpreprocurement.client.EzPreProcurementManager"/>      
+<%//@ page import="org.apache.poi.xssf.usermodel.*"%>                
+<%//@ page import="org.apache.poi.ss.usermodel.Cell"%>            
+<%//@ page import="org.apache.poi.ss.usermodel.Row"%>
+<%//@ page import="org.apache.poi.ss.usermodel.Sheet"%> 
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFCellStyle"%> 
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFCell"%>
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFRow"%>
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFSheet"%>
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFWorkbook"%> 
+<%//@ page import="org.apache.poi.ss.usermodel.*,org.apache.poi.ss.util.RegionUtil"%>
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFColor,org.apache.poi.ss.util.CellRangeAddress"%>
+<%@ page import ="ezc.ezbasicutil.*" %>
+<%@ page import="ezc.ezutil.*,java.util.*,java.math.BigDecimal,java.math.RoundingMode" %>
+<%@page import="ezc.sapconnection.*, com.sap.conn.jco.JCoDestination, com.sap.conn.jco.JCoFunction, com.sap.conn.jco.JCoParameterList,com.sap.conn.jco.JCoStructure,com.sap.conn.jco.JCoTable"%>
+<%
+	session.putValue("QCF_WF_UPDATE","");
+	
+	String wfStatus="",wfTemplate="",wfNextPart="";
+	int wfCurStep=0;
+	boolean showApprove=false;
+	boolean showSubmit=false;
+	boolean showReject=false;
+	boolean showCreate=false;
+	boolean showPOCreate=false;
+	boolean isServicePO = false;
+	
+	BigDecimal docVal= new BigDecimal(0.00);
+	ReturnObjFromRetrieve retWFDocDetails= ezMiscSelect(Session,"SELECT * FROM EZC_WF_DOC_HISTORY_HEADER WHERE EWDHH_DOC_ID='"+qcfNo+"'");
+	
+	ezc.ezcommon.EzLog4j.log("showSubmit Before =="+showSubmit,"I");
+	String status = request.getParameter("type");
+	//String showSubmit = request.getParameter("showSubmit");
+	ezc.ezcommon.EzLog4j.log("status>>>>>>"+status,"I");
+	
+	String readOnly="";
+	if("Sub".equals(status)) readOnly="readonly";
+	
+	Hashtable taxesHT =  new Hashtable();
+	taxesHT.put("DISC","Discount");
+	taxesHT.put("PKFW","Packing & Forwarding");
+	taxesHT.put("FRT","Freight"); 
+	taxesHT.put("GST","GST");
+
+	java.util.Hashtable hashType = new java.util.Hashtable();
+	hashType.put("P","(%)"); 
+	hashType.put("Q","(/Qty)");
+	hashType.put("V","(Value)");
+	hashType.put("","");
+	
+	String wfPlant=(String)dtlXML.getFieldValueString(0,"ERH_PLANT");
+	String compCode=(String)dtlXML.getFieldValueString(0,"ERH_COMP_CODE");
+	String rfqCat=(String)dtlXML.getFieldValueString(0,"ERH_CATEGORY");	
+	String poFlag=dtlXML.getFieldValueString(0,"ERH_PO_FLAG");
+	
+	String destinationPath="";
+	
+	try
+	{
+		ResourceBundle site1= ResourceBundle.getBundle("Site");
+		destinationPath=site1.getString("UPLOADFILEPATHDIR");
+	}
+	catch(Exception e)
+	{ 
+	    ezc.ezcommon.EzLog4j.log("Got Exception while getting Upload Temp Dir "+e,"E");	
+	}
+	
+	 ezc.ezcommon.EzLog4j.log("::::destinationPath::: "+destinationPath,"I");
+
+	FileOutputStream outputStream = null;
+	
+	String tempDocId="";
+	if(qcfNo.contains("/"))
+	{
+		tempDocId=qcfNo.replaceAll("/","_");
+	}
+	else
+	{
+		tempDocId=qcfNo;
+	}
+	String excelFilePath=destinationPath+"QCF\\"+tempDocId+"\\QCF_"+tempDocId+".xlsx";
+	File upFile1=new File(destinationPath+"QCF\\"+tempDocId);
+	
+	if(!((upFile1.exists()) && (upFile1.isDirectory())))
+	{
+	boolean dir=upFile1.mkdirs();
+	ezc.ezcommon.EzLog4j.log(":::directory:::::"+dir,"I");
+	}
+	/*outputStream = new FileOutputStream(excelFilePath);
+
+	Workbook wb = new XSSFWorkbook(); //or new HSSFWorkbook();
+	Sheet sheet = wb.createSheet("QCF");*/
+	
+	ArrayList rfqList = new ArrayList();
+	Hashtable rfqHash = new Hashtable();
+	int x=0;	
+
+%>
+<Html>
+<Head>
+
+<link rel="stylesheet" href="../Misc/library/assets/bootstrap-3.3.2/css/bootstrap.css">
+<style>
+.modal-backdrop {
+	opacity: 0
+}
+#cont {
+	height: 450px;
+}
+
+#table-1 {
+	width: 1300px !important;
+}
+</style>
+<style>
+table {
+  border-collapse: collapse;
+  background: white;
+  table-layout: fixed;
+  width: 100%;
+}
+th, td {
+  padding: 5px 5px;
+  border: 1px solid black;
+  line-height: inherit !important;
+  overflow: hidden;
+  
+}
+.wrappable
+{	
+	word-wrap:break-word;
+}
+.fborder
+{	
+    color: white;
+    background: #325786;
+}
+
+.pane {
+  background: #eee;
+}
+.pane-hScroll {
+ overflow: auto;
+  width: 100%;
+  
+}
+.pane-vScroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 600px;
+  
+}
+
+@media only print {
+   #idOfYourDiv {
+     width: auto;
+     height: auto;
+    overflow: visible;
+   }
+}
+</style>
+</Head>
+<body >
+<form name="myForm" method="post">
+<input type="hidden" name="qcfNo" value="<%=qcfNo%>">  
+<input type="hidden" name="rankType" value=""> 
+<input type="hidden" name="vendorSelected" value="N">
+<input type="hidden" name="chkVal">
+<input type="hidden" name="commentType">
+<input type="hidden" name="type" value="<%=status%>">
+<input type="hidden" name="excelFilePath" value="<%=excelFilePath%>">
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+<!-- Content Header (Page header) -->	
+	<section class="content-header">
+   	      <h4>Quotation Comparison Form:<b> <%=qcfNo%></b></h4> 
+   	</section>
+   	
+<!-- Main content -->  
+		<div class="box-body">
+		<div class="pane pane--table1" id="idOfYourDiv">
+		  <div class="pane-hScroll">
+		  <div id="cont">
+			<table id="table-1" class="table" border=1 style="font-size:12px;margin-bottom:0px !important">
+				<thead>
+				<tr style="background-color:#58afbd !important">
+				<th colspan=7 style="width:150px;text-align:left">Name of the Party</th>
+<%	
+
+		//out.print(rfqVendLinesRet.toEzcString());
+		String checked="";
+		String disabledStr= disabledStr="onclick='return false'";
+		for(int i=0;i<rfqVendLinesRetCnt;i++)  
+		{
+			String selQcf= rfqVendLinesRet.getFieldValueString(i,"QCFNO");
+			String selRfq= rfqVendLinesRet.getFieldValueString(i,"RFQNO");
+			String selLine= rfqVendLinesRet.getFieldValueString(i,"LINENO");
+			String rfqVen= rfqVendLinesRet.getFieldValueString(i,"VENDOR"); 
+			String tempVend= rfqVendLinesRet.getFieldValueString(i,"VENDOR"); 
+			try{
+					tempVend = Long.parseLong(tempVend)+"";
+					tempVend = "0000000000"+tempVend;
+					tempVend = tempVend.substring(tempVend.length()-10,tempVend.length());
+				}catch(Exception e){} 			
+			//String selVal= selQcf+"##"+selRfq+"##"+rfqVen;
+			String selVal= selRfq;
+			
+			if(chkList.contains(rfqVen))
+				continue;
+			else
+				chkList.add(rfqVen);	
+			
+			if(chkVen.contains(rfqVen))	
+				checked="checked";
+			else
+				checked="";
+				
+			if("FromQuote".equals(status)) checked="disabled";
+				
+%>		
+						
+				<th colspan=3 style="width:75px;text-align:center"><input class="" type="checkbox"  name="selVen" id="selVen" value="<%=selVal%>" <%=checked%> onclick="return false">&nbsp;<%=gv_VendorsHT.get(tempVend)+"["+rfqVen+"]"%></th>
+<%
+		}
+		
+%>		
+				</tr>
+		<!--<tr style="background-color:skyblue !important">
+			<th colspan=7 style="width:150px;text-align:left">Rank</th>
+<%			
+			chkList = new ArrayList();			
+			for(int i=0;i<rfqVendLinesRetCnt;i++)
+			{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))          
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));	
+			
+			String vend=rfqLinesRet.getFieldValueString(i,"VENDOR");
+			
+%>
+			<th colspan=3 style="width:60px;text-align:center">
+			<select class="form-control" name="rank" style="width:50%;display: inline-block;" disabled>
+			<option valie="">Select Rank</option>
+<%			
+			Enumeration names = vendRankHT.keys(); 
+			   while(names.hasMoreElements()) 
+			   {
+			      String key = (String) names.nextElement();
+			      String val=(String)vendRankHT.get(key);
+			      String rank=(String)rankWiseHT.get(vend);
+			      String selectStr=""; 
+			      if(val.equals(rank))selectStr="selected"; 
+%>
+				<option value="<%=vendRankHT.get(key)%>" <%=selectStr%>><%=vendRankHT.get(key)%></option>
+<%	
+			  }
+%>
+			</select>
+			</th>   
+<%			
+			}
+%>
+		    </tr>-->
+		    <!--<tr style="background-color:skyblue !important">
+			<th colspan=7 style="width:150px;text-align:left">Reason</th>
+			
+<%			
+			chkList = new ArrayList();
+			int p=0;
+			for(int i=0;i<rfqVendLinesRetCnt;i++)
+			{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));	
+				
+						
+%>
+			<th colspan=3 style="width:60px;text-align:center">
+			<div>
+			<select class="form-control" name="reason<%=p%>" id="reason<%=p%>" style="width:50%;display: inline-block;">
+			<option value="">Select Reason</option>
+			<option value="SS" <%if("SS".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%>>Single Source</option>
+			<option value="OEM" <%if("OEM".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%> >OEM</option>
+			<option value="OAD" <%if("OAD".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%>>OEM-Authorized Dealer</option>
+			<option value="SOP" <%if("SOP".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%>>SOP</option>
+			<option value="LPO" <%if("LPO".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%>>LPO</option>
+			</select>
+			</div>
+			</th>  
+
+<%			p++;			
+			}
+%>
+		</tr> -->
+				<tr style="background-color:skyblue !important">
+					<th colspan=7 style="width:150px;text-align:left">Quotation Ref.No.</th>
+<%
+
+		chkList = new ArrayList();
+		for(int i=0;i<rfqVendLinesRetCnt;i++)
+		{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));	
+				
+			String  quoteIndClr="";	
+			String  quoteBy = rfqVendLinesRet.getFieldValueString(i,"QUOTEBY");
+			if("2".equals(quoteBy))
+				quoteIndClr="orange";
+			if("3".equals(quoteBy))
+				quoteIndClr="#6230fb"; 					
+			
+%>					
+					<!--<th colspan=3 style="width:200px;text-align:center"><%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%>[RO]</th>-->
+					<!--<th colspan=3 style="width:60px;text-align:center"><%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%></th>-->
+					<th colspan=3 style="width:60px;text-align:center;background-color:<%=quoteIndClr%> !important"><%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%></th>
+<%
+		}
+%>		
+				</tr>
+				<tr style="background-color:skyblue !important">
+					<th colspan=7 style="width:150px;text-align:left">Payment Terms</th>
+<%
+		chkList = new ArrayList();			
+		for(int i=0;i<rfqVendLinesRetCnt;i++) 
+		{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));			
+%>					
+					<th colspan=3 style="width:60px;text-align:center"><%=pmntHash.get(rfqVendLinesRet.getFieldValueString(i,"PMNT"))%>[<%=rfqVendLinesRet.getFieldValueString(i,"PMNT")%>]</th>
+					
+<%
+		}
+%>
+				</tr>
+				<tr style="background-color:skyblue !important">
+					<th colspan=7 style="width:150px;text-align:left">Inco Terms</th>
+<%
+		chkList = new ArrayList();			
+		for(int i=0;i<rfqVendLinesRetCnt;i++)    
+		{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));		
+%>					
+					<th colspan=3 style="width:60px;text-align:center"><%=incoHash.get(rfqVendLinesRet.getFieldValueString(i,"INCO"))%>[<%=rfqVendLinesRet.getFieldValueString(i,"INCO")%>]</th>
+					
+<%
+		}
+%>
+		</tr>	
+			<tr style="background-color:skyblue !important">
+			<th rowspan=2  style="width:100px;text-align:center">S.No.</th>
+			<!--<th rowspan=2  style="width:100px;text-align:center">Mat Group</th>
+			<th rowspan=2  style="width:100px;text-align:center">PR No.</th>
+			<th rowspan=2  style="width:50x;text-align:center">PR Item.</th> -->			
+			<th rowspan=2  style="width:200px;text-align:center">Material</th>
+			<th rowspan=2  style="width:100px;text-align:center">Description</th>
+			<th rowspan=2  style="width:100px;text-align:center">Qty</th>
+			<th rowspan=2  style="width:100px;text-align:center">UOM</th>
+			<!--<th rowspan=2  style="width:100px;text-align:center">Item<br>Text</th>
+			<th rowspan=2  style="width:100px;text-align:center">PO<br>Text</th>-->
+			<th rowspan=2  style="width:50px;text-align:center">Budget Price</th>
+			<th rowspan=2  style="width:50px;text-align:center">Last PO <br> Price</th>
+		<tr>	
+<%		
+		chkList = new ArrayList();
+		for(int i=0;i<rfqVendLinesRetCnt;i++)
+		{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));		
+%>					
+				<!--<th style="width:80px;text-align:center">Rate<br>Rs./UOM </th>
+				<th style="width:100px;text-align:center">Total<br>Amount Rs.</th> -->
+				<th style="width:100px;text-align:center">Qty<br>Recommended</th>
+				<th style="width:100px;text-align:center">Rate<br><%=rfqVendLinesRet.getFieldValueString(i,"CURR")%>/UOM </th>
+				<th style="width:100px;text-align:center">Total<br>Amount <%=rfqVendLinesRet.getFieldValueString(i,"CURR")%></th>
+<%
+		}
+%>
+		</tr>	
+		</thead>
+		<tbody>
+<%      	 rfqLinesList = new ArrayList();
+		for(int i=0;i<rfqLinesRetCnt;i++)
+		{
+			String qcfH = rfqLinesRet.getFieldValueString(i,"QCFNO");
+			String lineH = rfqLinesRet.getFieldValueString(i,"LINENO");
+			String vend=rfqLinesRet.getFieldValueString(i,"VENDOR");
+			String payMentType=checkNull(rfqLinesRet.getFieldValueString(i,"PAYMENTTYPE"));
+			String leadDays=checkNull(rfqLinesRet.getFieldValueString(i,"LEADTIME"));
+			String percent=checkNull(rfqLinesRet.getFieldValueString(i,"PERCENT"));
+			if("".equals(percent))percent="";
+			vendWisePaymentTypeHT.put(vend,payMentType+"#"+leadDays+"#"+percent);
+ 
+			if(rfqLinesList.contains(rfqLinesRet.getFieldValueString(i,"QCFNO")+"##"+rfqLinesRet.getFieldValueString(i,"LINENO")))
+				continue;
+			else
+				rfqLinesList.add(rfqLinesRet.getFieldValueString(i,"QCFNO")+"##"+rfqLinesRet.getFieldValueString(i,"LINENO"));
+
+			String myQty = rfqLinesRet.getFieldValueString(i,"QTY");
+
+			try
+			{
+				myQty = (Double.parseDouble(myQty))+"";
+				myQty  = new java.math.BigDecimal(myQty).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e){}
+			totalQuantity=Double.parseDouble(myQty);  
+			
+			String purOrg =(String)dtlXML.getFieldValueString(0,"ERH_PUR_ORG");
+			ezc.ezcommon.EzLog4j.log(":::purOrg:::::"+purOrg,"I");
+			String rfqPlant=(String)dtlXML.getFieldValueString(0,"ERD_PLANT");
+		
+		//To fetch last PO price			
+		java.math.BigDecimal netPR=new java.math.BigDecimal(0);
+		JCoFunction function =null;	
+		String logonSite = (String)session.getValue("SITE");
+
+		JCoDestination destination = EzSAPHandler.getDestination(logonSite+"~999");	
+		function = EzSAPHandler.getJCoFunction(destination,"Z_EZ_GET_LAST_PO_PRICE");
+
+		JCoParameterList sapPreProc = function.getImportParameterList();
+		sapPreProc.setValue("PUR_ORG",purOrg);
+
+		JCoParameterList sapTabParam= function.getTableParameterList();
+		JCoTable poItemTable = sapTabParam.getTable("POITEMS");
+
+		poItemTable.appendRow();
+		
+		//poItemTable.setValue("MATNR","000000000000402102");
+		String matNo = rfqLinesRet.getFieldValueString(i,"MATERIAL");
+		matNo ="000000000000000000"+matNo;
+		matNo =matNo.substring(matNo.length()-18);
+		poItemTable.setValue("MATNR",matNo);
+
+		try
+		{
+			function.execute(destination);
+		}catch(Exception qe){
+			ezc.ezcommon.EzLog4j.log("Exception in Z_EZ_GET_LAST_PO_PRICE FM Exectution:::::::::::::::"+qe,"I");
+		}	
+
+
+		int poCnt =0;
+		ArrayList items =null;
+		JCoTable sapPoList = function.getTableParameterList().getTable("POITEMS"); 
+		poCnt 	= 	sapPoList.getNumRows();
+		ezc.ezcommon.EzLog4j.log("poCnt:::::::::::::::"+poCnt,"I");
+		ezc.ezparam.ReturnObjFromRetrieve myRet= null;
+
+		if(poCnt > 0)
+		{
+			myRet= new ReturnObjFromRetrieve(new String[]{"VENDOR","VENDNAME","PLANT","MATERAIL","PONUM","CREATED_ON","UOM","CURRENCY","NETPR"});
+
+		try 
+		{		
+			do
+			{
+				String chkStr = (String)sapPoList.getValue("EBELN");
+				//if(chkStr.startsWith("6"))
+				 	//continue;
+				myRet.setFieldValue("VENDOR", sapPoList.getValue("LIFNR"));		
+				myRet.setFieldValue("VENDNAME",sapPoList.getValue("NAME1"));		
+				myRet.setFieldValue("PLANT",sapPoList.getValue("WERKS"));
+				myRet.setFieldValue("MATERAIL",sapPoList.getValue("MATNR"));
+				myRet.setFieldValue("PONUM",sapPoList.getValue("EBELN"));
+				myRet.setFieldValue("CREATED_ON",sapPoList.getValue("AEDAT"));
+				myRet.setFieldValue("UOM",sapPoList.getValue("MEINS"));
+				myRet.setFieldValue("CURRENCY",sapPoList.getValue("WAERS"));
+				myRet.setFieldValue("NETPR",sapPoList.getValue("NETPR"));
+				myRet.addRow();
+
+
+				
+				String lastPOPlant=(String)sapPoList.getValue("WERKS");
+				if(netPR.compareTo(java.math.BigDecimal.ZERO)!=0)
+					if(rfqPlant.equals(lastPOPlant))
+						netPR=(java.math.BigDecimal)sapPoList.getValue("NETPR");
+
+			  		ezc.ezcommon.EzLog4j.log("rfqPlant"+rfqPlant,"I");
+			  		ezc.ezcommon.EzLog4j.log("lastPOPlant"+lastPOPlant,"I");
+			  		
+			  }while(sapPoList.nextRow());
+			  		
+			  		//out.println("myRet"+myRet.toEzcString());
+
+		}
+		catch (Exception e) {}
+			
+		String netPrStr= checkNull(myRet.getFieldValueString(0,"NETPR"));   
+		java.math.BigDecimal netprBD=new java.math.BigDecimal(netPrStr);
+		if(netPR.compareTo(java.math.BigDecimal.ZERO)==0)netPR=netprBD;
+		}
+		totPOPrice=(netPR.doubleValue()*Double.parseDouble(myQty))+totPOPrice;
+		totPOPriceStr=new java.math.BigDecimal(totPOPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		String prNum=rfqVendLinesRet.getFieldValueString(i,"PRDET").split("¥")[0];
+		
+      		String budgetPrice = "0";
+      		budgetPrice = checkNull_Num(rfqLinesRet.getFieldValueString(i,"BPRICE"));
+      		ezc.ezcommon.EzLog4j.log("** budgetPrice_MSIKARWAR>>>"+budgetPrice,"I");
+		try
+		{
+			budgetPrice = (Double.parseDouble(budgetPrice))+"";
+			budgetPrice  = new java.math.BigDecimal(budgetPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}catch(Exception e)
+		{
+			budgetPrice="0";
+		}      		
+      		/*
+		ezc.ezparam.ReturnObjFromRetrieve budgetRet	=  null;
+		    		
+      		//Getting Budget Price
+      	
+      		String qryStr="SELECT EMBP_BASIC_PRICE FROM EZC_MAT_BUDGET_PRICE WHERE EMBP_MATERIAL='"+matNo+"'" ;
+		ezc.ezcommon.EzLog4j.log("** qryStrPRICE>>>"+qryStr,"I");
+
+		quoteTableRow.setQuery(qryStr);
+		quoteTable.appendRow(quoteTableRow);
+		quoteParams.setLocalStore("Y");
+		quoteParams.setObject(quoteTable);
+		Session.prepareParams(quoteParams);  
+		
+		
+		try
+		{
+			budgetRet=(ezc.ezparam.ReturnObjFromRetrieve)quoteMgr.ezGetMiscTransactions(quoteParams);
+		
+		}
+		catch(Exception e)
+		{
+			out.println("Exception in getting conditions>>>>>"+e);
+		}
+		
+		if(budgetRet!=null && budgetRet.getRowCount()>0)
+		{
+			budgetPrice = budgetRet.getFieldValueString(0,"EMBP_BASIC_PRICE");
+
+		}*/
+		
+		String dispMat = "";
+		try
+		{
+			dispMat = Long.parseLong(rfqLinesRet.getFieldValueString(i,"MATERIAL"))+"";
+		}catch(Exception e){
+		}		
+
+	
+%>	
+		<input type=hidden name="rfqItem" value="<%=i%>">		      	
+		<tr>
+			<td style="width:100px;text-align:center" ><%=rfqLinesRet.getFieldValueString(i,"LINENO")%>&nbsp;</td> 
+			<td class="wrappable" style="width:100px;text-align:center"><%=dispMat%></td>
+			<td class="wrappable" style="width:200px;text-align:center;" ><%=rfqLinesRet.getFieldValueString(i,"MATDESC")%>&nbsp;</td>
+			<td style="width:20px;text-align:center"><input type="hidden" name="prItemQty<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" id="prItemQty<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" value="<%=myQty%>"><%=myQty%></td>
+			<td style="width:200px;text-align:center" ><%=rfqLinesRet.getFieldValueString(i,"UOM")%>&nbsp;</td>
+			<!--<td style="width:200px;text-align:center;"><a href="javascript:openLongItem('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"ITEMTEXT"))%>','I')"> <span class="glyphicon glyphicon-new-window"></span> </a></td> 
+			<td style="width:100px;text-align:center;"><a href="javascript:openLongItem('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"POTEXT"))%>','P')"> <span class="glyphicon glyphicon-new-window"></span> </a></td> -->
+			<td style="width:100px;text-align:center" ><%=budgetPrice%></td>
+			<td style="width:100px;text-align:center" >
+			<%if(netPR.compareTo(java.math.BigDecimal.ZERO)==0){%>
+			<a><b><%=netPR%></b></a>&nbsp; 
+			<!--<a href="javascript:openLastPO('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>')"> <span class="glyphicon glyphicon-new-window"></span> </a>-->
+			<%}else{%>
+
+			<a><b><%=netPR%></b></a>&nbsp; 
+			<a href="javascript:openLastPO('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=purOrg%>','<%=rfqPlant%>')"> <span class="glyphicon glyphicon-new-window"></span> </a>
+			<%}%>
+		</td>
+<%
+		//chkList = new ArrayList();  
+		for(int j=0;j<rfqVendLinesRetCnt;j++)
+		{
+		
+			discVal = 00.0;
+			/*if(chkList.contains(rfqVendLinesRet.getFieldValueString(j,"RFQNO")))
+				continue; 
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(j,"RFQNO"));*/
+
+			String vendorLoop=rfqLinesRet.getFieldValueString(j,"VENDOR");	 
+
+			if(qcfH.equals(rfqVendLinesRet.getFieldValueString(j,"QCFNO")) && lineH.equals(rfqVendLinesRet.getFieldValueString(j,"LINENO")))
+			{
+			String material="";
+			try{
+			material=(Long.parseLong(rfqLinesRet.getFieldValueString(i,"MATERIAL")))+"";
+			}catch(Exception e){
+			material=rfqLinesRet.getFieldValueString(i,"MATERIAL");
+			}
+			String quotCurr = rfqVendLinesRet.getFieldValueString(j,"CURR");
+					if("".equals(quotCurr) || "null".equals(quotCurr) || quotCurr==null) quotCurr = "INR";
+			String HSNCode=	rfqVendLinesRet.getFieldValueString(j,"HSNCODE");
+			String itemCat = rfqVendLinesRet.getFieldValueString(j,"ITEMCAT");
+			String quotPrice = rfqVendLinesRet.getFieldValueString(j,"PRICE");
+			if("".equals(quotPrice) || "null".equals(quotPrice) || quotPrice==null) quotPrice = "0";
+			try
+			{
+				quotPrice  = new java.math.BigDecimal(quotPrice).setScale(2,java.math.RoundingMode.CEILING).toString();
+			}
+			catch(Exception e){}
+
+			//Recommended Quantity
+			String qtyRec = "0";
+			try
+			{
+				qtyRec =  rfqVendLinesRet.getFieldValueString(j,"POQTY");  
+				qtyRec = (Double.parseDouble(qtyRec))+"";
+				qtyRec  = new java.math.BigDecimal(qtyRec).setScale(3,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e){
+				qtyRec="0";
+			}
+			ezc.ezcommon.EzLog4j.log(":::qtyRecDec:::::"+qtyRec,"I"); 
+			ezc.ezcommon.EzLog4j.log(":::quotPrice:::::"+quotPrice,"I"); 
+
+			try
+			{
+				totVal= (Double.parseDouble(qtyRec) * Double.parseDouble(quotPrice));
+				totValStr  = new java.math.BigDecimal(totVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{
+				totVal = 00.0;
+			}
+			ezc.ezcommon.EzLog4j.log(":::totValStr:::::"+totValStr,"I"); 
+			String leaddays1 = checkNull(rfqVendLinesRet.getFieldValueString(j,"LEADDAYS"));
+			String leaddaysCurr = checkNull(rfqVendLinesRet.getFieldValueString(j,"LEADVAL"));
+			String leaddaysHis = checkNull(rfqVendLinesRet.getFieldValueString(j,"LEADHISVAL"));
+			ezc.ezcommon.EzLog4j.log("leaddaysCurr:::::::::::::::"+leaddaysCurr,"I");   
+			ezc.ezcommon.EzLog4j.log("leaddaysHis:::::::::::::::"+leaddaysHis,"I");   
+			String quotHisPrice = rfqVendLinesRet.getFieldValueString(j,"PRICEHIS");   
+			if("".equals(quotHisPrice) || "null".equals(quotHisPrice) || quotHisPrice==null) quotHisPrice = "0";
+			try
+			{
+				quotHisPrice  = new java.math.BigDecimal(quotHisPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}						
+			catch(Exception e){}
+			try
+			{
+				totHisVal= (Double.parseDouble(myQty) * Double.parseDouble(quotHisPrice));
+				totHisValStr  = new java.math.BigDecimal(totHisVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{
+				totHisVal = 00.0;
+			}
+			//out.println("quotHisPrice"+quotHisPrice+"myQty"+myQty);
+			String styleCl="";  
+			String keyStr=rfqLinesRet.getFieldValueString(i,"MATERIAL")+"#"+rfqVendLinesRet.getFieldValueString(j,"VENDOR")+"#"+rfqVendLinesRet.getFieldValueString(j,"RFQNO");
+			String chkStr=rfqVendLinesRet.getFieldValueString(j,"RFQNO")+rfqVendLinesRet.getFieldValueString(j,"LINENO");
+			String chkRfq=rfqVendLinesRet.getFieldValueString(j,"RFQNO");
+			String chkLine=rfqVendLinesRet.getFieldValueString(j,"LINENO");
+			ezc.ezcommon.EzLog4j.log("chkRfq:::::::::::::::"+chkRfq,"I");
+			ezc.ezcommon.EzLog4j.log("chkLine:::::::::::::::"+chkLine,"I");
+			if(!rfqList.contains(chkRfq))
+			{
+				x++;
+				rfqList.add(chkRfq);
+				rfqHash.put(x,chkRfq);
+			}	
+			ezc.ezcommon.EzLog4j.log("chkRfq:::::::::::::::"+chkRfq,"I");						
+
+			ezc.ezcommon.EzLog4j.log("discVal1:::::::::::::::"+discVal,"I");						
+			discType = checkNull(rfqVendLinesRet.getFieldValueString(j,"DISCTYPE")); 
+			condDisc = checkNull(rfqVendLinesRet.getFieldValueString(j,"DISCVAL"));
+			condGST	 =checkNull(rfqVendLinesRet.getFieldValueString(j,"TAXVAL"));
+			if("".equals(condDisc) || "null".equals(condDisc) || condDisc==null) condDisc = "0";
+			if("".equals(condGST) || "null".equals(condGST) || condGST==null) condGST = "0";
+
+			ezc.ezcommon.EzLog4j.log("discVal2:::::::::::::::"+discVal,"I");						
+			try
+			{
+				if("P".equals(discType))
+					discVal= Double.parseDouble(totValStr) * Double.parseDouble(condDisc)/100;
+				else if("Q".equals(discType))
+					discVal= Double.parseDouble(condDisc) * Double.parseDouble(myQty);
+				else if("V".equals(discType))
+					discVal= Double.parseDouble(condDisc);			
+
+				discValStr  = new java.math.BigDecimal(discVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				ezc.ezcommon.EzLog4j.log("discValStr:::::::::::::::"+discValStr,"I");	
+				ezc.ezcommon.EzLog4j.log("discVal3:::::::::::::::"+discVal,"I");						
+			}
+			
+			catch(Exception e)
+			{
+				discVal = 00.0;
+			}
+			try
+			{
+
+				basicVal=  totVal - discVal;
+				basicValStr  = new java.math.BigDecimal(basicVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+
+			}
+			catch(Exception e)
+			{ 
+				discTotVal = 00.0;  
+			}	
+						
+			//PKFW
+			PKFWType = checkNull(rfqVendLinesRet.getFieldValueString(j,"PKFWTYPE"));
+			//out.println("PKFWType>>>"+PKFWType);
+			condPKFW = checkNull(rfqVendLinesRet.getFieldValueString(j,"PKFWVAL"));
+			//out.println("condPKFW>>>>"+condPKFW);
+			if("".equals(condPKFW) || "null".equals(condPKFW) || condPKFW==null) 
+				condPKFW = "0"; 
+					
+			try
+			{
+				if("P".equals(PKFWType))
+				{
+					PKFWVal= Double.parseDouble(basicValStr) * Double.parseDouble(condPKFW)/100; 
+					PKFWRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condPKFW)/100;
+				}	
+				else if("Q".equals(PKFWType))
+				{
+					PKFWVal= Double.parseDouble(condPKFW) * totalQuantity;
+					PKFWRecVal= Double.parseDouble(condPKFW) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(PKFWType))
+				{
+					PKFWVal= Double.parseDouble(condPKFW);	
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						PKFWRecVal= Double.parseDouble(condPKFW);
+					else
+						PKFWRecVal = 00.0; 
+				}	
+				else
+				{
+					PKFWVal = 00.0; 
+					PKFWRecVal = 00.0; 
+				}	
+				//out.println("PKFWRecVal>>>>"+PKFWRecVal);
+				PKFWValStr  = new java.math.BigDecimal(PKFWVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				PKFWRecValStr  = new java.math.BigDecimal(PKFWRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				//out.println("PKFWValStr in QCF"+PKFWValStr);
+			}
+			catch(Exception e)
+			{ 
+				PKFWVal = 00.0; 
+				PKFWRecVal = 00.0;
+			}
+			
+			//FRT
+			FRTType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"FRTTYPE")); 
+			condFRT  = checkNull(rfqVendLinesRet.getFieldValueString(j,"FRTVAL"));
+			String totValFRT =((String)vendWiseTotqtyWithoutDis.get(vend)).split("#")[1];
+			if("".equals(condFRT) || "null".equals(condFRT) || condFRT==null) 
+				condFRT = "0"; 			
+			try
+			{
+				if("P".equals(FRTType))
+				{
+					FRTVal= Double.parseDouble(basicValStr) * Double.parseDouble(condFRT)/100;
+					FRTRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condFRT)/100;
+				}	
+				else if("Q".equals(FRTType))
+				{
+					FRTVal= Double.parseDouble(condFRT) * totalQuantity;
+					FRTRecVal= Double.parseDouble(condFRT) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(FRTType))
+				{
+					FRTVal= Double.parseDouble(condFRT);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						FRTRecVal= Double.parseDouble(condFRT);
+					else
+						FRTRecVal = 00.0; 
+				}		
+				else
+				{
+					FRTVal = 00.0;
+					FRTRecVal = 00.0;
+				}	
+
+				FRTValStr  = new java.math.BigDecimal(FRTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				FRTRecValStr  = new java.math.BigDecimal(FRTRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				FRTVal = 00.0;  
+				FRTRecVal = 00.0;
+			}
+			
+			//OTH
+			OTHType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"OTHTYPE"));
+			condOTH  = checkNull(rfqVendLinesRet.getFieldValueString(j,"OTHVAL"));
+			if("".equals(condOTH) || "null".equals(condOTH) || condOTH==null) 
+				condOTH = "0";			
+			try
+			{
+				if("V".equals(OTHType))
+				{
+					OTHVal= Double.parseDouble(condOTH);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						OTHRecVal= Double.parseDouble(condOTH);
+					else
+						OTHRecVal = 00.0; 
+				}		
+				else
+				{
+					OTHVal = 00.0;
+					OTHRecVal = 00.0;
+				}	
+
+				OTHValStr  = new java.math.BigDecimal(OTHVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				OTHRecValStr  = new java.math.BigDecimal(OTHRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				OTHVal = 00.0;  
+				OTHRecVal = 00.0;
+			}
+			
+			//FOB
+			FOBType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"FOBTYPE"));
+			condFOB  = checkNull(rfqVendLinesRet.getFieldValueString(j,"FOBVAL"));
+			
+			if("".equals(condFOB) || "null".equals(condFOB) || condFOB==null) 
+				condFOB = "0"; 			
+			try
+			{
+				if("P".equals(FOBType))
+				{
+					FOBVal= Double.parseDouble(basicValStr) * Double.parseDouble(condFOB)/100;
+					FOBRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condFOB)/100;
+				}	
+				else if("Q".equals(FOBType))
+				{
+					FOBVal= Double.parseDouble(condFOB) * totalQuantity;
+					FOBRecVal= Double.parseDouble(condFOB) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(FOBType))
+				{
+					FOBVal= Double.parseDouble(condFOB);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						FOBRecVal= Double.parseDouble(condFOB);
+					else
+						FOBRecVal = 00.0; 
+				}		
+				else
+				{
+					FOBVal = 00.0;
+					FOBRecVal = 00.0;
+				}	
+
+				FOBValStr  = new java.math.BigDecimal(FOBVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				FOBRecValStr  = new java.math.BigDecimal(FOBRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				FOBVal = 00.0;  
+				FOBRecVal = 00.0;
+			}			
+			
+						
+			
+			//BFRT
+			BFRTType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"BFRTTYPE"));
+			condBFRT  = checkNull(rfqVendLinesRet.getFieldValueString(j,"BFRTVAL"));
+			
+			if("".equals(condBFRT) || "null".equals(condBFRT) || condBFRT==null) 
+				condBFRT = "0"; 
+			if("".equals(BFRTType) || "null".equals(BFRTType) || BFRTType==null) 
+				BFRTType = ""; 				
+			try
+			{
+				if("P".equals(BFRTType))
+				{
+					BFRTVal= Double.parseDouble(basicValStr) * Double.parseDouble(condBFRT)/100;
+					BFRTRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condBFRT)/100;
+				}	
+				else if("Q".equals(BFRTType))
+				{
+					BFRTVal= Double.parseDouble(condBFRT) * totalQuantity;
+					BFRTRecVal= Double.parseDouble(condBFRT) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(BFRTType))
+				{
+					BFRTVal= Double.parseDouble(condBFRT);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						BFRTRecVal= Double.parseDouble(condBFRT);
+					else
+						BFRTRecVal = 00.0; 
+				}		
+				else
+				{
+					BFRTVal = 00.0;
+					BFRTRecVal = 00.0;
+				}	
+
+				BFRTValStr  = new java.math.BigDecimal(BFRTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				BFRTRecValStr  = new java.math.BigDecimal(BFRTRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				BFRTVal = 00.0;  
+				BFRTRecVal = 00.0;
+			}
+			
+			//INS
+			
+			INSType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"INSTYPE"));
+			condINS  = checkNull(rfqVendLinesRet.getFieldValueString(j,"INSVAL"));
+			String totValINS =((String)vendWiseTotqtyWithoutDis.get(vend)).split("#")[1];
+			if("".equals(condINS) || "null".equals(condINS) || condINS==null) 
+				condINS = "0"; 
+			if("".equals(INSType) || "null".equals(INSType) || INSType==null) 
+				INSType = ""; 				
+			try
+			{
+				if("P".equals(INSType))
+				{
+					INSVal= Double.parseDouble(basicValStr) * Double.parseDouble(condINS)/100;
+					INSRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condINS)/100;
+				}	
+				else if("Q".equals(INSType))
+				{
+					INSVal= Double.parseDouble(condINS) * totalQuantity;
+					INSRecVal= Double.parseDouble(condINS) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(INSType))
+				{
+					INSVal= Double.parseDouble(condINS);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						INSRecVal= Double.parseDouble(condINS);
+					else
+						INSRecVal = 00.0; 
+				}		
+				else
+				{
+					INSVal = 00.0;
+					INSRecVal = 00.0;
+				}	
+
+				INSValStr  = new java.math.BigDecimal(INSVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				INSRecValStr  = new java.math.BigDecimal(INSRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				INSVal = 00.0;  
+				INSRecVal = 00.0;
+			}	
+			sPrice=Double.parseDouble(basicValStr)+Double.parseDouble(PKFWValStr)+Double.parseDouble(FRTValStr)+Double.parseDouble(OTHValStr)+Double.parseDouble(FOBValStr)+Double.parseDouble(BFRTValStr)+Double.parseDouble(INSValStr);
+			sPriceStr  = new java.math.BigDecimal(sPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			
+			//CUSTOMS
+			
+			BCDType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"BCDTYPE"));
+			condBCD  = checkNull(rfqVendLinesRet.getFieldValueString(j,"BCDVAL"));
+			
+			if("".equals(condBCD) || "null".equals(condBCD) || condBCD==null) 
+				condBCD = "0"; 
+			if("".equals(BCDType) || "null".equals(BCDType) || BCDType==null) 
+				BCDType = ""; 				
+			try
+			{
+				if("P".equals(BCDType))
+				{
+					BCDVal= Double.parseDouble(sPriceStr) * Double.parseDouble(condBCD)/100;
+					BCDRecVal= Double.parseDouble(sPriceStr) * Double.parseDouble(condBCD)/100;
+				}	
+
+				else
+				{
+					BCDVal = 00.0;
+					BCDRecVal = 00.0;
+				}	
+
+				BCDValStr  = new java.math.BigDecimal(BCDVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				BCDRecValStr  = new java.math.BigDecimal(BCDRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				BCDVal = 00.0;  
+				BCDRecVal = 00.0;
+			}	
+			
+			//SWC
+			
+			SWCType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"SWCTYPE"));
+			condSWC  = checkNull(rfqVendLinesRet.getFieldValueString(j,"SWCVAL"));
+			
+			if("".equals(condSWC) || "null".equals(condSWC) || condSWC==null) 
+				condSWC = "0"; 
+			if("".equals(SWCType) || "null".equals(SWCType) || SWCType==null) 
+				SWCType = ""; 				
+			try
+			{
+				if("P".equals(SWCType))
+				{
+					SWCVal= Double.parseDouble(BCDValStr) * Double.parseDouble(condSWC)/100;
+					SWCRecVal= Double.parseDouble(BCDValStr) * Double.parseDouble(condSWC)/100;
+				}
+				else
+				{
+					SWCVal = 00.0;
+					SWCRecVal = 00.0;
+				}	
+
+				SWCValStr  = new java.math.BigDecimal(SWCVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				SWCRecValStr  = new java.math.BigDecimal(SWCRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				SWCVal = 00.0;  
+				SWCRecVal = 00.0;
+			}
+			
+			double netPrice=Double.parseDouble(sPriceStr)+Double.parseDouble(BCDValStr)+Double.parseDouble(SWCValStr);
+			String netPriceStr  = new java.math.BigDecimal(netPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();						
+			//CLR
+			
+			CLRType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"CLRTYPE"));
+			condCLR  = checkNull(rfqVendLinesRet.getFieldValueString(j,"CLRVAL"));
+			
+			if("".equals(condCLR) || "null".equals(condCLR) || condCLR==null) 
+				condCLR = "0"; 
+			if("".equals(CLRType) || "null".equals(CLRType) || CLRType==null) 
+				CLRType = ""; 			
+			try
+			{
+				if("P".equals(CLRType))
+				{
+					CLRVal= Double.parseDouble(netPriceStr) * Double.parseDouble(condCLR)/100;
+					CLRRecVal= Double.parseDouble(netPriceStr) * Double.parseDouble(condCLR)/100;
+				}
+				else if("V".equals(CLRType))
+				{
+					
+					CLRVal= Double.parseDouble(condCLR);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						CLRRecVal= Double.parseDouble(condCLR);
+					else
+						CLRRecVal = 00.0;					
+				}				
+				else
+				{
+					CLRVal = 00.0;
+					CLRRecVal = 00.0;
+				}	
+
+				CLRValStr  = new java.math.BigDecimal(CLRVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				CLRRecValStr  = new java.math.BigDecimal(CLRRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				CLRVal = 00.0;  
+				CLRRecVal = 00.0;
+			}			
+			
+
+	
+			
+			//TAX
+			TAXType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"TAXTYPE"));
+			condGST  = checkNull(rfqVendLinesRet.getFieldValueString(j,"TAXVAL"));
+			
+			if("".equals(condGST) || "null".equals(condGST) || condGST==null) 
+				condGST = "0"; 			
+			try
+			{
+				GSTVal= netPrice * Double.parseDouble(condGST)/100;
+				GSTValStr  = new java.math.BigDecimal(GSTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				ezc.ezcommon.EzLog4j.log("GSTValStr in ADD GST>>>>>>>"+GSTValStr,"I"); 
+				GSTRecVal= sPriceRec * Double.parseDouble(condGST)/100;
+				GSTRecValStr  = new java.math.BigDecimal(GSTRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();	
+				ezc.ezcommon.EzLog4j.log("GSTRecValStr in ADD GST>>>>>>>"+GSTRecValStr,"I"); 				
+			}
+			catch(Exception e)
+			{ 
+				GSTVal = 00.0;  
+				GSTRecVal = 00.0;
+			}
+			double grossValue= netPrice+CLRVal+GSTVal;
+			String grossValueStr = new java.math.BigDecimal(grossValue).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			
+			//totRfqVal = grossValue;
+			
+			
+     						
+
+			String saphsnCode=checkNull(rfqVendLinesRet.getFieldValueString(j,"SAPHSNCODE")); 
+			String sapgstCode=checkNull(rfqVendLinesRet.getFieldValueString(j,"SAPGSTCODE")); 
+			String gstCode=checkNull(rfqVendLinesRet.getFieldValueString(j,"GSTCODE"));
+			String hsnCode=checkNull(rfqVendLinesRet.getFieldValueString(j,"HSNCODE"));  
+			//   out.println(minMatHT+"minMatHT");
+			double minMatCost=minMatHT.get(material);
+			//if(totVal==minMatCost)styleCl="background-color:greenyellow;"; 
+%>
+						<td  style="width:100px;text-align:center;<%=styleCl%>" ><b><%=qtyRec%></b></td>		
+<%
+						if("D".equals(itemCat))
+						{
+							isServicePO=true;
+%>						
+							<td  style="width:100px;text-align:center;" ><b><%=quotPrice%>
+								<a href="javascript:viewService('<%=chkRfq%>','<%=chkLine%>')"><img src="services4.PNG" style="VERTICAL-ALIGN: -webkit-baseline-middle;"></a></b>
+								<br>
+								<a href="javascript:showHis('<%=chkRfq%>','<%=chkLine%>')"><i class="fa fa-history" aria-hidden="true"></i></a>																						
+							</td>
+<%
+						}else{
+%>
+							<td  style="width:100px;text-align:center;" ><b><%=quotPrice%><b>
+								<br>
+								<a href="javascript:showHis('<%=chkRfq%>','<%=chkLine%>')"><i class="fa fa-history" aria-hidden="true"></i></a>																					
+							</td>
+<%
+						}
+%>						
+<%
+						if(Double.parseDouble(qtyRec)>0)
+						{
+%>
+						<td  style="width:100px;text-align:center;<%=styleCl%>"><b><%=checkNull(grossValueStr)%>&nbsp;<a href="javascript:showConditions('<%=chkRfq%>','<%=chkLine%>','<%=i%>');"><img src="../../../Vendor2/Images/Common/cond1.PNG"></b></a></td>
+<%
+						}else{
+%>
+						<td  style="width:100px;text-align:center;<%=styleCl%>"><b><%=checkNull(grossValueStr)%></b></td>				
+<%
+						}
+%>
+						<input type="hidden" name="itemPrice<%=chkStr%>" id="itemPrice<%=chkStr%>" value="<%=quotPrice%>">
+						<input type="hidden" name="itemVal<%=chkStr%>" value="<%=totValStr%>"> 
+						<input type="hidden" name="itemCurr<%=chkStr%>" id="itemCurr<%=chkStr%>" value="<%=quotCurr%>">
+						<input type="hidden" name="itemQty<%=chkStr%>" id="itemQty<%=chkStr%>" value="<%=myQty%>">
+						<input type="hidden" name="valTypeDISC<%=chkStr%>" value="<%=discType%>">
+						<input type="hidden" name="itemDISC<%=chkStr%>" value="<%=condDisc%>">
+						<input type="hidden" name="itemDISCCode<%=chkStr%>" value="DISC">
+						<input type="hidden" name="itemDISCVal<%=chkStr%>" value="<%=discValStr%>"> 
+						<input type="hidden" name="valTypePKFW<%=chkStr%>" value="<%=PKFWType%>">
+						<input type="hidden" name="itemPKFW<%=chkStr%>" value="<%=checkNull(condPKFW)%>">   						
+						<input type="hidden" name="itemPKFWCode<%=chkStr%>" value="PKFW"> 
+						<input type="hidden" name="itemPKFWVal<%=chkStr%>" value="<%=checkNull(PKFWValStr)%>">
+						
+						<input type="hidden" name="valTypeFRT<%=chkStr%>" value="<%=FRTType%>">
+						<input type="hidden" name="itemFRT<%=chkStr%>" value="<%=checkNull(condFRT)%>">  						
+						<input type="hidden" name="itemFRTCode<%=chkStr%>" value="FRT">
+						<input type="hidden" name="itemFRTVal<%=chkStr%>" value="<%=checkNull(FRTValStr)%>"> 
+						
+						<input type="hidden" name="itemOTHCode<%=chkStr%>" value="OTH">
+						<input type="hidden" name="itemOTH<%=chkStr%>" value="<%=checkNull(condOTH)%>">
+						<input type="hidden" name="itemOTHVal<%=chkStr%>" value="<%=checkNull(OTHValStr)%>">
+						
+						<input type="hidden" name="valTypeFOB<%=chkStr%>" value="<%=FOBType%>">
+						<input type="hidden" name="itemFOB<%=chkStr%>" value="<%=checkNull(condFOB)%>">  						
+						<input type="hidden" name="itemFOBCode<%=chkStr%>" value="FOB">
+						<input type="hidden" name="itemFOBVal<%=chkStr%>" value="<%=checkNull(FOBValStr)%>"> 						
+						
+						
+						<input type="hidden" name="valTypeBFRT<%=chkStr%>" value="<%=BFRTType%>">
+						<input type="hidden" name="itemBFRT<%=chkStr%>" value="<%=checkNull(condBFRT)%>">  						
+						<input type="hidden" name="itemBFRTCode<%=chkStr%>" value="BFRT">
+						<input type="hidden" name="itemBFRTVal<%=chkStr%>" value="<%=checkNull(BFRTValStr)%>">  
+						
+						<input type="hidden" name="valTypeINS<%=chkStr%>" value="<%=INSType%>">
+						<input type="hidden" name="itemINS<%=chkStr%>" value="<%=checkNull(condINS)%>">  						
+						<input type="hidden" name="itemINSCode<%=chkStr%>" value="INS">
+						<input type="hidden" name="itemINSVal<%=chkStr%>" value="<%=checkNull(INSValStr)%>"> 
+						
+						<input type="hidden" name="itemSupplyPrice<%=chkStr%>" value="<%=checkNull(sPriceStr)%>">
+						
+						<input type="hidden" name="valTypeCUST<%=chkStr%>" value="<%=BCDType%>">
+						<input type="hidden" name="itemCUST<%=chkStr%>" value="<%=checkNull(condBCD)%>">  						
+						<input type="hidden" name="itemCUSTCode<%=chkStr%>" value="BCD">
+						<input type="hidden" name="itemCUSTVal<%=chkStr%>" value="<%=checkNull(BCDValStr)%>"> 						
+						
+						<input type="hidden" name="valTypeSWC<%=chkStr%>" value="<%=SWCType%>">
+						<input type="hidden" name="itemSWC<%=chkStr%>" value="<%=checkNull(condSWC)%>">  						
+						<input type="hidden" name="itemSWCCode<%=chkStr%>" value="SWC">
+						<input type="hidden" name="itemSWCVal<%=chkStr%>" value="<%=checkNull(SWCValStr)%>"> 
+						
+						<input type="hidden" name="valTypeCLR<%=chkStr%>" value="<%=CLRType%>">
+						<input type="hidden" name="itemCLR<%=chkStr%>" value="<%=checkNull(condCLR)%>">  						
+						<input type="hidden" name="itemCLRCode<%=chkStr%>" value="CLR">
+						<input type="hidden" name="itemCLRVal<%=chkStr%>" value="<%=checkNull(CLRValStr)%>"> 						
+						
+						<input type="hidden" name="valTypeTAX<%=chkStr%>" value="P">
+						<input type="hidden" name="itemTAX<%=chkStr%>" value="<%=checkNull(condGST)%>">  						
+						<input type="hidden" name="itemTAXCode<%=chkStr%>" value="TAX">
+						<input type="hidden" name="itemTAXVal<%=chkStr%>" value="<%=checkNull(GSTValStr)%>">  													
+						
+						<input type="hidden" name="itemValue<%=chkStr%>" value="<%=checkNull(grossValueStr)%>"> 
+<%
+						vendWiseRfqHT.put(chkStr,grossValue); 
+						rfqTotHT.put(chkRfq+"##"+chkLine,grossValueStr); 
+						
+				}
+			}
+
+			
+		}		
+
+%>			
+			</tr>
+			
+<%
+		//out.println("vendWiseRfqHT>>>"+vendWiseRfqHT);
+		
+			
+
+		java.math.BigDecimal netRfq=new java.math.BigDecimal(0);
+		String totRfqValStr="0.00";
+		
+		Hashtable chkRfqHT=new Hashtable();
+				
+		Set<String> keyHT = rfqTotHT.keySet();
+		for(String key: keyHT)
+		{
+			String chkHT = key.split("##")[0];
+			//out.println("chkHT>>>>"+chkHT);
+			
+			if(chkRfqHT.containsKey(chkHT))
+			{
+				//out.println("rfqTOT in IF>>>>"+(String)chkRfqHT.get(chkHT)); 
+				netRfq =(java.math.BigDecimal)chkRfqHT.get(chkHT);
+				netRfq= netRfq.add(new java.math.BigDecimal((String)rfqTotHT.get(key)));
+				
+				chkRfqHT.put(chkHT,netRfq);
+				//out.println("chkRfqHT in IF>>>>"+chkRfqHT); 
+			}
+			else
+			{
+
+				netRfq = new java.math.BigDecimal((String)rfqTotHT.get(key));
+				chkRfqHT.put(chkHT,netRfq);
+
+			}
+			
+			
+		} 
+%>					
+				<tr style="background-color:#43eac452 !important">
+					<th colspan=7 style="width:150px;text-align:right">Landed Cost [INR]</th>
+<%
+				chkList = new ArrayList();			
+				for(int i=0;i<rfqVendLinesRetCnt;i++) 
+				{
+					String rfqChk= rfqVendLinesRet.getFieldValueString(i,"RFQNO");
+					if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+					continue;
+					else
+					chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));			
+%>			
+						<th colspan=2 style="width:60px;text-align:center">&nbsp;</th>
+						<!--<th colspan=1 style="width:60px;text-align:center"><input type="hidden" name="rfqTotVal<%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%>" value="<%=chkRfqHT.get(rfqChk)%>"><%=chkRfqHT.get(rfqChk)%></th>-->
+<%
+					if("New".equals(status)){
+%>						
+						<td style="width:100px;text-align:center"><b><input type="text" name="botTotVal<%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%>" value="0.00" readOnly></b></td>			
+<%
+					}else{
+%>
+						<td style="width:100px;text-align:center"><b><%=checkNull_Num(rfqVendLinesRet.getFieldValueString(i,"RECVAL"))%></b></td>						
+<%
+					}
+				}
+%>
+				</tr>
+				<tr style="background-color:#efe81ca8 !important">
+					<th colspan=7 style="width:150px;text-align:right">Total Cost [INR]</th>
+		<%
+		String docValue="0.00";
+
+		chkList = new ArrayList();			
+		for(int i=0;i<rfqVendLinesRetCnt;i++) 
+		{
+			String rfqChk= rfqVendLinesRet.getFieldValueString(i,"RFQNO");
+				if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));
+
+			try
+			{
+				docValue =  rfqVendLinesRet.getFieldValueString(i,"DOCVAL");  
+				docValue = (Double.parseDouble(docValue))+"";
+				docValue  = new java.math.BigDecimal(docValue).setScale(2,java.math.BigDecimal.ROUND_DOWN).toString();
+			}
+			catch(Exception e){
+				docValue="0.00";
+			}
+						
+			if(i==0)
+			{
+				if("New".equals(status)){
+%>			
+							<td colspan=<%=(rfqLen*3)%> style="width:100px;text-align:right"><b><input type="text" name="botDocVal<%=rfqVendLinesRet.getFieldValueString(i,"QCFNO")%>" value="<%=docVal%>" readOnly></b></td>
+<%
+						}else{
+%>					
+							<td colspan=<%=(rfqLen*3)%> style="width:100px;text-align:center"><b><%=docValue%></b></td>
+<%
+						}
+			}
+					
+		}
+%>		
+			</tbody>
+			</table>
+		</div>
+		</div>
+		</div> 
+		</div>  
+
+<%
+	
+	if(retWFDocDetails != null && retWFDocDetails.getRowCount() > 0)
+	{
+		docVal = new BigDecimal(rfqVendLinesRet.getFieldValueString(0,"DOCVAL")).setScale(2,RoundingMode.HALF_UP);
+		wfStatus=retWFDocDetails.getFieldValueString(0,"EWDHH_WF_STATUS");
+		wfCurStep = Integer.parseInt(retWFDocDetails.getFieldValueString(0,"EWDHH_CURRENT_STEP"));
+		wfTemplate = retWFDocDetails.getFieldValueString(0,"EWDHH_TEMPLATE_CODE");
+		wfNextPart = retWFDocDetails.getFieldValueString(0,"EWDHH_NEXT_PARTICIPANT");
+		
+		ezc.ezcommon.EzLog4j.log("wfNextPart>>>>"+wfNextPart+"  workGrpVect Before =="+workGrpVect,"I");
+		if("SUBMITTED".equals(wfStatus) || "REJECTED".equals(wfStatus))
+		{
+			if(workGrpVect != null && workGrpVect.contains(wfNextPart))
+			{
+				ReturnObjFromRetrieve retWFDetails = getWFDetails(Session,wfTemplate,wfCurStep,wfNextPart);
+				BigDecimal cmpVal=BigDecimal.valueOf((Long)retWFDetails.getFieldValue(0,"EWPC_QCF_RELEASE"));
+				String cmpOp = retWFDetails.getFieldValueString(0,"EWPC_QCF_FLAG");
+				//out.println("cmpOp>>>"+cmpOp);
+				//out.println("cmpVal>>>"+cmpVal);
+				ezc.ezcommon.EzLog4j.log("cmpOp Before =="+cmpOp+" cmpVal="+cmpVal,"I");
+				if("LE".equals(cmpOp))
+				{	
+					if(cmpVal.compareTo(BigDecimal.ZERO) == 0 || cmpVal.compareTo(docVal) <= 0)
+					{
+						showSubmit=true;
+						showReject=true;
+					}
+					else
+					{
+						showApprove=true;
+						showReject=true;
+					}
+				}
+				if("GE".equals(cmpOp))
+				{	
+					if(docVal.compareTo(cmpVal) >= 0)
+					{
+						showApprove=true;
+						showReject=true;
+					}
+					else
+					{
+						showSubmit=true;
+						showReject=true;
+					}	
+				}				
+			}
+		}
+		else if("APPROVED".equals(wfStatus) && "PP".equals(userRole) && !"X".equals(poFlag))
+		{
+			showPOCreate = true;
+		}
+	}
+	else
+	{
+		showCreate=true;
+	}
+	//COMMENTS
+	String trBGColor = "Bgcolor=\"#325786\"  style=\"color:white\"";
+	int commentsCount =0;
+	ReturnObjFromRetrieve commentsRet = getJGLDocComments(Session,qcfNo,"QCF");
+	
+	
+	
+	if(commentsRet!= null)
+		commentsCount = commentsRet.getRowCount();
+		
+
+	if(commentsCount>0)
+	{
+			commentsRet.sort(new String[]{"EDC_DATE"},true);
+			SimpleDateFormat sdf=new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+%>
+
+		<table id="table-2" class="table table-bordered">
+<%
+		String displayStr ="";
+		for(int i=0;i<commentsCount;i++)
+		{
+			if(i == 0)
+			{
+%>	
+				<Tr <%=trBGColor%>>
+				
+					<Th width="20%">User</Th>
+					<Th width="20%">Date</Th>
+					<Th width="60%">Comments</Th>
+				</Tr>
+<%
+			}
+					displayStr = commentsRet.getFieldValueString(i,"EDC_COMMENTS");
+%>				
+				<Tr>
+					<Td align="center">&nbsp;<%=commentsRet.getFieldValueString(i,"EDC_USER_ID")+"["+checkNull(commentsRet.getFieldValueString(i,"EU_FIRST_NAME"))+"]"%></Td>
+					<Td align="center">&nbsp;<%=sdf.format((Date)commentsRet.getFieldValue(i,"EDC_DATE"))%></Td>					
+					<Td title='<%=displayStr%>' align="center"><textarea style='width:100%' rows='2' readonly><%=checkNull(displayStr)%></textarea></td>
+				</Tr>
+			
+<%
+		}	
+%>
+	</Table>
+<%
+	}
+	ReturnObjFromRetrieve retUploadList = getUploadList(Session,qcfNo,"QCF"); 
+	int retUploadListCnt = 0; 
+	String itemId="H";
+	if(retUploadList != null)
+		retUploadListCnt = retUploadList.getRowCount();
+%>
+		<h5>
+			<b>Attachment(s)</b>
+		</h5>
+		<div class="row">
+		  <div class="col-md-12 col-xs-12">
+			<!-- general form elements -->
+			<div class="box box-default">
+				<div class="box-body table-responsive no-padding">
+					<div class="box-body">
+					       <table id="uploadTable<%=itemId%>" class="table  table-bordered dt-responsive nowrap" >
+							<tr <%=trBGColor%>>
+								<th width="95%" align='left'>File Name</th>
+								<th width="5%"></th>
+							</tr>
+<%
+		if(retUploadListCnt == 0)
+		{
+%>
+			<tr id="noDataStatUpload">
+				<td>No files attached</td>
+			</tr>
+<%
+		}
+		for(int r=0;r<retUploadListCnt;r++)
+		{
+%>
+			<tr>
+				<td align="left" width="95%"><input type="hidden" name="fileItem" value="<%=retUploadList.getFieldValueString(r,"EUD_FILE_NAME")%>"><a href="javascript:downloadFile('<%=retUploadList.getFieldValueString(r,"EUD_ITEM_NO")%>','<%=retUploadList.getFieldValueString(r,"EUD_FILE_NAME")%>')"><%=retUploadList.getFieldValueString(r,"EUD_FILE_NAME")%></a></td>
+				<td width="5%"><span onclick="javascript:deleteFile(this,'<%=retUploadList.getFieldValueString(r,"EUD_ITEM_NO")%>','<%=retUploadList.getFieldValueString(r,"EUD_FILE_NAME")%>')" class="fa fa-trash fa-lg" style="margin-left: 25%;"></span></td>
+				
+			</tr>
+<%
+		}
+%>
+		</table>
+	
+			</div>
+		      </div>
+		     </div>
+		    <!-- Your Page Content Here -->
+		  </div>
+		</div><!--row-->
+		
+		
+<%
+	//}
+	
+	if(showSubmit || showApprove || showCreate)
+	{
+%>			
+		
+	<Table align="center" width="96%" border=1 borderColorDark=#ffffff borderColorLight=#006666 cellPadding=2 cellSpacing=0 >
+	<Tr <%=trBGColor%>>
+		<Th align=left ><B>Enter your comments here</B></Th>
+	</Tr>
+	<Tr>	
+		<Td class='blankcell' width='100%'>
+			<textarea name = 'comments' style='width:100%' rows=3 cols=73 maxlength="5000" onKeyPress='return maxLength(this,"2000");' onpaste='return maxLengthPaste(this,"2000");'></textarea>
+		</Td>
+	</Tr> 
+	</Table>
+	<!--<h5>
+		<b>Uploads</b>
+	</h5>			
+	<table id="uploadTableH" class="table  table-bordered dt-responsive nowrap" >	
+		<tr>
+			<th class="fborder" width="95%" align='left'>File Name</th>
+			<th class="fborder" width="5%"></th>
+		</tr>
+		<tr id="noDataStatUpload">
+			<td>No files attached</td>
+		</tr>						
+	</table> -->			
+<%
+	}
+%>		
+	<br>
+			<div class="row">
+			<div class="col-xs-12" align="center">
+				<button type="button" class="btn btn-primary" onclick="javascript:history.go(-1)" ><i class="fa fa-backward"></i>&nbsp;Back</button>
+				<!--<button type="button"  value="H" class="btn btn-primary uploadDialogBtn" ><i class="fa fa-upload"></i>&nbsp;Upload Attachments</button>
+				<button type="button" class="btn btn-primary" onclick="funQuery('<%=qcfNo%>','QCF','<%=compCode%>','<%=wfPlant%>','<%=rfqCat%>','<%=docVal%>','<%=wfStatus%>')" style="margin-right: 5px;"><i class="fa fa-question-circle"></i> Query</button>-->				
+<%
+			if(!"VIW".equals(userRole))
+			{
+%>				
+				<button type="button"  value="H" class="btn btn-primary uploadDialogBtn" ><i class="fa fa-upload"></i>&nbsp;Upload Attachments</button>
+<%
+			}
+			if( (!"PP".equals(userRole) && !"VIW".equals(userRole) && !"APPROVED".equals(wfStatus)) || ("APPROVED".equals(wfStatus)) )
+			{
+%>	
+				<button type="button" class="btn btn-primary" onclick="funQuery('<%=qcfNo%>','QCF','<%=compCode%>','<%=wfPlant%>','<%=rfqCat%>','<%=docVal%>','<%=wfStatus%>')" style="margin-right: 5px;"><i class="fa fa-question-circle"></i> Query</button>
+<%
+			}
+
+			if(showCreate)	
+			{
+%>
+				<button type="button" class="btn btn-primary" onclick="funCreateWF()" style="margin-right: 5px;"><i class="fa fa-check"></i> Submit</button>
+<%
+			}
+			if(showSubmit)	
+			{
+%>
+				<button type="button" class="btn btn-primary" onclick="funSubmit('SUBMITTED')" style="margin-right: 5px;"><i class="fa fa-check"></i> Submit</button>
+<%
+			}
+			if(showApprove || "RRKLDBUY".equals(Session.getUserId()))	
+			{
+%>
+				<button type="button" class="btn btn-primary" onclick="funSubmit('APPROVED')" style="margin-right: 5px;"><i class="fa fa-check"></i> Approve</button>
+<%
+			}
+			if(showReject)	
+			{
+%>
+				<button type="button" class="btn btn-primary" onclick="funSubmit('REJECTED')" style="margin-right: 5px;"><i class="fa fa-remove"></i> Reject</button>
+<%
+			}	
+%>
+			<button type="button" class="btn btn-primary" onclick="funShowApprovalHirearchy('<%=compCode%>','<%=wfPlant%>','<%=rfqCat%>','<%=docVal%>')" style="margin-right: 5px;"><i class="fa fa-users"></i> Show Approval Hirearchy</button>
+			<button type="button" class="btn btn-primary" onclick="funAuditTrail('<%=qcfNo%>','QCF')" style="margin-right: 5px;"><i class="fa fa-list"></i> Audit Trail</button>			
+<%@ include file="ezPOCreateCheck.jsp"%>		
+<%
+	if(showPOCreate)
+	{
+	if(isServicePO)
+	{
+%>
+		<button type="button" class="btn btn-primary" onclick="createServicePO();"> <i class="fa fa-check"></i>&nbsp;Create PO </button>
+<%
+	}
+	else
+	{
+%>
+			<button type="button" class="btn btn-primary" onclick="openManfModal();"> <i class="fa fa-check"></i>&nbsp;Create PO </button>
+<%
+	}
+	}
+
+			if("APPROVED".equals(wfStatus))
+			{
+%>
+			<button type="button" class="btn btn-primary" onclick="viewPOs();" style="margin-right: 5px;"><i class="fa fa-list"></i> PO List</button>
+<%
+			}
+%>
+			<button id="btnExport" class="btn btn-primary" onclick="fnExcelReport('<%=qcfNo%>');"> <i class="fa fa-check"></i>&nbsp;Download Excel </button>
+			<!--<button type="button" class="btn btn-primary" onclick="funPrint()" ><i class="fa fa-check"></i>&nbsp;Print</button>-->
+			</div>
+ 	 	</div>		
+	</div>
+<input type="hidden" name="submitType" value="">
+<input type="hidden" name="wfTemplate" value="<%=wfTemplate%>">
+<input type="hidden" name="wfCurStep" value="<%=wfCurStep%>">
+<input type="hidden" name="wfNextPart" value="<%=wfNextPart%>">
+<input type="hidden" name="docVal" value="<%=docVal%>">	
+<input type="hidden" name="category" value="<%=rfqCat%>">	
+<input type="hidden" name="plant" value="<%=wfPlant%>">
+<div id="manModal" class="modal " tabindex="-1" role="dialog">
+   <div class="modal-dialog">
+      <div class="modal-content" style="width:700px">
+<div class="modal-header">
+      	      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      		<span aria-hidden="true">×</span></button>
+      	      <h4 class="modal-title">Enter Ordering Vendor(s)</h4>
+	</div>
+	<div class="modal-body">
+	<table class="table  table-bordered dt-responsive nowrap" >	
+	    <Tr <%=trBGColor%>>
+		<Th align=left ><B>RFQ No.</B></Th>
+		<Th align=left ><B>Vendor</B></Th>
+	    </Tr>
+<%
+	chkList = new ArrayList();
+	for(int i=0;i<rfqVendLinesRetCnt;i++)  
+	{
+		if(!chkVen.contains(rfqVendLinesRet.getFieldValueString(i,"VENDOR")))
+			continue;	
+		String ordVenRfq = rfqVendLinesRet.getFieldValueString(i,"RFQNO");
+		if(chkList.contains(ordVenRfq))  
+			continue;
+		else
+			chkList.add(ordVenRfq);
+	
+			
+			
+%>
+		<Tr>
+			<Td align=left ><%=ordVenRfq%></Td>
+			<Td align=left ><input type="text" name="ordVend_<%=ordVenRfq%>" value=""></Td>
+		</Tr>
+<%	
+	}
+%>
+
+	</table>
+	</div>	
+      <div class="modal-header">
+      	      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      		<span aria-hidden="true">×</span></button>
+      	      <h4 class="modal-title">Enter Manufacuring Vendor Details</h4>
+	</div>
+         <div class="modal-body">
+            <table class="table  table-bordered dt-responsive nowrap" >	
+            <Tr <%=trBGColor%>>
+	    	<Th align=left ><B>RFQ No.</B></Th>
+	    	<Th align=left ><B>Vendor</B></Th>
+	    	<Th align=left ><B>Manufacturing Vendor</B></Th>
+	    </Tr>
+
+<%
+	for(int i=0;i<rfqVendLinesRetCnt;i++)  
+	{
+		if(!chkVen.contains(rfqVendLinesRet.getFieldValueString(i,"VENDOR")))
+			continue;
+			
+%>				
+		<Tr>
+			<Td align=left ><%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%></Td>
+			<Td align=left ><%=rfqVendLinesRet.getFieldValueString(i,"VENDOR")%></Td>
+			<Td align=left ><input type="text" name="manfVend_<%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%>" value=""></Td>
+		</Tr>
+<%	
+	}
+%>
+	</table>
+         </div>
+         <div class="modal-footer">
+	 		 <button class="btn btn-primary" onclick="createPO();"> <i class="fa fa-check"></i>&nbsp;Create PO </button>
+	 </div>
+      </div>
+   </div>
+</div>
+
+</form>
+<iframe id="txtArea1" style="display:none"></iframe>
+</body>
+</html>
+<div id="woModal2" class="modal " tabindex="-1" role="dialog">
+<div class="modal-dialog modal-lg">
+<div class="modal-content" style="width: 85%;">
+<div class="modal-body">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="closeUploadModal1()">&times;</button>
+    <iframe src="" width="100%" height="580" frameborder="0" allowtransparency="true"></iframe>
+ </div>
+</div>
+</div>
+</div>
+<div id="woModal" class="modal " tabindex="-1" role="dialog">
+   <div class="modal-dialog">
+      <div class="modal-content" style="width:700px">
+         <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="closeUploadModal2()">&times;</button>
+            <iframe src="" width="100%" height="450" frameborder="0" allowtransparency="true"></iframe>
+         </div>
+      </div>
+   </div>
+</div>
+<div id="woModalSer" class="modal " tabindex="-1" role="dialog">
+   <div class="modal-dialog modal-lg">
+      <div class="modal-content" style="width: 80%;">
+         <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="closeUploadModal()">&times;</button>
+            <iframe src="" width="100%" height="300" frameborder="0" allowtransparency="true"></iframe>
+         </div>
+      </div>
+   </div>
+</div>
+<div id="uploadMod" class="modal " tabindex="-1" role="dialog">
+   <div class="modal-dialog">
+      <form id="uploadForm" action="../Inbox/ezUploadFileTemp.jsp" method="post" enctype="multipart/form-data">
+      <div class="modal-content">
+      <div class="modal-header">
+	      <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeUploadModal3()">
+		<span aria-hidden="true">×</span></button>
+	      <h4 class="modal-title">Attachments</h4>
+	</div>
+	 <div class="modal-body">	    
+	         <fieldset>
+			<input type="hidden" id="upDocType" name="upDocType" value="QCF">
+			<input type="hidden" id="upDocId" name="upDocId" value="<%=qcfNo%>">
+			<input type="hidden" id="upItemNo" name="upItemNo" value="">
+			<input type="file" id="file" name="file"/>
+				<!--<input type="submit" id="uploadbutton" value="upload" />-->
+			<div id="loadingInd" style="display:none;margin-left: 25%;">
+				<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+				<span class="sr-only">Loading...</span>
+			</div>
+	         </fieldset>
+   		
+	 </div>
+	 <div class="modal-footer">
+	 	<button type="submit" id="uploadbutton" class="btn btn-primary">Upload</button>
+	 </div>
+      </div>
+     </form>
+   </div>  
+</div> 	 
+<%@ include file="../Misc/ezSubFooter.jsp"%>
+<%@ include file="../Misc/ezFooter.jsp"%>
+<link rel="stylesheet" type="text/css" href="../../Library/jquery/jquery-ui-1.12.1.custom/jquery-ui.css">
+<link rel="stylesheet" href="../Misc/library/fancybox2/jquery.fancybox.css" type="text/css" media="screen" />
+<script type="text/javascript" src="../Misc/library/fancybox2/jquery.fancybox.js"></script>
+<script type="text/javascript" src="../Misc/library/fancybox2/jquery.fancybox.pack.js"></script>
+
+<script src="../Misc/library/js/tableHeadFixer.js"></script>
+<script>
+function viewPOs()
+{
+	var url="ezShowQCFPOs.jsp?qcfNo=<%=qcfNo%>";
+	$('iframe').attr("src",url);
+	$('#woModal').modal({show:true});
+}
+/*
+$(document).ready(function() {
+$("#table-1").tableHeadFixer({"left" : 7}); 
+}); */
+$( function() {
+
+$(".sidebar-toggle").trigger("click"); 
+});
+
+window.closeUploadModal = function(){
+		    $('#woModalSer').modal('hide');
+}
+
+window.closeUploadModal1 = function(){
+		    $('#woModal2').modal('hide');
+}
+
+window.closeUploadModal2 = function(){
+		    $('#woModal').modal('hide');
+}
+
+window.closeUploadModal3 = function(){
+		    $('#uploadMod').modal('hide');
+}
+
+
+function showConditions(rfqNo,lineNo)
+{
+	var itemPos  =  rfqNo+lineNo;
+	var itemQty   = eval("document.myForm.itemQty"+itemPos).value;
+	var itemPrice = eval("document.myForm.itemPrice"+itemPos).value;
+	var currency = eval("document.myForm.itemCurr"+itemPos).value;
+	//alert("itemPrice>>"+itemPrice);
+
+	var vendCat= "IMP";
+	//alert("vendCat>>>"+vendCat);
+	var reqFrom="Apr";
+	var userType="2"
+
+	var url="ezGetImpConditions.jsp?rfqNo="+rfqNo+"&lineNo="+lineNo+"&itemPos="+itemPos+"&itemQty="+itemQty+"&itemPrice="+itemPrice+"&vendCat="+vendCat+"&reqFrom="+reqFrom+"&userType="+userType+"&currency="+currency;
+	$('iframe').attr("src",url);
+	$('#woModal2').modal("show");
+	$('.modal-dialog').draggable({
+		handle: ".modal-body"
+	});			
+
+
+}	
+
+
+function funBack()
+{
+	
+	document.myForm.action ="ezListQcfs.jsp"; 
+	document.myForm.submit(); 
+		
+}
+function funDownloadExcel()
+{
+document.myForm.action="ezQCFDownloadExcel.jsp";
+document.myForm.submit();
+}
+function funSubmit(submitType)
+{	
+	var qcfNo='<%=qcfNo%>';
+	//alert("QCFNO>>"+qcfNo);
+	$.ajax({
+	    url: 'ezCheckQCFQuery.jsp', 
+	    data: { "qcfNo":qcfNo},
+	    type: 'POST',
+	    success: function(result) {
+	      result=$.trim(result);  
+	     //alert("result>>>>"+result.split("#")[1]);
+	      if(result.split("#")[1] == "Q")
+	      {
+		    alert("QCF: "+qcfNo+" cannot be approved/rejected as you have sent a query");
+                    return;
+	
+
+	      }
+	      else
+	      {
+			document.myForm.submitType.value=submitType;
+			document.myForm.action="ezUpdateQCFWF.jsp";
+			document.myForm.submit();
+	      }
+	     }, 
+	    error: function()
+	    {
+		alert("error::");
+	    }
+	});
+
+}
+
+function funShowApprovalHirearchy(compCode,plant,category,docValue)
+{
+	var url="../Misc/ezShowApprovalHirearchy.jsp?compCode="+compCode+"&plant="+plant+"&category="+category+"&docValue="+docValue;
+	$('iframe').attr("src",url);
+	$('#woModal').modal("show");
+}
+function funQuery(docId,docType,compCode,plant,category,docValue,wfStatus)
+{
+	//alert("TEST in SCRIPT");
+	var url="../Misc/ezShowQuery2.jsp?docId="+docId+"&docType="+docType+"&compCode="+compCode+"&plant="+plant+"&category="+category+"&docValue="+docValue+"&wfStatus="+wfStatus; 
+	document.myForm.commentType.value="QUERY";
+	$('iframe').attr("src",url);
+	$('#woModal').modal("show");
+}
+function funAuditTrail(docId,docType)
+{
+	var url="../Misc/ezShowAuditTrail.jsp?docId="+docId+"&docType="+docType;
+	$('iframe').attr("src",url);
+	$('#woModal').modal("show");
+}
+function closeIframe()
+{
+	   $('#woModal').modal('toggle');
+}
+
+function funSubmit1()
+{
+
+			var chkObj = document.myForm.selVen;
+			var len = chkObj.length;
+			var count = 0;
+			var chkVal;
+			//var reason;
+			var chkCount = 0;
+
+			if(isNaN(len))
+			{
+				if(chkObj.checked)
+				{
+					count++;
+				}
+			}
+			else
+			{
+				for(i=0;i<len;i++)
+				{
+					if(chkObj[i].checked)
+					{
+						count++;
+					}
+				}
+			}
+			
+			if(count==0)
+			{
+				alert("Please select atleast one vendor");
+				return;
+			}
+			
+			
+			if(isNaN(len))
+			{
+				chkVal = chkObj.value;
+				//reason=document.getElementById("reason0").value;
+				chkVal=chkVal;
+			}
+			else
+			{
+				var countChk = 0;
+				for(i=0;i<len;i++)
+				{
+					if(chkObj[i].checked)
+					{
+						countChk++;
+						if(countChk==1)
+						{
+							chkVal = chkObj[i].value;
+							
+							chkVal=chkVal;
+						}
+						else
+						{
+							//reason=document.getElementById("reason"+i).value;
+							chkVal = chkVal+','+chkObj[i].value;  
+						} 
+						
+						
+					}
+				}
+			}
+			
+			//alert("chkVal"+chkVal);
+			document.myForm.chkVal.value  = chkVal; 
+			if(document.myForm.comment.value=="")
+			{
+				alert("Please Enter Comments");
+				document.myForm.comment.focus()
+				return;
+			}				
+		       
+		       if(confirm("Are sure to submit the QCF Form?"))
+		       {
+		       		document.myForm.action="ezSaveQuotationComparisionForm.jsp"; 
+		       		document.myForm.submit();
+        	       }
+}        	       
+function funPrint()
+{
+	window.print();
+}
+function openManfModal()
+{
+	$('#manModal').modal("show");
+}
+function createServicePO()
+{
+	if(confirm("Are you sure you want to create PO?"))
+	{
+		document.myForm.action="ezCreateServicePO.jsp";
+		document.myForm.submit();
+	}
+}
+function createPO()
+{
+	document.myForm.action="ezCreatePO.jsp";
+	document.myForm.submit();
+}
+function fnExcelReport(qcfNo)
+{
+    var tab_text="<table border='2px'><tr bgcolor='#87AFC6'>";
+    var textRange; 
+    var j=0;
+    var k=0;
+    
+    
+    tab_text=tab_text+"<b><p align='left'><h4>Quotation Comparison Form:"+qcfNo+"</p></b></h4></tr>";  
+    
+    
+    tab = document.getElementById('table-1'); // id of table
+    tab1 = document.getElementById('table-2'); // id of table
+
+    for(j = 0 ; j < tab.rows.length ; j++) 
+    {     
+        tab_text=tab_text+tab.rows[j].innerHTML+"</tr>";
+        //tab_text=tab_text+"</tr>";
+    }
+    
+    for(k = 0 ; k < tab1.rows.length ; k++) 
+    {     
+        tab_text=tab_text+tab1.rows[k].innerHTML+"</tr>";
+        //tab_text=tab_text+"</tr>";
+    }    
+ 
+    tab_text=tab_text+"</table>";
+    tab_text= tab_text.replace(/<A[^>]*>|<\/A>/g, "");//remove if u want links in your table
+    tab_text= tab_text.replace(/<img[^>]*>/gi,""); // remove if u want images in your table
+    tab_text= tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
+
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE "); 
+
+    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // If Internet Explorer
+    {
+        txtArea1.document.open("txt/html","replace");
+        txtArea1.document.write(tab_text);
+        txtArea1.document.close();
+        txtArea1.focus(); 
+        sa=txtArea1.document.execCommand("SaveAs",true,"QCF.xls");
+    }  
+    else     
+    {
+    	 let a = $("<a />", {
+             href: 'data:application/vnd.ms-excel,' + encodeURIComponent(tab_text),
+             download: "QCF_<%=qcfNo%>.xls"
+         })
+         .appendTo("body")
+         .get(0)
+         .click();
+         e.preventDefault();
+   }   
+
+    return (sa);
+}
+function fnExcelReport1()
+{
+    var tab_text="<table border='2px'><tr bgcolor='#87AFC6'>";
+    var textRange; var j=0;
+    tab = document.getElementById('table-1'); // id of table
+
+    for(j = 0 ; j < tab.rows.length ; j++) 
+    {     
+        tab_text=tab_text+tab.rows[j].innerHTML+"</tr>";
+        //tab_text=tab_text+"</tr>";
+    }
+ 
+tab_text=tab_text+"</table>";
+    tab_text= tab_text.replace(/<A[^>]*>|<\/A>/g, "");//remove if u want links in your table
+    tab_text= tab_text.replace(/<img[^>]*>/gi,""); // remove if u want images in your table
+    tab_text= tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
+
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE "); 
+
+    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // If Internet Explorer
+    {
+        txtArea1.document.open("txt/html","replace");
+        txtArea1.document.write(tab_text);
+        txtArea1.document.close();
+        txtArea1.focus(); 
+        sa=txtArea1.document.execCommand("SaveAs",true,"QCF.xls");
+    }  
+    else     
+    {
+    	 let a = $("<a />", {
+             href: 'data:application/vnd.ms-excel,' + encodeURIComponent(tab_text),
+             download: "QCF_<%=qcfNo%>.xls"
+         })
+         .appendTo("body")
+         .get(0)
+         .click();
+         e.preventDefault();
+   }   
+
+    return (sa);
+}
+function openLastPO(mat,purOrg,plant)
+{ 
+	var url="ezLastPOPriceDet.jsp?mat="+mat+"&purOrg="+purOrg+"&plant"+plant;
+	$.fancybox.open({
+		href : url, 
+		type : 'iframe',
+		
+		width:'80%',
+		height:'78%',
+		autoSize : false,
+		closeBtn : false,
+		keys : {
+		    close  : true,
+		},			
+		helpers     : {  
+			overlay : {closeClick: false}
+			}
+		});
+
+}
+function openLongItem(mat,text,type)
+{ 
+	var url="ezItemTextPopup.jsp?mat="+mat+"&text="+text+"&type="+type;     
+
+
+	$('iframe').attr("src",url);
+
+	$.fancybox.open({
+		href : url, 
+		type : 'iframe',
+		
+		width:'80%',
+		height:'50%',
+		autoSize : false,
+		closeBtn : false,
+		keys : {
+		    close  : true,
+		},			
+		helpers     : {  
+			overlay : {closeClick: false}
+			}
+		});  				
+
+}
+function openDet(basicVal,leadDays,disc,type,sapHsn,sapGst,gst,hsn)
+{ 
+	var url="ezDiscDet.jsp?basicVal="+basicVal+"&leadDays="+leadDays+"&disc="+disc+"&type="+type+"&sapHsn="+sapHsn+"&sapGst="+sapGst+"&gst="+gst+"&hsn="+hsn;
+	$.fancybox.open({
+		href : url, 
+		type : 'iframe',
+		
+		width:'40%',
+		height:'40%',
+		autoSize : false,
+		closeBtn : false,
+		keys : {
+		    close  : true,
+		},			
+		helpers     : {  
+			overlay : {closeClick: false}
+			}
+		});
+
+} 
+function calcBot(chkStr,chkRfq,chkLine)
+{ 
+	
+		//alert("chkStr"+chkStr);
+		//alert("chkRfq"+chkRfq);
+		//alert("chkLine"+chkLine);
+		var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+chkLine);
+		//alert("itemQtyObj"+itemQtyObj.value);
+		if(itemQtyObj.value=='')
+		{
+			alert("Enter Recommended Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		
+		var prItemQtyObj = eval("document.myForm.prItemQty"+chkLine);
+		//alert("prItemQtyObjNew"+prItemQtyObj.value);
+		
+		if( parseFloat(itemQtyObj.value) > parseFloat(prItemQtyObj.value))
+		{
+			alert("Recommended Qty should not be greater than PR Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		var rfqCount='<%=rfqHash.size()%>';
+		//alert("rfqCount>>>>"+rfqCount);
+		var lineTotQty=0;		
+		var lineTotQty=0;
+<%
+		for(int j=0;j<rfqHash.size();j++)
+		{
+			String  rfqChk = (String)rfqHash.get(j+1);
+%> 
+			var rfqChk= '<%=rfqChk%>';
+			//alert("rfqChk>>>"+rfqChk);
+			var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+chkLine);
+			//alert("lineQtyObj>>>"+lineQtyObj.value);
+			lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+<%
+		}
+%>
+		//alert("lineTotQty>>>"+lineTotQty);
+		//alert("prItemQtyObj>>>"+prItemQtyObj.value);
+		if(lineTotQty >prItemQtyObj.value)
+		{
+			alert("Total Line Qty should not be greater than PR Qty at line"+chkLine);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		var Count='<%=(rfqLinesRetCnt/2)%>';
+		//alert("Count"+Count);
+		var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+		var botPKGValObj = eval("document.myForm.botPKGVal"+chkRfq);		
+		var botFRTValObj = eval("document.myForm.botFRTVal"+chkRfq);
+		var botBFRTValObj = eval("document.myForm.botBFRTVal"+chkRfq);
+		var botINSValObj = eval("document.myForm.botINSVal"+chkRfq);
+		var botSupValObj = eval("document.myForm.botSupVal"+chkRfq);
+		var itemGSTObj = eval("document.myForm.itemGST"+chkRfq);
+		var botGSTValObj = eval("document.myForm.botGSTVal"+chkRfq);
+		var botLCValObj = eval("document.myForm.botLCVal"+chkRfq);
+		var itemPKFWObj = eval("document.myForm.itemPKFW"+chkRfq);
+		var valTypePKFWObj = eval("document.myForm.valTypePKFW"+chkRfq);		
+		var itemFRTObj = eval("document.myForm.itemFRT"+chkRfq);
+		var valTypeFRTObj = eval("document.myForm.valTypeFRT"+chkRfq);
+		var itemBFRTObj = eval("document.myForm.itemBFRT"+chkRfq);
+		var valTypeBFRTObj = eval("document.myForm.valTypeBFRT"+chkRfq);				
+		var itemINSObj = eval("document.myForm.itemINS"+chkRfq);
+		var valTypeINSObj = eval("document.myForm.valTypeINS"+chkRfq);				
+		var totPriceVal=0;
+		var totalQuantity=0.0;
+		for(var k=0;k<Count;k++)
+		{
+			var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+			//alert("itemQtyObj"+itemQtyObj.value);
+			var itemPriceObj = eval("document.myForm.itemPrice"+chkRfq+((k+1)*10));
+			//alert("itemPriceObj"+itemPriceObj.value);
+			var itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 
+			//alert("itemValObj"+parseFloat(itemValObj));
+			totalQuantity=(parseFloat(totalQuantity)+parseFloat(itemQtyObj.value)).toFixed(2);
+			totPriceVal=(parseFloat(totPriceVal)+parseFloat(itemValObj)).toFixed(2);
+			
+		}
+		//alert("totalQuantity>>>>"+totalQuantity);
+		//alert(totPriceVal);
+		totPriceVal=(parseFloat(totPriceVal)).toFixed(2); 	
+		botTotValObj.value = totPriceVal;
+		if(totalQuantity>0)
+		{
+			if(valTypePKFWObj.value == "P")
+				botPKGValObj.value = (((botTotValObj.value) * itemPKFWObj.value)/100).toFixed(2);
+			if(valTypePKFWObj.value == "V")
+				botPKGValObj.value = eval("document.myForm.itemPKFWVal"+chkRfq).value;
+			if(valTypePKFWObj.value == "Q")
+				botPKGValObj.value = itemPKFWObj.value * parseFloat(totalQuantity);
+				
+			if(valTypeFRTObj.value == "P")
+				botFRTValObj.value = (((botTotValObj.value) * itemFRTObj.value)/100).toFixed(2);
+			if(valTypeFRTObj.value == "V")
+				botFRTValObj.value = eval("document.myForm.itemFRTVal"+chkRfq).value;
+			if(valTypeFRTObj.value == "Q")
+				botFRTValObj.value = itemFRTObj.value * parseFloat(totalQuantity);
+				
+			if(valTypeBFRTObj.value == "P")
+				botBFRTValObj.value = (((botTotValObj.value) * itemBFRTObj.value)/100).toFixed(2);
+			if(valTypeBFRTObj.value == "V")
+				botBFRTValObj.value = eval("document.myForm.itemBFRTVal"+chkRfq).value;
+			if(valTypeBFRTObj.value == "Q")
+				botBFRTValObj.value = itemBFRTObj.value * parseFloat(totalQuantity);				
+				
+			if(valTypeINSObj.value == "P")
+				botINSValObj.value = (((botTotValObj.value) * itemINSObj.value)/100).toFixed(2);
+			if(valTypeINSObj.value == "V")
+				botINSValObj.value = eval("document.myForm.itemINSVal"+chkRfq).value;
+			if(valTypeINSObj.value == "Q")
+				botINSValObj.value = itemINSObj.value * parseFloat(totalQuantity);								
+			
+			var itemSupplyPrice = (parseFloat(botTotValObj.value)+ parseFloat(botPKGValObj.value) + parseFloat(botFRTValObj.value)+ parseFloat(botBFRTValObj.value)+ parseFloat(botINSValObj.value)).toFixed(2);
+			botSupValObj.value= itemSupplyPrice;
+			botGSTValObj.value = ((parseFloat(botSupValObj.value)) * parseFloat(itemGSTObj.value)/100).toFixed(2);
+			botLCValObj.value = (parseFloat(botSupValObj.value) + parseFloat(botGSTValObj.value)).toFixed(2);
+		}
+		else
+		{
+			botPKGValObj.value = "0.00";
+			botFRTValObj.value = "0.00";
+			botBFRTValObj.value = "0.00";
+			botINSValObj.value = "0.00";
+			botSupValObj.value = "0.00";
+			botGSTValObj.value = "0.00";
+			botLCValObj.value = "0.00";
+		}	
+}
+function chkRecQty(chkRfq,chkLine,chkQcf)
+{
+		var chkObj = document.myForm.selVen;
+		var len = chkObj.length;
+
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+
+		var chkCount = 0;
+		for(i=0;i<len;i++)
+		{
+			if(chkObj[i].checked)
+			{
+				if(chkRfq === chkObj[i].value)
+					chkCount++;
+			}
+		}	
+
+
+		var Count='<%=(rfqLinesRetCnt/2)%>';
+		
+
+		if(chkCount>0)
+		{
+		
+			var lineTotQty=0;
+			var prItemQtyObj = eval("document.myForm.prItemQty"+chkLine);
+			//alert("prItemQtyObj>>>"+prItemQtyObj.value);		
+<%
+			for(int j=0;j<rfqHash.size();j++)
+			{
+				String  rfqChk = (String)rfqHash.get(j+1);
+%> 
+				var rfqChk= '<%=rfqChk%>';
+				//alert("rfqChk>>>"+rfqChk);
+				var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+chkLine);
+				//alert("lineQtyObj>>>"+lineQtyObj.value);
+				lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+<%
+			}
+%>
+			//alert("lineTotQty>>>"+lineTotQty);
+
+			if(lineTotQty >= prItemQtyObj.value)
+			{
+					var chkObj = document.myForm.selVen;
+					var len = chkObj.length;
+
+					for(i=0;i<len;i++)
+					{
+						if(chkObj[i].checked)
+						{
+							if(chkRfq === chkObj[i].value)
+							chkObj[i].checked = false;
+						}
+					}			
+
+					alert("Total Line Qty should not be greater than PR Qty at line"+chkLine);
+					return false;
+			}
+			else
+			{
+				//BOT VALUES
+				for(var k=0;k<Count;k++)
+				{
+					var prItemQtyObj = eval("document.myForm.prItemQty"+((k+1)*10));
+					var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+					itemQtyObj.value = parseFloat(prItemQtyObj.value).toFixed(0);
+					//alert("itemQtyObj>>>>"+itemQtyObj.value);	
+				}	
+	
+				var rfqTotValObj = eval("document.myForm.rfqTotVal"+chkRfq);
+				var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+				botTotValObj.value = rfqTotValObj.value;
+				botDocObj.value = (parseFloat(botDocObj.value) + parseFloat(botTotValObj.value)).toFixed(2); 
+			}	
+		}
+		else
+		{
+
+			for(var k=0;k<Count;k++)
+			{
+				var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+				itemQtyObj.value = "0";
+
+			}	
+
+			var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+			botDocObj.value = (parseFloat(botDocObj.value) - parseFloat(botTotValObj.value)).toFixed(2); 
+			botTotValObj.value = "0.00";
+
+		}
+		
+}
+function viewService(rfqNo,rfqItem)
+{ 
+	var url="ezViewServices.jsp?rfqNo="+rfqNo+"&rfqItem="+rfqItem;      
+	$('iframe').attr("src",url);
+	$('#woModalSer').modal("show");
+	$('.modal-dialog').draggable({
+		   handle: ".modal-body"
+	});   		
+}
+function showHis(rfqNo,lineNO)
+{ 
+	var url="ezGetQuoteHistory.jsp?rfqNo="+rfqNo+"&lineNO="+lineNO;
+	$.fancybox.open({
+		href : url, 
+		type : 'iframe',
+		
+		width:'80%',
+		height:'50%',
+		autoSize : false,
+		closeBtn : false,
+		keys : {
+		    close  : true,
+		},			
+		helpers     : {  
+			overlay : {closeClick: false}
+			}
+		});
+}
+	function downloadFile(upItemNo,fileName)
+	{
+	  	var upDocId 	= $('#upDocId').val();
+	  	var upDocType 	= $('#upDocType').val();
+	  	var fileName1 = fileName.replace(/&/g,'§');
+	  	window.open("../Inbox/ezFileDownloadN.jsp?upDocId="+upDocId+"&upDocType="+upDocType+"&upItemNo="+upItemNo+"&fileName="+fileName1);
+	}
+	function valUploadForm()
+	{ 
+	    	var upItemNo = $('#upItemNo').val();
+	    	var fileName = $('#file').val().replace(/C:\\fakepath\\/i, '');
+	    	var fileExt  = fileName.substr((fileName.lastIndexOf('.') +1)).toUpperCase();
+	    	var isValid = true;
+	    	if(fileName == "")
+	   	{
+	   		alert("Please upload file");
+	   		isValid = false;
+	   		return false;
+	   	}
+	   	if(allowedFileExt.indexOf(fileExt) <= -1)
+	   	{ 
+	   		alert("Only file extension's "+allowedFileStr+" are allowed.");
+	   		isValid = false;
+	   		return false;
+	   	}
+	   	if(($("#file")[0].files[0].size/1024)/1024 > allowedFileSize)
+	   	{ 
+	   		alert("Please upload file less than "+allowedFileSize+"MB");
+	   		isValid = false;
+	   		return false;
+	   	}
+	    	$('input[name="fileItem'+upItemNo+'"]').each(function(){
+	   	  if($(this).val() == fileName)
+	   	  {
+	   	  	alert("File already uploaded");
+	   	  	isValid = false;
+	   		return false;
+	   	  }	  
+	   	});
+	   	if(isValid)
+	   	{
+	   		$('#uploadbutton').hide(); 	
+	          		$('#loadingInd').show();
+	   	}
+	   	return isValid;
+	 }
+	 function deleteFile(thisObj,upItemNo,fileName)
+	 {
+	 	var upDocId 	= $('#upDocId').val();
+	 	var upDocType 	= $('#upDocType').val();
+	 	if(confirm("Are you sure you want to delete this file?"))
+	 	{
+			$.ajax({
+			    url: '../Inbox/ezDeleteFile.jsp',
+			    data: { upDocId: upDocId, upDocType : upDocType,upItemNo:upItemNo,fileName:fileName},
+			    dataType: "json",
+			    type: 'POST',
+			    success: function(result) {
+			      result=$.trim(result);  
+			      if(result === 'true')
+			      {
+				$(thisObj).closest("tr").remove();	
+			      }
+			    }
+			});
+		}
+	 }
+	 $(function() {
+	      $( ".uploadDialogBtn" ).button().on( "click", function() {
+	         $("#upItemNo").val($(this).val());
+	         $("#file").val("");
+	        $('#uploadMod').modal("show");
+	        	return false;
+	      });
+	      $('#uploadForm').ajaxForm({
+	      	  beforeSubmit: valUploadForm,	
+	 	  success: function(msg) {
+	 	      $('#uploadbutton').show(); 	
+	        	      $('#loadingInd').hide();
+	 	      msg=$.trim(msg);
+	 	      //alert(msg);
+	 	      if(msg.split("##")[0] === 'true')
+	 	      {
+	 	      		
+	 	      	$('#noDataStatUpload').hide();
+	 	      	  var upItemNo = $('#upItemNo').val();
+	 	      	  var fileNameTemp = msg.split("##")[1];
+	 	      	   $('#uploadTable'+upItemNo).append('<tr><td align="left" width="95%"><input type="hidden" name="fileItem" value="'+fileNameTemp+'"><a href="javascript:downloadFile(\''+upItemNo+'\',\''+fileNameTemp+'\')">'+fileNameTemp+'</a></td><td width="5%"><span onclick="javascript:deleteFile(this,\''+upItemNo+'\',\''+fileNameTemp+'\')" class="fa fa-trash fa-lg" style="margin-left: 25%;"></span></td></tr>')
+	 	      }
+	 	      //alert("File has been uploaded successfully");
+	 	      $('#uploadMod').modal('hide');
+	 	  },
+	 	  error: function(msg) {
+	 	     $('#uploadbutton').show(); 	
+	        	     $('#loadingInd').hide();	
+	 	     alert("Couldn't upload file");
+	 	  }
+	      });
+	 
+	 
+	   } );
+	   function closeIframe()
+	      {
+	      	   $('#woModal').modal('toggle');
+   }
+</script>

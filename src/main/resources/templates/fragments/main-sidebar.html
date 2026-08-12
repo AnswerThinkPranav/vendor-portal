@@ -193,6 +193,10 @@
                                             class="nav-link"> <i class="fas fa-list nav-icon"></i>
                         <p>QCF List</p>
                     </a></li>
+                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a th:href="@{/qcf/qcsList}"
+                                            class="nav-link"> <i class="fas fa-clipboard-check nav-icon"></i>
+                        <p>QCS List</p>
+                    </a></li>
                     <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_VEND_SAP','ROLE_VEND_TEMP')"><a
                             th:href="@{/qcf/submit}" class="nav-link"> <i
                             class="far fas fa-plus nav-icon"></i>

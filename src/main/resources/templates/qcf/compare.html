@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'QCF ' + ${form.qcfNo()}">Quotation Comparison Form</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        .vr-breadcrumb { font-size: 13px; color: #6c7a91; margin-bottom: 18px; letter-spacing: .2px; }
+        .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
+
+        .vr-card { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08); overflow: hidden; width: 100%; margin: 0 0 24px 0; }
+        .vr-card-header { padding: 16px 28px; border-bottom: 1px solid #eef1f6; background: #f5f7fb; }
+        .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; color: #1c2733; font-size: 18px; }
+
+        .vr-grid-wrap { padding: 18px 28px 0 28px; overflow-x: auto; }
+        .vr-qcf-grid { border-collapse: separate; border-spacing: 0 3px; margin-bottom: 14px; min-width: 100%; }
+        .vr-qcf-grid td { padding: 11px 18px; font-size: 13.5px; white-space: nowrap; }
+        .vr-qcf-grid td.label {
+            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 700;
+            width: 220px; min-width: 220px;
+        }
+        .vr-qcf-grid td.value {
+            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 600;
+            min-width: 260px;
+        }
+        .vr-qcf-grid td.value.highlight {
+            background: linear-gradient(120deg, #6c3fd6 0%, #8a5cf0 100%); text-align: center; font-weight: 700; letter-spacing: .4px;
+        }
+        .vr-qcf-grid td.value label { display: flex; align-items: center; gap: 10px; font-weight: 700; margin: 0; white-space: normal; }
+        .vr-qcf-grid td.value input[type=checkbox] { width: 18px; height: 18px; flex: none; }
+
+        .vr-table-wrap { overflow-x: auto; padding: 6px 28px 0 28px; }
+        table.vr-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+        table.vr-table thead th {
+            background: #325786; color: #fff; font-weight: 700;
+            font-size: 11px; letter-spacing: .3px; padding: 9px 10px; text-align: center; border-bottom: 2px solid #274263; white-space: nowrap;
+        }
+        table.vr-table tbody td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #f0f2f7; white-space: nowrap; }
+        table.vr-table tbody td input { width: 90px; border-radius: 7px; border: 1px solid #dde3ec; padding: 5px 8px; font-size: 12.5px; text-align: center; }
+        .vr-rate-cell { background: #e3f9e0; border-radius: 7px; padding: 6px 10px; font-weight: 700; color: #1c7c4d; display: inline-block; }
+        .vr-vendor-divider { border-left: 2px solid #325786; }
+
+        table.vr-table tfoot td.summary-label {
+            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 700;
+            padding: 10px 18px; text-align: right; font-size: 12.5px;
+        }
+        table.vr-table tfoot td.summary-blank {
+            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%);
+        }
+        table.vr-table tfoot td.summary-value { padding: 10px 14px; text-align: right; font-weight: 700; font-size: 13px; }
+        table.vr-table tfoot td.summary-value input {
+            width: 100%; text-align: right; border: 1px solid #bfe8e0; border-radius: 7px; padding: 6px 10px; font-weight: 700;
+        }
+        .vr-landed-row .summary-value { background: #d9f5ef; color: #0f6857; }
+        .vr-total-row .summary-label { background: linear-gradient(120deg, #33415c, #1c2733); }
+        .vr-total-row .summary-value { background: #fdf1b0; color: #6b5b00; }
+
+        .vr-comments-table thead th { background: #325786; }
+        .vr-comments-table tbody td { text-align: left; }
+        .vr-empty-note { padding: 14px 0; color: #8b96ab; font-size: 12.5px; }
+
+        .vr-comments-wrap { padding: 20px 28px 20px 28px; }
+        .vr-comments-wrap textarea { width: 100%; border-radius: 10px; border: 1px solid #dde3ec; padding: 10px 14px; font-size: 13.5px; }
+
+        .vr-attach-wrap { padding: 0 28px 24px 28px; }
+        .vr-attach-wrap h5 { font-size: 13px; font-weight: 700; color: #4b5876; margin: 0 0 8px 0; }
+        .vr-attach-empty { padding: 10px 14px; background: #f5f7fb; border-radius: 8px; color: #8b96ab; font-size: 12.5px; }
+
+        .vr-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 20px 28px 24px 28px; }
+        .vr-btn { display: inline-block; border: none; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13.5px; cursor: pointer; text-decoration: none; }
+        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-btn-primary:hover { color: #fff; }
+        .vr-btn-light { background: #eef1f6; color: #33415c; }
+        .vr-btn-light:hover { color: #33415c; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="vr-breadcrumb">RFQs &nbsp;/&nbsp; <span class="current">Quotation Comparison Form</span></div>
+
+        <div class="vr-card">
+            <div class="vr-card-header">
+                <h4>Quotation Comparision Form <span th:text="${form.qcfNo()}"></span></h4>
+            </div>
+
+            <!-- Header grid: one label column, one value column per vendor -->
+            <div class="vr-grid-wrap">
+                <table class="vr-qcf-grid">
+                    <tr>
+                        <td class="label">Name of the Party</td>
+                        <td class="value" th:each="vendor : ${form.vendors()}">
+                            <label>
+                                <input type="checkbox" class="qcf-vendor-chk" th:attr="data-rfq=${vendor.rfqNo()}"
+                                       th:disabled="${vendor.alreadySubmitted()}">
+                                <span th:text="${vendor.vendorLabel()} + ' [' + ${vendor.vendorId()} + ']'"></span>
+                                <span th:if="${vendor.alreadySubmitted()}" style="font-weight:400;font-size:11.5px;opacity:.85">(Recommended)</span>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Qtn Ref No.</td>
+                        <td class="value highlight" th:each="vendor : ${form.vendors()}" th:text="${vendor.rfqNo()}"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Payment Terms</td>
+                        <td class="value" th:each="vendor : ${form.vendors()}" th:text="${vendor.paymentTerms()}"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Inco Terms</td>
+                        <td class="value" th:each="vendor : ${form.vendors()}" th:text="${vendor.incoTerms1()}"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Item table: shared columns once, Rate/Total/Qty Recommended repeated per vendor -->
+            <div class="vr-table-wrap">
+                <table class="vr-table" id="qcfItemTable">
+                    <thead>
+                    <tr>
+                        <th>SR No.</th><th>Material</th><th>Description</th><th>Qty</th><th>Per</th><th>UOM</th>
+                        <th>Budget Price</th><th>Last PO Price</th>
+                        <th:block th:each="vendor : ${form.vendors()}">
+                            <th class="vr-vendor-divider">Rate Rs./Per</th><th>Total Amount Rs.</th><th>Qty Recommended</th>
+                        </th:block>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${form.lineRows()}">
+                        <td th:text="${row.lineNo()}"></td>
+                        <td th:text="${row.material()}"></td>
+                        <td th:text="${row.materialDesc()}" style="white-space:normal;min-width:160px;text-align:left"></td>
+                        <td th:text="${row.qty()}"></td>
+                        <td th:text="${row.perQty()}"></td>
+                        <td th:text="${row.uom()}"></td>
+                        <td th:text="${row.budgetPrice()}"></td>
+                        <td th:text="${row.lastPoPrice()}"></td>
+                        <th:block th:each="cell : ${row.vendorCells()}">
+                            <td class="vr-vendor-divider"><span class="vr-rate-cell" th:text="${cell.rate()}"></span></td>
+                            <td th:text="${cell.totalAmount()}"></td>
+                            <td>
+                                <input type="number" min="0"
+                                       th:id="'qty_' + ${cell.rfqNo()} + '_' + ${row.lineNo()}"
+                                       th:value="${cell.qtyRecommended()}"
+                                       th:disabled="${cell.alreadySubmitted()}">
+                            </td>
+                        </th:block>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr class="vr-landed-row">
+                        <td class="summary-label" colspan="8">Landed Cost</td>
+                        <th:block th:each="vendor : ${form.vendors()}">
+                            <td class="summary-blank" colspan="2"></td>
+                            <td class="summary-value">
+                                <input type="text" th:id="'landed_' + ${vendor.rfqNo()}" value="0.00"
+                                       onchange="recalcGrandTotal()"
+                                       th:disabled="${vendor.alreadySubmitted()}">
+                            </td>
+                        </th:block>
+                    </tr>
+                    <tr class="vr-total-row">
+                        <td class="summary-label" th:attr="colspan=${8 + (#lists.size(form.vendors()) - 1) * 3 + 2}">Total Cost</td>
+                        <td class="summary-value" id="totalCost">0.00</td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="vr-attach-wrap" style="padding-top:20px;">
+                <h5>Users / Date / Comments</h5>
+                <div class="vr-table-wrap" style="padding:0;">
+                    <table class="vr-table vr-comments-table" th:if="${not #lists.isEmpty(form.commentHistory())}">
+                        <thead>
+                        <tr><th style="text-align:left">Users</th><th style="text-align:left">Date</th><th style="text-align:left">Comments</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="entry : ${form.commentHistory()}">
+                            <td th:text="${entry.user()}"></td>
+                            <td th:text="${entry.date()}"></td>
+                            <td th:text="${entry.comments()}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="vr-empty-note" th:if="${#lists.isEmpty(form.commentHistory())}">No comments yet.</p>
+            </div>
+
+            <div class="vr-comments-wrap">
+                <label style="font-weight:700;font-size:13px;color:#4b5876">Comments</label>
+                <textarea id="comments" rows="2" placeholder="Enter Comments" th:disabled="${!form.showSubmit()}"></textarea>
+            </div>
+
+            <div class="vr-attach-wrap">
+                <h5>Attachments</h5>
+                <div class="vr-attach-empty">No files attached</div>
+            </div>
+
+            <div class="vr-actions">
+                <a class="vr-btn vr-btn-light" href="/qcf/list"><i class="fa fa-arrow-left"></i> Go Back</a>
+                <button type="button" class="vr-btn vr-btn-primary" th:if="${form.showSubmit()}" onclick="submitQcf()">
+                    <i class="fa fa-check"></i> Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script th:inline="javascript">
+        function recalcGrandTotal() {
+            var grand = 0;
+            /*[# th:each="vendor : ${form.vendors()}"]*/
+            grand += (parseFloat([[${vendor.totalAmount()}]]) || 0) + (parseFloat($('#landed_' + [[${vendor.rfqNo()}]]).val()) || 0);
+            /*[/]*/
+            $('#totalCost').text(grand.toFixed(2));
+        }
+        $(function () {
+            recalcGrandTotal();
+        });
+
+        function submitQcf() {
+            var vendorRfqNos = [ /*[# th:each="vendor : ${form.vendors()}"]*/ [[${vendor.rfqNo()}]], /*[/]*/ ];
+            var selections = [];
+            var anySelected = false;
+
+            vendorRfqNos.forEach(function (rfqNo) {
+                var checked = $('.qcf-vendor-chk[data-rfq="' + rfqNo + '"]').is(':checked');
+                if (checked) { anySelected = true; }
+
+                var items = [];
+                $('input[id^="qty_' + rfqNo + '_"]').each(function () {
+                    var lineNo = $(this).attr('id').replace('qty_' + rfqNo + '_', '');
+                    items.push({ lineNo: lineNo, qtyRecommended: parseFloat($(this).val()) || 0 });
+                });
+
+                selections.push({ rfqNo: rfqNo, selected: checked, items: items });
+            });
+
+            if (!anySelected) {
+                alert('Please select atleast one vendor.');
+                return;
+            }
+            if (!confirm('Are you sure you want to submit this QCF for approval?')) {
+                return;
+            }
+
+            var payload = { comments: $('#comments').val(), selections: selections };
+
+            $.ajax({
+                url: '/qcf/api/' + /*[[${form.qcfNo()}]]*/ '' + '/submit',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content') },
+                data: JSON.stringify(payload),
+                success: function (resp) {
+                    alert(resp.message || 'QCF submitted successfully.');
+                    window.location.href = '/qcf/list?type=Sub';
+                },
+                error: function (xhr) {
+                    var msg = 'Failed to submit QCF.';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+                    alert(msg);
+                }
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

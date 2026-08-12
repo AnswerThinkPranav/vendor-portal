@@ -1,0 +1,121 @@
+<script>
+var processRequest;
+var counter = 0;
+
+function ezAutoLogout()
+{
+
+try
+{
+processRequest = null;
+processRequest = new ActiveXObject("Msxml2.XMLHTTP");
+}
+catch(e)
+{
+try
+{
+processRequest=new ActiveXObject("Microsoft.XMLHTTP");
+}
+catch(oc)
+{
+processRequest=null;
+}
+}
+
+if(!processRequest&&typeof XMLHttpRequest!="undefined")
+{
+processRequest=new XMLHttpRequest();
+}
+
+
+var url="";
+if(location.host=="partner.sunpharma.com" || location.host=="www.partner.sunpharma.com")
+url="https://"+location.host+"/SUN/EzCommerce/EzVendor/EzRanbaxyVendor/Vendor2/JSPs/Misc/ezAutoLogout.jsp?noCache='"+((new Date()).valueOf())+ "'&counter="+counter;
+else
+url="http://"+location.host+"/SUN/EzCommerce/EzVendor/EzRanbaxyVendor/Vendor2/JSPs/Misc/ezAutoLogout.jsp?noCache='"+((new Date()).valueOf())+ "'&counter="+counter;
+if(processRequest!=null)
+{
+processRequest.onreadystatechange = Process;
+processRequest.open("GET", url, false);
+processRequest.send(null);
+counter++;
+}
+}
+
+
+
+function Process()
+{
+if (processRequest.readyState == 4)
+{
+if (processRequest.status == 200)
+{
+if(processRequest.responseText!="")
+{
+performAutoLogout(processRequest.responseText)
+}
+}
+}
+
+
+
+}
+
+
+
+function performAutoLogout(duration)
+{
+var checkDuration = '15'
+
+
+
+if(counter > 1)
+checkDuration = checkDuration-1
+
+
+
+if(duration >= checkDuration)
+{
+parent.location.href="ezLogout.jsp?AUTOLOGOUT=Y";
+}
+else
+{
+
+
+
+setTimeout("ezAutoLogout()",60000);
+}
+
+}
+</script>
+
+
+[13:53] Raj Gopal Nagabhairava
+</script>
+
+[13:54] Raj Gopal Nagabhairava
+<%
+response.setHeader("Pragma", "No-cache");
+response.setDateHeader("Expires", 0);
+response.setHeader("Cache-Control", "no-cache");
+java.util.Date myDate=new java.util.Date();
+int year=myDate.getYear()+1900;
+int month=myDate.getMonth();
+int date=myDate.getDate();
+int hours=myDate.getHours();
+int minutes=myDate.getMinutes();
+int seconds=myDate.getSeconds();
+String userId = (String)Session.getUserId();
+//out.println("userId=="+userId);
+%>
+
+
+==========
+[13:56] Raj Gopal Nagabhairava
+<body onLoad="show_clock(<%=year%>,<%=month%>,<%=date%>,<%=hours%>,<%=minutes%>,<%=seconds%>),ezAutoLogout()" style="background-color:#BDD7E6" text="#000000" topmargin="0" marginheight="0" marginwidth="5">
+
+
+==============
+[13:57] Raj Gopal Nagabhairava
+<input type='hidden' name='userId' value='<%=userId%>'>
+

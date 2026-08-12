@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Vendor Registration</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <meta name="_docId" th:content="${details.docId}" />
+    <meta name="_status" th:content="${details.status}" />
+    <meta name="_isOwner" th:content="${isOwner}" />
+    <meta name="_hasUnansweredQuery" th:content="${hasUnansweredQuery}" />
+
+    <style>
+        .vr-breadcrumb { font-size: 13px; color: #6c7a91; margin-bottom: 18px; letter-spacing: .2px; }
+        .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
+
+        .vr-card { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08); overflow: hidden; width: 100%; margin: 0 0 24px 0; }
+        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; }
+        .vr-card-header p { margin: 2px 0 0 0; opacity: .85; font-size: 13px; }
+        .vr-id-badge { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 6px 16px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .vr-status-pill { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+        .vr-status-INITIATED { background: #eaf1fd; color: #2054a6; }
+        .vr-status-SUBMITTED { background: #fff2e0; color: #b5690a; }
+        .vr-status-APPROVED { background: #e7f7ee; color: #1c7c4d; }
+        .vr-status-POSTED { background: #e7f7ee; color: #1c7c4d; }
+        .vr-status-REJECTED { background: #fdecea; color: #c0392b; }
+        .vr-status-RESUBMITTED { background: #f1ecfd; color: #5b34a6; }
+        .vr-locked-banner { display: none; margin: 0 28px 18px 28px; padding: 12px 18px; border-radius: 12px; background: #eef4ff; border: 1px solid #cfe0fb; color: #2054a6; font-size: 13.5px; align-items: center; gap: 10px; }
+        fieldset[disabled] .vr-upload-btn, .vr-form-locked .vr-upload-btn { pointer-events: none; opacity: .5; }
+
+        .vr-tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid #eef1f6; background: #fbfcfe; padding: 0 20px; }
+        .vr-tab-btn { border: none; background: transparent; padding: 14px 18px; font-size: 13.5px; font-weight: 600; color: #7c879b; cursor: pointer; border-bottom: 3px solid transparent; }
+        .vr-tab-btn.active { color: var(--blue-color); border-bottom-color: var(--orange-color); }
+        .vr-tab-pane { display: none; padding: 24px 28px; }
+        .vr-tab-pane.active { display: block; }
+
+        .vr-section-title { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--orange-color); margin: 22px 0 10px 0; }
+        .vr-section-title:first-child { margin-top: 0; }
+
+        /* Blue-label grid, matching the legacy form's layout - reused across all 5 tabs. */
+        .vr-grid { border: 1px solid #e7ecf3; border-radius: 12px; overflow: hidden; margin-bottom: 18px; }
+        .vr-grid-row { display: grid; grid-template-columns: 200px 1fr; border-top: 1px solid #e7ecf3; }
+        .vr-grid-row.vr-cols-2 { grid-template-columns: 200px 1fr 200px 1fr; }
+        .vr-grid-row.vr-cols-3 { grid-template-columns: 160px 1fr 130px 1fr 170px 1fr; }
+        .vr-grid-row:first-child { border-top: none; }
+        .vr-grid-label { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 600; font-size: 13px; padding: 11px 16px; display: flex; align-items: center; }
+        .vr-grid-label .req { color: #ffd28a; margin-left: 3px; }
+        .vr-grid-value { padding: 9px 14px; display: flex; align-items: center; gap: 8px; background: #fff; flex-wrap: wrap; }
+        .vr-grid-value .form-control, .vr-grid-value .select2-container .select2-selection { border-radius: 8px; border: 1px solid #dde3ec; box-shadow: none; height: 36px; font-size: 13px; }
+        .vr-grid-value .select2-container { flex: 1; min-width: 140px; }
+        .vr-grid-value.empty { background: #f5f7fb; }
+
+        .vr-tab-nav { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 16px; }
+        .vr-tab-nav-btn { border: none; border-radius: 8px; padding: 8px 16px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+        .vr-tab-nav-btn.next { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-tab-nav-btn.prev { background: #eef1f6; color: #4b5876; }
+        .vr-tab-nav-btn.finish { background: linear-gradient(120deg, #1c7c4d, #159457); color: #fff; }
+
+        .vr-field { margin-bottom: 12px; }
+        .vr-field label { font-size: 12.5px; font-weight: 600; color: #33415c; margin-bottom: 4px; display: block; }
+        .vr-field label .req { color: var(--orange-color); margin-left: 2px; }
+        .vr-field .form-control, .vr-field .select2-container .select2-selection--single { border-radius: 9px; border: 1px solid #dde3ec; height: 38px; font-size: 13.5px; box-shadow: none; }
+        .vr-field .select2-container .select2-selection--single .select2-selection__rendered { line-height: 36px; }
+        .vr-field .select2-container .select2-selection--single .select2-selection__arrow { height: 36px; }
+        .vr-field textarea.form-control { border-radius: 9px; border: 1px solid #dde3ec; font-size: 13.5px; }
+        .vr-field .form-control:focus { border-color: var(--blue-color); box-shadow: 0 0 0 3px rgba(3, 56, 130, 0.12); }
+        .vr-hint { font-size: 11.5px; color: #8b96ab; margin-top: 4px; }
+        .vr-conditional { display: none; }
+        .vr-conditional.show { display: block; }
+        /* For a conditional label+value PAIR that must merge into an already-open grid row's
+           column tracks (as opposed to wrapping a complete, self-contained .vr-grid-row) - "contents"
+           makes the wrapper itself invisible to layout while still hiding/showing its children as a unit. */
+        .vr-conditional-cell { display: none; }
+        .vr-conditional-cell.show { display: contents; }
+
+        .vr-checkgrid, .vr-radiogrid { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 4px; }
+        .vr-checkgrid label, .vr-radiogrid label { font-size: 13px; font-weight: 500; color: #33415c; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .vr-checkgrid input, .vr-radiogrid input { accent-color: var(--blue-color); width: 15px; height: 15px; }
+
+        .vr-upload-row { display: flex; gap: 8px; align-items: center; }
+        .vr-upload-btn { border: 1px dashed #b9c6da; background: #f7f9fc; border-radius: 9px; padding: 8px 14px; font-size: 12.5px; font-weight: 600; color: var(--blue-color); white-space: nowrap; cursor: pointer; }
+        .vr-upload-btn:hover { background: #eef3fb; }
+
+        table.vr-contact-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin-top: 6px; }
+        table.vr-contact-table thead th { background: #f5f7fb; color: #4b5876; font-weight: 700; text-transform: uppercase; font-size: 10.5px; letter-spacing: .3px; padding: 8px 10px; text-align: left; border-bottom: 2px solid #e7ecf3; }
+        table.vr-contact-table tbody td { padding: 6px 8px; border-bottom: 1px solid #f0f2f7; vertical-align: middle; }
+        table.vr-contact-table .form-control { height: 34px; font-size: 12.5px; border-radius: 7px; }
+        .vr-add-row-btn { border: 1px dashed #b9c6da; background: #f7f9fc; border-radius: 9px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--blue-color); cursor: pointer; margin-top: 8px; }
+        .vr-remove-row-btn { border: none; background: none; color: #c0392b; cursor: pointer; font-size: 15px; }
+
+        .vr-card-footer { padding: 16px 28px 22px 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #eef1f6; }
+        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #0a4fae); border: none; border-radius: 9px; padding: 9px 24px; font-weight: 600; color: #fff; font-size: 13.5px; }
+        .vr-btn-primary:hover { color: #fff; }
+        .vr-btn-primary:disabled { opacity: .6; }
+        .vr-btn-submit { background: linear-gradient(120deg, #1c7c4d, #159457); border: none; border-radius: 9px; padding: 9px 24px; font-weight: 600; color: #fff; font-size: 13.5px; }
+        .vr-btn-submit:hover { color: #fff; }
+
+        .vr-alert { display: none; border-radius: 12px; padding: 12px 18px; font-size: 13.5px; margin: 0 28px 0 28px; align-items: center; gap: 10px; }
+        .vr-alert.success { background: #e7f7ee; color: #1c7c4d; border: 1px solid #b9ecce; }
+        .vr-alert.error { background: #fdecea; color: #c0392b; border: 1px solid #f7c9c2; }
+
+        .vr-invalid-row .vr-grid-label { background: linear-gradient(120deg, #c0392b, #a52f22) !important; }
+        .vr-invalid-row .vr-grid-value { background: #fff5f5; }
+        .vr-invalid-row .vr-grid-value .form-control { border-color: #e2a29c; }
+        tr.vr-invalid-row { background: #fff5f5 !important; box-shadow: inset 3px 0 0 #c0392b; }
+        tbody.vr-invalid-row { outline: 2px solid #c0392b; outline-offset: 2px; }
+
+        .vr-query-banner { margin: 0 28px 18px 28px; padding: 12px 18px; border-radius: 12px; background: #fdecea; border: 1px solid #f7c9c2; color: #c0392b; font-weight: 600; font-size: 13.5px; text-align: center; }
+        .vr-query-list { max-height: 220px; overflow-y: auto; margin-bottom: 10px; }
+        .vr-query-item { padding: 10px 0; border-bottom: 1px solid #f0f2f7; font-size: 12.5px; }
+        .vr-query-item .q-meta { color: #99a4b8; font-size: 11.5px; margin-bottom: 3px; }
+        .vr-query-item .q-text { color: #24314a; margin-bottom: 6px; }
+        .vr-query-item .r-text { background: #f5f7fb; border-radius: 8px; padding: 8px 10px; color: #33415c; }
+        .vr-query-item .r-meta { color: #99a4b8; font-size: 11px; margin-top: 3px; }
+        .vr-query-open { color: #c0392b; font-style: italic; }
+
+        .vr-comments-box { margin-bottom: 4px; }
+        .vr-comments-box label { display: block; font-size: 12.5px; font-weight: 600; color: #33415c; margin-bottom: 6px; }
+        .vr-comments-box label .opt { font-weight: 500; color: #8b96ab; }
+        .vr-comments-box textarea { width: 100%; min-height: 90px; border: 1px solid #dde3ec; border-radius: 9px; padding: 10px 12px; font-size: 13.5px; font-family: inherit; resize: vertical; }
+        .vr-comments-box textarea:focus { outline: none; border-color: var(--blue-color); box-shadow: 0 0 0 3px rgba(3, 56, 130, 0.12); }
+
+        .vr-wf-banner { margin: 0 28px 18px 28px; padding: 14px 18px; border-radius: 12px; background: #eef4ff; border: 1px solid #cfe0fb; color: #2054a6; font-size: 13.5px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+        .vr-wf-banner b { color: #0a3d8f; }
+        .vr-wf-banner.readonly { background: #f5f7fb; border-color: #e3e8f1; color: #56617a; }
+        .vr-body { padding: 24px 28px; }
+
+        .vr-btn { border: none; border-radius: 9px; padding: 9px 22px; font-weight: 600; font-size: 13.5px; cursor: pointer; }
+        .vr-btn:disabled { opacity: .55; cursor: not-allowed; }
+        .vr-btn-forward { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-btn-forward:hover { color: #fff; }
+        .vr-btn-post { background: linear-gradient(120deg, #1c7c4d, #159457); color: #fff; }
+        .vr-btn-post:hover { color: #fff; }
+        .vr-btn-validate { background: #eef1f6; color: #2054a6; }
+        .vr-btn-reject { background: #fdecea; color: #c0392b; }
+        .vr-btn-sendback { background: #fff2e0; color: #b5690a; }
+        .vr-btn-back { background: #eef1f6; color: #4b5876; margin-right: auto; text-decoration: none; display: inline-block; }
+        .vr-btn-query { background: #fff2e0; color: #b5690a; }
+        .vr-btn-hierarchy, .vr-btn-audit { background: #eef1f6; color: #33415c; }
+
+        .vr-sap-messages { margin-top: 10px; font-size: 12.5px; }
+        .vr-sap-messages li { color: #c0392b; }
+
+        table.vr-modal-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        table.vr-modal-table th { background: #f5f7fb; color: #4b5876; text-align: left; padding: 8px 10px; border-bottom: 2px solid #e7ecf3; }
+        table.vr-modal-table td { padding: 8px 10px; border-bottom: 1px solid #f0f2f7; vertical-align: top; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="vr-breadcrumb">Vendor Registration &nbsp;/&nbsp; <span class="current">Register</span></div>
+
+        <div class="vr-card">
+            <div class="vr-card-header">
+                <div>
+                    <h4 th:text="${details.custName != null ? details.custName : 'Vendor Registration'}"></h4>
+                    <p>Complete all sections and submit for approval</p>
+                </div>
+                <div class="vr-id-badge">Doc Id: <span th:text="${details.docId}"></span>
+                    <span th:if="${details.status}" class="vr-status-pill" th:classappend="'vr-status-' + ${details.status}" th:text="${details.status}"></span>
+                </div>
+            </div>
+
+            <div class="vr-locked-banner" id="lockedBanner">
+                <i class="fas fa-lock"></i>
+                <span id="lockedBannerText">This registration has already been posted to SAP and can no longer be edited here.</span>
+            </div>
+
+            <div class="vr-wf-banner" th:if="${!isOwner}" th:classappend="${workflow.canAct or workflow.canSendBack or workflow.canSubmitToWorkflow} ? '' : 'readonly'">
+                <span>Workflow Status: <b th:text="${workflow.wfStatus}">-</b></span>
+                <span th:if="${workflow.currentLevel != null}">Current Level: <b th:text="${workflow.currentLevel}">-</b></span>
+                <span th:if="${workflow.currentGroup}">Current Group: <b th:text="${workflow.currentGroup}">-</b></span>
+            </div>
+
+            <div class="vr-query-banner" th:if="${hasUnansweredQuery}">
+                * Query has not been replied to this Vendor Registration. You cannot submit/approve Vendor Registration now.
+            </div>
+
+            <div class="vr-alert success" id="successAlert"><i class="fas fa-check-circle"></i> <span></span></div>
+            <div class="vr-alert error" id="errorAlert"><i class="fas fa-exclamation-circle"></i> <span></span></div>
+
+            <div class="vr-tabs">
+                <button type="button" class="vr-tab-btn active" data-tab="tab1">1. Vendor Information</button>
+                <button type="button" class="vr-tab-btn" data-tab="tab2">2. Commercial Information</button>
+                <button type="button" class="vr-tab-btn" data-tab="tab3">3. Financial Information</button>
+                <button type="button" class="vr-tab-btn" data-tab="tab4">4. Attachments</button>
+                <button type="button" class="vr-tab-btn" data-tab="tab5">5. Bank Details</button>
+            </div>
+
+            <!-- ============ TAB 1: VENDOR INFORMATION (CONTCT_DET / CONTCT_DET1) ============ -->
+            <div class="vr-tab-pane active" id="tab1">
+                <div class="vr-tab-nav">
+                    <button type="button" class="vr-tab-nav-btn next" onclick="goNext('tab1', 'contact', buildContactPayload, 'tab2', this)">Next: Commercial Information &nbsp;<i class="fas fa-arrow-right"></i></button>
+                </div>
+
+                <div class="vr-grid">
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Title <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <select class="form-control select2" id="c_title" data-req="1" style="width:100%">
+                                <option value="">--select--</option>
+                                <option>Company</option><option>Mr.</option><option>Ms.</option>
+                                <option>Mr. and Mrs.</option><option>Physician</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Vendor Name <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_vendName" data-req="1" maxlength="100" style="width:100%;"></div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Search Term <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_searchTerm" data-req="1" maxlength="100" style="width:100%;"></div>
+                    </div>
+                </div>
+
+                <div class="vr-section-title">Address</div>
+                <div class="vr-grid">
+                    <div class="vr-grid-row vr-cols-3">
+                        <div class="vr-grid-label">Address Line 1 <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_addrsLine1" data-req="1" maxlength="50"></div>
+                        <div class="vr-grid-label">District</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_districtName" maxlength="50"></div>
+                        <div class="vr-grid-label">Phone Number <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_phoneNum" data-req="1" maxlength="50"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-3">
+                        <div class="vr-grid-label">Address Line 2</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_addrsLine2" maxlength="50"></div>
+                        <div class="vr-grid-label">Postal Code <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="number" class="form-control" id="c_postalCode" data-req="1"></div>
+                        <div class="vr-grid-label">Alternate Phone Number</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_altPhoneNum" maxlength="50"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-3">
+                        <div class="vr-grid-label">Address Line 3</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_addrsLine3" maxlength="50"></div>
+                        <div class="vr-grid-label">Country <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <select class="form-control select2" id="c_country" data-req="1" style="width:100%">
+                                <option value="">--Select Country--</option>
+                                <option th:each="o : ${countryOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                        </div>
+                        <div class="vr-grid-label">Mobile Number <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_mobNum" data-req="1" maxlength="50"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-3">
+                        <div class="vr-grid-label">Address Line 4</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_addrsLine4" maxlength="50"></div>
+                        <div class="vr-grid-label">City <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_city" data-req="1" maxlength="50"></div>
+                        <div class="vr-grid-label">Alternate Mobile Number</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_altMobNum" maxlength="50"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-3">
+                        <div class="vr-grid-label">Address Line 5</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_addrsLine5" maxlength="50"></div>
+                        <div class="vr-grid-label">State <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <select class="form-control select2" id="c_state" data-req="1" style="width:100%">
+                                <option value="">Select</option>
+                                <option th:each="o : ${stateOptions}" th:value="${o.value}" th:text="${o.value} + ' ' + ${o.label}"></option>
+                            </select>
+                        </div>
+                        <div class="vr-grid-label">Fax</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_fax" maxlength="50"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-3">
+                        <div class="vr-grid-label">Email Address-1 <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="email" class="form-control" id="c_email1" data-req="1" maxlength="50"></div>
+                        <div class="vr-grid-label">Email Address-2</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_email2" maxlength="50"></div>
+                        <div class="vr-grid-label">WebSite</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="c_website" maxlength="50"></div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Preferred Contact Method <span class="req">*</span></div>
+                        <div class="vr-grid-value" data-req-check="c-conMethod">
+                            <div class="vr-checkgrid" id="c_conMethodGrid" style="padding-top:0;">
+                                <label th:each="o : ${conMethodOptions}">
+                                    <input type="checkbox" class="c-conMethod" th:value="${o.value}"> <span th:text="${o.label}"></span>
+                                </label>
+                                <input type="text" class="form-control" id="c_othConMethod" placeholder="Other" style="width:160px;height:32px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vr-section-title">Contacts</div>
+                <table class="vr-contact-table">
+                    <thead>
+                    <tr><th>Sr No.</th><th>Title *</th><th>Main Contact Person(s) *</th><th>Designation *</th><th>Phone Number *</th><th>Email *</th><th></th></tr>
+                    </thead>
+                    <tbody id="contactRows"></tbody>
+                </table>
+                <button type="button" class="vr-add-row-btn" onclick="addContactRow()"><i class="fa fa-plus"></i> Add Contact</button>
+            </div>
+
+            <!-- ============ TAB 2: COMMERCIAL INFORMATION (CONSTN_DET) ============ -->
+            <div class="vr-tab-pane" id="tab2">
+                <div class="vr-tab-nav">
+                    <button type="button" class="vr-tab-nav-btn prev" onclick="activateTab('tab1')"><i class="fas fa-arrow-left"></i>&nbsp; Back</button>
+                    <button type="button" class="vr-tab-nav-btn next" onclick="goNext('tab2', 'constitution', buildConstitutionPayload, 'tab3', this)">Next: Financial Information &nbsp;<i class="fas fa-arrow-right"></i></button>
+                </div>
+
+                <div class="vr-grid">
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Type of Entity/Organization <span class="req">*</span></div>
+                        <div class="vr-grid-value" data-req-radio="typeOfOrg">
+                            <div class="vr-radiogrid" style="padding-top:0;">
+                                <label th:each="o : ${orgTypeOptions}"><input type="radio" name="typeOfOrg" th:value="${o.value}"> <span th:text="${o.label}"></span></label>
+                            </div>
+                            <input type="text" class="form-control" id="ct_othCompType" placeholder="If Other, specify" style="max-width:220px;">
+                        </div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Type of Supplier <span class="req">*</span></div>
+                        <div class="vr-grid-value" data-req-check="ct-supType">
+                            <div class="vr-checkgrid" style="padding-top:0;">
+                                <label th:each="o : ${supTypeOptions}"><input type="checkbox" class="ct-supType" th:value="${o.value}"> <span th:text="${o.label}"></span></label>
+                            </div>
+                            <input type="text" class="form-control" id="ct_othSupType" placeholder="If Other, specify" style="max-width:220px;">
+                        </div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Type of Vendor <span class="req">*</span></div>
+                        <div class="vr-grid-value" data-req-check="ct-vendorType">
+                            <div class="vr-checkgrid" style="padding-top:0;">
+                                <label th:each="o : ${vendorTypeOptions}"><input type="checkbox" class="ct-vendorType" th:value="${o.value}"> <span th:text="${o.label}"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Purchase Order Currency <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <select class="form-control select2" id="ct_purOrdCurr" data-req="1" style="width:100%">
+                                <option value="">--Select currency--</option>
+                                <option th:each="o : ${currencyOptions}" th:value="${o.value}" th:text="${o.value} + ' - ' + ${o.label}"></option>
+                            </select>
+                        </div>
+                        <div class="vr-grid-label">Inco Terms <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <select class="form-control select2" id="ct_incoTerms" data-req="1" style="width:100%">
+                                <option value="">--Select--</option>
+                                <option th:each="o : ${incoTermsOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Place of Delivery <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="ct_incoTerms2" data-req="1" maxlength="100" style="width:100%;"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Copy of PAN card Attached <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <select class="form-control select2" id="ct_panAttach" data-req="1" style="width:100%">
+                                <option value="" selected>--select--</option><option value="Y">Yes</option><option value="N">No</option>
+                            </select>
+                        </div>
+                        <div class="vr-grid-label">Legal Name as per PAN <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="ct_panName" data-req="1" maxlength="100" style="flex:1;"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">PAN Number <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="ct_panNumber" data-req="1" maxlength="100" style="flex:1;"></div>
+                        <div class="vr-grid-label">&nbsp;</div>
+                        <div class="vr-grid-value">
+                            <div class="vr-upload-row"><input type="text" class="form-control" id="ct_panFile" readonly placeholder="No file"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('ct_panFile','VENDREGPAN')"><i class="fa fa-upload"></i></button></div>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">GST Status of Firm <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <!-- No data-req here: "" is the real value for "Registered" (see VendorRegLookups.gstVendorClassifications),
+                                 not an unfilled placeholder, so an empty-value check can never validate this field correctly -
+                                 it always has a legitimate selection from first render (defaults to Registered). -->
+                            <select class="form-control select2" id="ct_gstVendorClas" style="width:100%">
+                                <option th:each="o : ${gstVendorClasOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                        </div>
+                        <div class="vr-grid-label">Type of Registration <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <select class="form-control select2" id="ct_gstType" data-req="1" style="width:100%">
+                                <option value="">--Select--</option>
+                                <option th:each="o : ${gstTypeOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">GSTIN Number of Business <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="ct_gstNumber" data-req="1" maxlength="100" style="flex:1;"></div>
+                        <div class="vr-grid-label">&nbsp;</div>
+                        <div class="vr-grid-value">
+                            <div class="vr-upload-row"><input type="text" class="form-control" id="ct_gstFile" readonly placeholder="No file"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('ct_gstFile','VENDREGGST')"><i class="fa fa-upload"></i></button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(incoTermsOptions)}" class="vr-hint">No Inco Terms configured yet (EZC_MASTER_KEY_VALUES / INCO_TERM).</div>
+            </div>
+
+            <!-- ============ TAB 3: FINANCIAL INFORMATION (MSME_DET) ============ -->
+            <div class="vr-tab-pane" id="tab3">
+                <div class="vr-tab-nav">
+                    <button type="button" class="vr-tab-nav-btn prev" onclick="activateTab('tab2')"><i class="fas fa-arrow-left"></i>&nbsp; Back</button>
+                    <button type="button" class="vr-tab-nav-btn next" onclick="goNext('tab3', 'msme', buildMsmePayload, 'tab4', this)">Next: Attachments &nbsp;<i class="fas fa-arrow-right"></i></button>
+                </div>
+
+                <div class="vr-grid">
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Status of Vendor <span class="req">*</span></div>
+                        <div class="vr-grid-value" data-req-radio="msmeType">
+                            <div class="vr-radiogrid" style="padding-top:0;">
+                                <label th:each="o : ${msmeTypeOptions}"><input type="radio" name="msmeType" class="m-msmeType" th:value="${o.value}"> <span th:text="${o.label}"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vr-conditional" id="msmeInfoRow">
+                        <div class="vr-grid-row">
+                            <div class="vr-grid-label">MSME Registration Number</div>
+                            <div class="vr-grid-value">
+                                <div class="vr-upload-row" style="flex:1;"><input type="text" class="form-control" id="m_msmeUdyogAdhrNo" maxlength="50"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('m_msmeFile','VENDREGMSME')"><i class="fa fa-upload"></i></button></div>
+                                <input type="hidden" id="m_msmeFile">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Payment Terms <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <select class="form-control select2" id="m_paymntTerms" data-req="1" style="width:100%">
+                                <option value="">--Select--</option>
+                                <option th:each="o : ${paymentTermsOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Business Status of Vendor <span class="req">*</span></div>
+                        <div class="vr-grid-value" data-req-radio="busStatus">
+                            <div class="vr-radiogrid" style="padding-top:0;">
+                                <label th:each="o : ${busStatusOptions}"><input type="radio" name="busStatus" th:value="${o.value}"> <span th:text="${o.label}"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">E-Invoicing <span class="vr-hint" style="color:#c9dcfb;">(if turnover &gt; Rs.10 Cr.)</span></div>
+                        <div class="vr-grid-value"><div class="vr-radiogrid" style="padding-top:0;"><label><input type="radio" name="eInvoice" value="Y"> Yes</label><label><input type="radio" name="eInvoice" value="N"> No</label></div></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Is Supplier Currently Created with Other Jubilant Entities</div>
+                        <div class="vr-grid-value"><div class="vr-radiogrid" style="padding-top:0;"><label><input type="radio" name="vendJgl" class="m-vendJgl" value="Y"> Yes</label><label><input type="radio" name="vendJgl" class="m-vendJgl" value="N"> No</label></div></div>
+                        <div class="vr-conditional-cell" id="vendUnitRow">
+                            <div class="vr-grid-label">Name of Business Unit <span class="req">*</span></div>
+                            <div class="vr-grid-value"><input type="text" class="form-control" id="m_vendUnit" data-req="1" maxlength="20" style="flex:1;"></div>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Is Supplier done any transaction earlier with Jubilant with any other name or related concerns firm</div>
+                        <div class="vr-grid-value"><div class="vr-radiogrid" style="padding-top:0;"><label><input type="radio" name="vendTrans" class="m-vendTrans" value="Y"> Yes</label><label><input type="radio" name="vendTrans" class="m-vendTrans" value="N"> No</label></div></div>
+                        <div class="vr-conditional-cell" id="vendDtlsRow">
+                            <div class="vr-grid-label">Vendor Details <span class="req">*</span></div>
+                            <div class="vr-grid-value"><input type="text" class="form-control" id="m_vendDtls" data-req="1" maxlength="100" style="flex:1;"></div>
+                        </div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Vendor Site Visit Performed</div>
+                        <div class="vr-grid-value"><div class="vr-radiogrid" style="padding-top:0;"><label><input type="radio" name="vendSite" class="m-vendSite" value="Y"> Yes</label><label><input type="radio" name="vendSite" class="m-vendSite" value="N"> No</label></div></div>
+                    </div>
+                    <div class="vr-conditional" id="siteVisitRow">
+                        <div class="vr-grid-row vr-cols-2">
+                            <div class="vr-grid-label">Name of the Person</div>
+                            <div class="vr-grid-value"><input type="text" class="form-control" id="m_sitePerson" data-req="1" maxlength="20" style="flex:1;"></div>
+                            <div class="vr-grid-label">Site Visited on</div>
+                            <div class="vr-grid-value"><input type="text" class="form-control" id="m_siteViDt" data-req="1" maxlength="20" placeholder="dd/mm/yyyy" style="flex:1;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(paymentTermsOptions)}" class="vr-hint">No Payment Terms configured yet (EZC_MASTER_KEY_VALUES / PMNT_TERM).</div>
+            </div>
+
+            <!-- ============ TAB 4: ATTACHMENTS (DOC_DET) ============ -->
+            <div class="vr-tab-pane" id="tab4">
+                <div class="vr-tab-nav">
+                    <button type="button" class="vr-tab-nav-btn prev" onclick="activateTab('tab3')"><i class="fas fa-arrow-left"></i>&nbsp; Back</button>
+                    <button type="button" class="vr-tab-nav-btn next" onclick="goNext('tab4', 'documents', buildDocumentsPayload, 'tab5', this)">Next: Bank Details &nbsp;<i class="fas fa-arrow-right"></i></button>
+                </div>
+
+                <div class="vr-grid">
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Income Tax Return</div>
+                        <div class="vr-grid-value"><div class="vr-upload-row" style="flex:1;"><input type="text" class="form-control" id="d_itrAttach" readonly placeholder="No file"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('d_itrAttach','VENDITR')"><i class="fa fa-upload"></i></button></div></div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">MOA &amp; AOA</div>
+                        <div class="vr-grid-value"><div class="vr-upload-row" style="flex:1;"><input type="text" class="form-control" id="d_moaAttach" readonly placeholder="No file"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('d_moaAttach','VENDMOA')"><i class="fa fa-upload"></i></button></div></div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Certified copy of Financial Statements</div>
+                        <div class="vr-grid-value"><div class="vr-upload-row" style="flex:1;"><input type="text" class="form-control" id="d_fsAttach" readonly placeholder="No file"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('d_fsAttach','VENDFS')"><i class="fa fa-upload"></i></button></div></div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Certified copy of Supply agreement or proposal attached</div>
+                        <div class="vr-grid-value"><div class="vr-upload-row" style="flex:1;"><input type="text" class="form-control" id="d_saAttach" readonly placeholder="No file"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('d_saAttach','VENDSA')"><i class="fa fa-upload"></i></button></div></div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">List of key Customer Reference</div>
+                        <div class="vr-grid-value"><div class="vr-upload-row" style="flex:1;"><input type="text" class="form-control" id="d_kcAttach" readonly placeholder="No file"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('d_kcAttach','VENDCUST')"><i class="fa fa-upload"></i></button></div></div>
+                    </div>
+                    <div class="vr-grid-row">
+                        <div class="vr-grid-label">Other</div>
+                        <div class="vr-grid-value"><div class="vr-upload-row" style="flex:1;"><input type="text" class="form-control" id="d_othAttach" readonly placeholder="No file"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('d_othAttach','VENDOTH')"><i class="fa fa-upload"></i></button></div></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ============ TAB 5: BANK DETAILS (BANK_DET) ============ -->
+            <div class="vr-tab-pane" id="tab5">
+                <div class="vr-tab-nav">
+                    <button type="button" class="vr-tab-nav-btn prev" onclick="activateTab('tab4')"><i class="fas fa-arrow-left"></i>&nbsp; Back</button>
+                </div>
+
+                <div class="vr-grid">
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Accounting Point Person <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="b_accntPer" data-req="1" maxlength="100" style="flex:1;"></div>
+                        <div class="vr-grid-label">Email <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="email" class="form-control" id="b_accntEmail" data-req="1" maxlength="100" style="flex:1;"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Mobile <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="b_accntMobile" data-req="1" maxlength="100" style="flex:1;"></div>
+                        <div class="vr-grid-label">IFSC Code <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="b_rtgsCode" data-req="1" maxlength="100" style="flex:1;"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Bank Name <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="b_bankName" data-req="1" maxlength="100" style="flex:1;"></div>
+                        <div class="vr-grid-label">Branch <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="b_bankBranch" data-req="1" maxlength="100" style="flex:1;"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Account Number <span class="req">*</span></div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="b_accntNumber" data-req="1" maxlength="100" style="flex:1;"></div>
+                        <div class="vr-grid-label">Swift Code</div>
+                        <div class="vr-grid-value"><input type="text" class="form-control" id="b_bankSwift" maxlength="100" style="flex:1;"></div>
+                    </div>
+                    <div class="vr-grid-row vr-cols-2">
+                        <div class="vr-grid-label">Cancelled Cheque <span class="req">*</span></div>
+                        <div class="vr-grid-value">
+                            <div class="vr-upload-row" style="flex:1;"><input type="text" class="form-control" id="b_chequeNo" data-req="1" maxlength="100"><button type="button" class="vr-upload-btn" onclick="uploadAttachment('b_chequeFile','VENDREGCHEQ')"><i class="fa fa-upload"></i></button></div>
+                            <input type="hidden" id="b_chequeFile">
+                        </div>
+                        <div class="vr-grid-label">&nbsp;</div>
+                        <div class="vr-grid-value"></div>
+                    </div>
+                </div>
+
+                <div class="vr-card-footer" style="border-top:none;">
+                    <span th:if="${isOwner and details.status == 'SUBMITTED'}" style="color:#8b96ab; font-size:12.5px;">
+                        <i class="fas fa-clock"></i>&nbsp; Submitted - awaiting buyer review.
+                    </span>
+                    <span th:unless="${isOwner and details.status == 'SUBMITTED'}"></span>
+                    <button type="button" class="vr-btn-submit" id="submitBtn" onclick="goSubmit(this)"
+                            th:if="${isOwner and (details.status == 'INITIATED' or details.status == 'RESUBMITTED')}">
+                        <i class="fas fa-paper-plane"></i>&nbsp; Submit for Approval
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============ SHARED PANEL: Comments history + Attachments + Query history + Finance
+                 Review + Comments - always visible below the tabs (not tab-specific), for both the
+                 vendor's reply and the buyer's review/action flow. See ezVendReg.jsp's read-only
+                 User/Date/Comments table, Attachment(s) table, and Query / Finance / action buttons. -->
+            <div class="vr-body" style="border-top: 1px solid #eef1f6;">
+                <th:block th:if="${!#lists.isEmpty(comments)}">
+                    <table class="vr-modal-table" style="margin-bottom:18px;">
+                        <thead><tr><th style="width:20%;">User</th><th style="width:20%;">Date</th><th>Comments</th></tr></thead>
+                        <tbody>
+                        <tr th:each="c : ${comments}">
+                            <td th:text="${c.userId()} + '[' + ${c.userName()} + ']'"></td>
+                            <td th:text="${#temporals.format(c.date(), 'dd/MM/yyyy HH:mm:ss')}"></td>
+                            <td th:text="${c.comments()}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </th:block>
+
+                <th:block th:if="${!isOwner}">
+                    <div class="vr-section-title">Attachment(s)</div>
+                    <table class="vr-modal-table" style="margin-bottom:18px;">
+                        <thead><tr><th>File Name</th></tr></thead>
+                        <tbody id="attachmentRows">
+                        <tr th:if="${#lists.isEmpty(headerAttachments)}" id="noAttachmentsRow"><td style="color:#a7b0c0;">No files attached</td></tr>
+                        <tr th:each="f : ${headerAttachments}">
+                            <td><a th:href="@{'/view/' + ${f} + '/' + ${details.docId} + '/VNR/VNRH'}" th:text="${f}" target="_blank"></a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </th:block>
+
+                <div class="vr-section-title">Query</div>
+                <div class="vr-query-list" id="queryList">
+                    <div th:if="${#lists.isEmpty(queries)}" style="color:#a7b0c0; font-style:italic; font-size:12.5px;">No queries raised on this registration.</div>
+                    <div class="vr-query-item" th:each="q : ${queries}">
+                        <div class="q-meta">Raised by <b th:text="${q.raisedBy()}"></b> on <span th:text="${#temporals.format(q.raisedOn(), 'dd/MM/yyyy HH:mm')}"></span></div>
+                        <div class="q-text" th:text="${q.queryText()}"></div>
+                        <div th:if="${q.repliedOn() != null}">
+                            <div class="r-text" th:text="${q.replyText()}"></div>
+                            <div class="r-meta">Replied by <b th:text="${q.repliedBy()}"></b> on <span th:text="${#temporals.format(q.repliedOn(), 'dd/MM/yyyy HH:mm')}"></span></div>
+                        </div>
+                        <div th:if="${q.repliedOn() == null}" class="vr-query-open">Awaiting reply...</div>
+                    </div>
+                </div>
+                <div class="vr-comments-box" id="queryReplyBox" style="display:none;">
+                    <label for="queryReplyText">Your reply to the buyer's query</label>
+                    <textarea id="queryReplyText" placeholder="Type your reply to the buyer's query"></textarea>
+                    <div style="text-align:right; margin-top:8px;">
+                        <button type="button" class="vr-btn-primary" onclick="sendQueryReply()">Send Reply</button>
+                    </div>
+                </div>
+                <div class="vr-comments-box" id="queryRaiseBox" style="display:none;">
+                    <label for="queryText">Query for the vendor</label>
+                    <textarea id="queryText" placeholder="Enter your query for the vendor"></textarea>
+                    <div style="text-align:right; margin-top:8px;">
+                        <button type="button" class="vr-btn vr-btn-query" onclick="sendQuery()">Send Query</button>
+                    </div>
+                </div>
+
+                <th:block th:if="${!isOwner and workflow.financeFieldsVisible}">
+                    <div class="vr-section-title">Finance Review <span th:unless="${workflow.financeFieldsEditable}" style="color:#8b96ab; font-weight:500; text-transform:none; letter-spacing:0;">(read only - editable by Finance approvers only)</span></div>
+                    <div class="vr-grid">
+                        <div class="vr-grid-row vr-cols-2">
+                            <div class="vr-grid-label">WH Tax Type</div>
+                            <div class="vr-grid-value">
+                                <input th:if="${workflow.financeFieldsEditable}" type="text" class="form-control" id="f_whTaxType" maxlength="10" th:value="${workflow.finance != null ? workflow.finance.whTaxType() : ''}">
+                                <span th:unless="${workflow.financeFieldsEditable}" th:text="${workflow.finance != null and workflow.finance.whTaxType() != null and !workflow.finance.whTaxType().isEmpty() ? workflow.finance.whTaxType() : '-'}"></span>
+                            </div>
+                            <div class="vr-grid-label">WH Tax Code</div>
+                            <div class="vr-grid-value">
+                                <input th:if="${workflow.financeFieldsEditable}" type="text" class="form-control" id="f_whTaxCode" maxlength="10" th:value="${workflow.finance != null ? workflow.finance.whTaxCode() : ''}">
+                                <span th:unless="${workflow.financeFieldsEditable}" th:text="${workflow.finance != null and workflow.finance.whTaxCode() != null and !workflow.finance.whTaxCode().isEmpty() ? workflow.finance.whTaxCode() : '-'}"></span>
+                            </div>
+                        </div>
+                        <div class="vr-grid-row vr-cols-2">
+                            <div class="vr-grid-label">Receiver Type</div>
+                            <div class="vr-grid-value">
+                                <input th:if="${workflow.financeFieldsEditable}" type="text" class="form-control" id="f_recType" maxlength="10" th:value="${workflow.finance != null ? workflow.finance.recType() : ''}">
+                                <span th:unless="${workflow.financeFieldsEditable}" th:text="${workflow.finance != null and workflow.finance.recType() != null and !workflow.finance.recType().isEmpty() ? workflow.finance.recType() : '-'}"></span>
+                            </div>
+                            <div class="vr-grid-label">Reconciliation Account</div>
+                            <div class="vr-grid-value">
+                                <input th:if="${workflow.financeFieldsEditable}" type="text" class="form-control" id="f_reconAccount" maxlength="20" th:value="${workflow.finance != null ? workflow.finance.reconAccount() : ''}">
+                                <span th:unless="${workflow.financeFieldsEditable}" th:text="${workflow.finance != null and workflow.finance.reconAccount() != null and !workflow.finance.reconAccount().isEmpty() ? workflow.finance.reconAccount() : '-'}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </th:block>
+
+                <th:block th:if="${!isOwner}">
+                    <div class="vr-section-title">Comments</div>
+                    <div class="vr-comments-box">
+                        <label for="actionComments">Add a comment for this action <span class="opt">(optional)</span></label>
+                        <textarea id="actionComments" placeholder="Type your comments here..."></textarea>
+                    </div>
+                </th:block>
+            </div>
+
+            <div class="vr-card-footer vr-review-footer" th:if="${!isOwner}">
+                <a class="vr-btn vr-btn-back" th:href="@{/vendorReg/list}">Back to List</a>
+
+                <button type="button" class="vr-btn vr-btn-hierarchy" onclick="openHierarchy()"><i class="fa fa-users"></i> Show Approval Hierarchy</button>
+                <button type="button" class="vr-btn vr-btn-audit" onclick="openAuditTrail()"><i class="fa fa-list"></i> Audit Trail</button>
+
+                <div th:if="${workflow.canSubmitToWorkflow}" style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" class="vr-btn vr-btn-hierarchy" id="uploadHeaderAttachmentBtn" onclick="uploadHeaderAttachment()"><i class="fa fa-upload"></i> Upload Attachments</button>
+                    <button type="button" class="vr-btn vr-btn-forward" id="submitToWorkflowBtn" onclick="submitToWorkflow()"><i class="fas fa-paper-plane"></i> Submit to Workflow</button>
+                </div>
+
+                <div th:if="${workflow.canSendBack}" style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" class="vr-btn vr-btn-query" id="queryToggleBtn" onclick="toggleQueryBox()"><i class="fa fa-question-circle"></i> Query</button>
+                    <button type="button" class="vr-btn vr-btn-sendback" id="sendBackBtn" onclick="act('SEND_BACK')">Send Back to Vendor</button>
+                </div>
+
+                <div th:if="${workflow.canAct}" style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" class="vr-btn vr-btn-reject" id="rejectBtn" onclick="act('REJECT')">Reject</button>
+                    <button type="button" th:unless="${workflow.isFinalLevel}" class="vr-btn vr-btn-forward" id="forwardBtn" onclick="act('FORWARD')">Forward to Next Level</button>
+                    <button type="button" th:if="${workflow.isFinalLevel}" class="vr-btn vr-btn-validate" id="validateBtn" onclick="validateSap()">Validate with SAP</button>
+                    <button type="button" th:if="${workflow.isFinalLevel}" class="vr-btn vr-btn-post" id="postBtn" onclick="postToSap()" disabled>Post to SAP</button>
+                </div>
+            </div>
+            <ul class="vr-sap-messages" id="sapMessages" style="display:none; padding-left: 46px;"></ul>
+        </div>
+    </div>
+
+    <div class="modal fade" id="hierarchyModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Approval Hierarchy</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-x:auto;">
+                    <table class="vr-modal-table" id="hierarchyTable">
+                        <thead><tr><th>Level</th><th>Role</th><th>User</th><th>Type</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="auditModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Audit Trail</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-x:auto;">
+                    <table class="vr-modal-table" id="auditTable">
+                        <thead><tr><th>Audit</th><th>Action</th><th>Date</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const docId = /*[[${details.docId}]]*/ '';
+        const existing = /*[[${details}]]*/ {};
+        /*]]>*/
+
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+
+        const isOwner = document.querySelector('meta[name="_isOwner"]').content === 'true';
+        const hasUnansweredQuery = document.querySelector('meta[name="_hasUnansweredQuery"]').content === 'true';
+
+        $(function () {
+            $('.select2').select2({ theme: 'bootstrap4' });
+
+            document.querySelectorAll('.vr-tab-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () { activateTab(btn.dataset.tab); });
+            });
+            document.addEventListener('input', clearInvalidOnEdit, true);
+            document.addEventListener('change', clearInvalidOnEdit, true);
+
+            wireConditionalVisibility();
+            prefillForm();
+            applyLock();
+
+            if (isOwner && hasUnansweredQuery) {
+                document.getElementById('queryReplyBox').style.display = 'block';
+            }
+            if (!isOwner && hasUnansweredQuery) {
+                ['sendBackBtn', 'rejectBtn', 'forwardBtn', 'validateBtn', 'postBtn', 'submitToWorkflowBtn'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) { el.disabled = true; }
+                });
+            }
+        });
+
+        function activateTab(tabId) {
+            document.querySelectorAll('.vr-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+            document.querySelectorAll('.vr-tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
+            document.querySelector('.vr-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        /**
+         * Locks the whole form read-only (no field edits, no Next-triggered saves) when
+         * either: the registration has already been POSTED to SAP (further edits here would
+         * have no downstream effect), the current user isn't the vendor this registration
+         * belongs to (their login id IS the doc id - see IVendorRegistrationService.inviteVendor)
+         * - a buyer who browsed here directly gets a read-only view - or the registration has
+         * already been submitted and is sitting with the buyer for review: once submitted, the
+         * vendor cannot change anything until a buyer explicitly sends it back (status flips to
+         * RESUBMITTED, see IVendorRegistrationService.actOnVendorRegistration SEND_BACK).
+         */
+        function canEdit() {
+            const status = document.querySelector('meta[name="_status"]').content;
+            return isOwner && (status === 'INITIATED' || status === 'RESUBMITTED');
+        }
+
+        function applyLock() {
+            if (canEdit()) { return; }
+
+            const status = document.querySelector('meta[name="_status"]').content;
+            let text;
+            if (!isOwner) {
+                text = 'You are viewing this vendor\'s registration - only the vendor can edit and submit it.';
+            } else if (status === 'SUBMITTED') {
+                text = 'This registration has been submitted and is with the buyer for review. You cannot make changes unless it is sent back to you.';
+            } else if (status === 'POSTED') {
+                text = 'This registration has already been posted to SAP and can no longer be edited here.';
+            } else if (status === 'REJECTED') {
+                text = 'This registration has been rejected and can no longer be edited here.';
+            } else {
+                text = 'This registration cannot be edited right now.';
+            }
+            document.getElementById('lockedBannerText').textContent = text;
+            document.getElementById('lockedBanner').style.display = 'flex';
+            document.querySelectorAll('.vr-tab-pane input, .vr-tab-pane select, .vr-tab-pane textarea')
+                .forEach(function (el) { el.disabled = true; });
+            /* Only the vendor's own "Submit for Approval" footer (inside tab5) gets locked here -
+               the buyer's review-action footer (.vr-review-footer: Back to List / Show Approval
+               Hierarchy / Audit Trail / Submit to Workflow / Query / Send Back / Reject / Forward)
+               must stay clickable for a buyer, who is never isOwner and so always hits this branch;
+               it was previously matched by the shared .vr-card-footer class and force-disabled/greyed
+               out regardless of the buyer's actual permissions. */
+            document.querySelectorAll('#tab5 .vr-card-footer button, .vr-upload-btn')
+                .forEach(function (el) { el.disabled = true; el.style.pointerEvents = 'none'; el.style.opacity = '.5'; });
+            $('.select2').prop('disabled', true);
+        }
+
+        function isFieldVisible(el) {
+            return !el.closest('.vr-conditional:not(.show), .vr-conditional-cell:not(.show)');
+        }
+
+        function markInvalid(el) {
+            const row = el.closest('.vr-grid-row') || el;
+            row.classList.add('vr-invalid-row');
+        }
+
+        function clearInvalidOnEdit(e) {
+            const row = e.target.closest && e.target.closest('.vr-invalid-row');
+            if (row) { row.classList.remove('vr-invalid-row'); }
+        }
+
+        /** id prefix -> payload key, e.g. "ct_purOrdCurr" -> "purOrdCurr" (matches the buildXPayload() naming convention). */
+        function payloadKeyFromId(id) {
+            return id.replace(/^(c_|ct_|m_|b_)/, '');
+        }
+
+        const CHECK_GROUP_PAYLOAD_KEY = { 'c-conMethod': 'conMethod', 'ct-supType': 'supType', 'ct-vendorType': 'vendorType' };
+
+        /**
+         * Validates against the exact payload object that's about to be saved - the same data
+         * already proven correct by buildXPayload(), rather than re-reading the DOM a second,
+         * less reliable way (select2 fields in particular can lag behind a raw .value read).
+         */
+        function validateTab(tabId, payload) {
+            const pane = document.getElementById(tabId);
+            const problems = [];
+
+            pane.querySelectorAll('[data-req="1"]').forEach(el => {
+                if (!isFieldVisible(el)) { return; }
+                const value = payload[payloadKeyFromId(el.id)];
+                if (!value || !String(value).trim()) { problems.push(el); }
+            });
+            pane.querySelectorAll('[data-req-radio]').forEach(container => {
+                if (!isFieldVisible(container)) { return; }
+                const key = container.dataset.reqRadio;
+                if (!payload[key]) { problems.push(container); }
+            });
+            pane.querySelectorAll('[data-req-check]').forEach(container => {
+                if (!isFieldVisible(container)) { return; }
+                const key = CHECK_GROUP_PAYLOAD_KEY[container.dataset.reqCheck];
+                const values = payload[key];
+                if (!values || values.length === 0) { problems.push(container); }
+            });
+
+            if (tabId === 'tab1') {
+                const contacts = payload.contacts || [];
+                if (contacts.length === 0) { problems.push(document.getElementById('contactRows')); }
+                Array.from(document.querySelectorAll('#contactRows tr')).forEach((tr, i) => {
+                    const c = contacts[i] || {};
+                    ['title', 'name', 'designation', 'phone', 'email'].forEach(field => {
+                        if (!c[field] || !String(c[field]).trim()) { problems.push(tr); }
+                    });
+                });
+            }
+
+            problems.forEach(markInvalid);
+            if (problems.length > 0) {
+                showAlert(false, 'Please fill all mandatory fields (marked *) before continuing.');
+                problems[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            return true;
+        }
+
+        function wireConditionalVisibility() {
+            document.querySelectorAll('.m-msmeType').forEach(r => r.addEventListener('change', function () {
+                toggle('msmeInfoRow', this.value !== '0');
+            }));
+            document.querySelectorAll('.m-vendJgl').forEach(r => r.addEventListener('change', function () {
+                toggle('vendUnitRow', this.value === 'Y');
+            }));
+            document.querySelectorAll('.m-vendTrans').forEach(r => r.addEventListener('change', function () {
+                toggle('vendDtlsRow', this.value === 'Y');
+            }));
+            document.querySelectorAll('.m-vendSite').forEach(r => r.addEventListener('change', function () {
+                toggle('siteVisitRow', this.value === 'Y');
+            }));
+        }
+
+        function toggle(id, show) {
+            document.getElementById(id).classList.toggle('show', show);
+        }
+
+        function setVal(id, val) { const el = document.getElementById(id); if (el && val != null) el.value = val; }
+        function setSelect2(id, val) { if (val != null) { $('#' + id).val(val).trigger('change'); } }
+        function setRadio(name, val) { if (val != null) { const el = document.querySelector('input[name="' + name + '"][value="' + val + '"]'); if (el) { el.checked = true; el.dispatchEvent(new Event('change')); } } }
+        function setChecks(selector, values) { if (!values) return; document.querySelectorAll(selector).forEach(cb => { if (values.indexOf(cb.value) !== -1) cb.checked = true; }); }
+
+        function prefillForm() {
+            const c = existing.contact || {};
+            setVal('c_title', c.title); setSelect2('c_title', c.title);
+            setVal('c_vendName', c.vendName); setVal('c_searchTerm', c.searchTerm);
+            setVal('c_addrsLine1', c.addrsLine1); setVal('c_addrsLine2', c.addrsLine2); setVal('c_addrsLine3', c.addrsLine3);
+            setVal('c_addrsLine4', c.addrsLine4); setVal('c_addrsLine5', c.addrsLine5); setVal('c_districtName', c.districtName);
+            setVal('c_city', c.city); setSelect2('c_state', c.state); setSelect2('c_country', c.country);
+            setVal('c_postalCode', c.postalCode); setVal('c_phoneNum', c.phoneNum); setVal('c_altPhoneNum', c.altPhoneNum);
+            setVal('c_mobNum', c.mobNum); setVal('c_altMobNum', c.altMobNum); setVal('c_fax', c.fax);
+            setVal('c_email1', c.email1); setVal('c_email2', c.email2); setVal('c_website', c.website);
+            setChecks('.c-conMethod', c.conMethod); setVal('c_othConMethod', c.othConMethod);
+            (c.contacts || []).forEach(addContactRow);
+            if (!c.contacts || c.contacts.length === 0) addContactRow();
+
+            const ct = existing.constitution || {};
+            setRadio('typeOfOrg', ct.typeOfOrg); setVal('ct_othCompType', ct.othCompType);
+            setChecks('.ct-supType', ct.supType); setVal('ct_othSupType', ct.othSupType);
+            setChecks('.ct-vendorType', ct.vendorType);
+            setSelect2('ct_purOrdCurr', ct.purOrdCurr); setSelect2('ct_incoTerms', ct.incoTerms); setVal('ct_incoTerms2', ct.incoTerms2);
+            setSelect2('ct_panAttach', ct.panAttach); setVal('ct_panName', ct.panName); setVal('ct_panNumber', ct.panNumber);
+            setSelect2('ct_gstVendorClas', ct.gstVendorClas); setSelect2('ct_gstType', ct.gstType); setVal('ct_gstNumber', ct.gstNumber);
+
+            const m = existing.msme || {};
+            setRadio('msmeType', m.msmeType); setVal('m_msmeUdyogAdhrNo', m.msmeUdyogAdhrNo);
+            setSelect2('m_paymntTerms', m.paymntTerms); setRadio('busStatus', m.busStatus);
+            setRadio('eInvoice', m.eInvoice); setRadio('vendJgl', m.vendJgl); setVal('m_vendUnit', m.vendUnit);
+            setRadio('vendTrans', m.vendTrans); setVal('m_vendDtls', m.vendDtls);
+            setRadio('vendSite', m.vendSite); setVal('m_sitePerson', m.sitePerson); setVal('m_siteViDt', m.siteViDt);
+
+            const d = existing.documents || {};
+            setVal('d_itrAttach', d.itrAttach); setVal('d_moaAttach', d.moaAttach); setVal('d_fsAttach', d.fsAttach);
+            setVal('d_saAttach', d.saAttach); setVal('d_kcAttach', d.kcAttach); setVal('d_othAttach', d.othAttach);
+
+            const b = existing.bank || {};
+            setVal('b_accntPer', b.accntPer); setVal('b_accntEmail', b.accntEmail); setVal('b_accntMobile', b.accntMobile);
+            setVal('b_rtgsCode', b.rtgsCode); setVal('b_bankName', b.bankName); setVal('b_bankBranch', b.bankBranch);
+            setVal('b_accntNumber', b.accntNumber); setVal('b_bankSwift', b.bankSwift); setVal('b_chequeNo', b.chequeNo);
+        }
+
+        let contactRowCount = 0;
+        function addContactRow(prefill) {
+            contactRowCount++;
+            const idx = contactRowCount;
+            const tr = document.createElement('tr');
+            tr.dataset.idx = idx;
+            tr.innerHTML =
+                '<td>' + idx + '</td>' +
+                '<td><select class="form-control ct-title"><option value="">--</option><option>Mr.</option><option>Ms.</option><option>Mr. and Mrs.</option></select></td>' +
+                '<td><input type="text" class="form-control ct-name" maxlength="30"></td>' +
+                '<td><input type="text" class="form-control ct-desgtn" maxlength="30"></td>' +
+                '<td><input type="text" class="form-control ct-phone" maxlength="15"></td>' +
+                '<td><input type="text" class="form-control ct-email" maxlength="50"></td>' +
+                '<td><button type="button" class="vr-remove-row-btn" onclick="this.closest(\'tr\').remove()"><i class="fa fa-times-circle"></i></button></td>';
+            document.getElementById('contactRows').appendChild(tr);
+            if (prefill) {
+                tr.querySelector('.ct-title').value = prefill.title || '';
+                tr.querySelector('.ct-name').value = prefill.name || '';
+                tr.querySelector('.ct-desgtn').value = prefill.designation || '';
+                tr.querySelector('.ct-phone').value = prefill.phone || '';
+                tr.querySelector('.ct-email').value = prefill.email || '';
+            }
+        }
+
+        function uploadAttachment(targetInputId, itemType) {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.onchange = function () {
+                const file = fileInput.files[0];
+                if (!file) return;
+                if (file.size > 5 * 1024 * 1024) { alert('Maximum file size is 5MB.'); return; }
+                const formData = new FormData();
+                formData.append('file', file);
+                const headers = {}; headers[csrfHeader] = csrfToken;
+                fetch('/fileUpload/handle/' + docId + '/VNR/' + itemType, { method: 'POST', headers: headers, body: formData })
+                    .then(r => r.json())
+                    .then(data => { document.getElementById(targetInputId).value = data.fileName || ''; })
+                    .catch(() => alert('Upload failed. Please try again.'));
+            };
+            fileInput.click();
+        }
+
+        /** Buyer-side general attachment upload (not tied to a specific field) - see the Attachment(s) table / iGetUploadList.jsp itemId="H". */
+        function uploadHeaderAttachment() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.onchange = function () {
+                const file = fileInput.files[0];
+                if (!file) return;
+                if (file.size > 5 * 1024 * 1024) { alert('Maximum file size is 5MB.'); return; }
+                const formData = new FormData();
+                formData.append('file', file);
+                const headers = {}; headers[csrfHeader] = csrfToken;
+                fetch('/fileUpload/handle/' + docId + '/VNR/VNRH', { method: 'POST', headers: headers, body: formData })
+                    .then(r => r.json())
+                    .then(data => {
+                        const tbody = document.getElementById('attachmentRows');
+                        const noRow = document.getElementById('noAttachmentsRow');
+                        if (noRow) { noRow.remove(); }
+                        const tr = document.createElement('tr');
+                        const td = document.createElement('td');
+                        const a = document.createElement('a');
+                        a.href = '/view/' + encodeURIComponent(data.fileName) + '/' + docId + '/VNR/VNRH';
+                        a.target = '_blank';
+                        a.textContent = data.fileName;
+                        td.appendChild(a);
+                        tr.appendChild(td);
+                        tbody.appendChild(tr);
+                    })
+                    .catch(() => alert('Upload failed. Please try again.'));
+            };
+            fileInput.click();
+        }
+
+        function checkedValues(selector) {
+            return Array.from(document.querySelectorAll(selector + ':checked')).map(el => el.value);
+        }
+        function radioValue(name) {
+            const el = document.querySelector('input[name="' + name + '"]:checked');
+            return el ? el.value : null;
+        }
+
+        function buildContactPayload() {
+            const contacts = Array.from(document.querySelectorAll('#contactRows tr')).map(tr => ({
+                title: tr.querySelector('.ct-title').value,
+                name: tr.querySelector('.ct-name').value,
+                designation: tr.querySelector('.ct-desgtn').value,
+                phone: tr.querySelector('.ct-phone').value,
+                email: tr.querySelector('.ct-email').value
+            }));
+            return {
+                title: $('#c_title').val(), vendName: val('c_vendName'), searchTerm: val('c_searchTerm'),
+                addrsLine1: val('c_addrsLine1'), addrsLine2: val('c_addrsLine2'), addrsLine3: val('c_addrsLine3'),
+                addrsLine4: val('c_addrsLine4'), addrsLine5: val('c_addrsLine5'), postalCode: val('c_postalCode'), districtName: val('c_districtName'),
+                city: val('c_city'), state: $('#c_state').val(), country: $('#c_country').val(),
+                phoneNum: val('c_phoneNum'), altPhoneNum: val('c_altPhoneNum'), mobNum: val('c_mobNum'), altMobNum: val('c_altMobNum'),
+                fax: val('c_fax'), email1: val('c_email1'), email2: val('c_email2'), website: val('c_website'),
+                conMethod: checkedValues('.c-conMethod'), othConMethod: val('c_othConMethod'), contacts: contacts
+            };
+        }
+
+        function buildConstitutionPayload() {
+            return {
+                typeOfOrg: radioValue('typeOfOrg'), othCompType: val('ct_othCompType'),
+                supType: checkedValues('.ct-supType'), othSupType: val('ct_othSupType'),
+                vendorType: checkedValues('.ct-vendorType'),
+                purOrdCurr: $('#ct_purOrdCurr').val(), incoTerms2: val('ct_incoTerms2'), incoTerms: $('#ct_incoTerms').val(),
+                panAttach: $('#ct_panAttach').val(), panName: val('ct_panName'), panNumber: val('ct_panNumber'),
+                gstVendorClas: $('#ct_gstVendorClas').val(), gstType: $('#ct_gstType').val(), gstNumber: val('ct_gstNumber')
+            };
+        }
+
+        function buildMsmePayload() {
+            return {
+                msmeType: radioValue('msmeType'), msmeUdyogAdhrNo: val('m_msmeUdyogAdhrNo'),
+                paymntTerms: $('#m_paymntTerms').val(), busStatus: radioValue('busStatus'),
+                eInvoice: radioValue('eInvoice'), vendJgl: radioValue('vendJgl'), vendUnit: val('m_vendUnit'),
+                vendTrans: radioValue('vendTrans'), vendDtls: val('m_vendDtls'),
+                vendSite: radioValue('vendSite'), sitePerson: val('m_sitePerson'), siteViDt: val('m_siteViDt')
+            };
+        }
+
+        function buildDocumentsPayload() {
+            return {
+                itrAttach: val('d_itrAttach'), moaAttach: val('d_moaAttach'), fsAttach: val('d_fsAttach'),
+                saAttach: val('d_saAttach'), kcAttach: val('d_kcAttach'), othAttach: val('d_othAttach')
+            };
+        }
+
+        function buildBankPayload() {
+            return {
+                accntPer: val('b_accntPer'), accntEmail: val('b_accntEmail'), accntMobile: val('b_accntMobile'),
+                rtgsCode: val('b_rtgsCode'), bankName: val('b_bankName'), bankBranch: val('b_bankBranch'),
+                accntNumber: val('b_accntNumber'), bankSwift: val('b_bankSwift'), chequeNo: val('b_chequeNo')
+            };
+        }
+
+        function val(id) { const el = document.getElementById(id); return el ? el.value : null; }
+
+        /** Saves the current tab's data then advances - only the vendor who owns this registration ever triggers a save; anyone else just navigates. */
+        function goNext(currentTabId, tabName, payloadBuilder, nextTabId, btn) {
+            if (!canEdit()) { activateTab(nextTabId); return; }
+            const payload = payloadBuilder();
+            if (!validateTab(currentTabId, payload)) { return; }
+
+            hideAlerts();
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = 'Saving...';
+            const headers = { 'Content-Type': 'application/json' }; headers[csrfHeader] = csrfToken;
+            fetch('/vendorReg/register/' + docId + '/' + tabName, { method: 'POST', headers: headers, body: JSON.stringify(payload) })
+                .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
+                .then(result => {
+                    if (!result.ok) { showAlert(false, result.body.message); return; }
+                    activateTab(nextTabId);
+                })
+                .catch(() => showAlert(false, 'Unexpected error while saving.'))
+                .finally(() => { btn.disabled = false; btn.innerHTML = original; });
+        }
+
+        function goSubmit(btn) {
+            if (!canEdit()) { return; }
+            const bankPayload = buildBankPayload();
+            if (!validateTab('tab5', bankPayload)) { return; }
+            if (!confirm('Submit this vendor registration for approval?')) return;
+
+            hideAlerts();
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = 'Saving...';
+            const headers = { 'Content-Type': 'application/json' }; headers[csrfHeader] = csrfToken;
+            fetch('/vendorReg/register/' + docId + '/bank', { method: 'POST', headers: headers, body: JSON.stringify(bankPayload) })
+                .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
+                .then(result => {
+                    if (!result.ok) { showAlert(false, result.body.message); return; }
+                    btn.innerHTML = 'Submitting...';
+                    const submitHeaders = {}; submitHeaders[csrfHeader] = csrfToken;
+                    return fetch('/vendorReg/register/' + docId + '/submit', { method: 'POST', headers: submitHeaders })
+                        .then(res2 => res2.json().then(body2 => ({ ok: res2.ok, body: body2 })))
+                        .then(result2 => showAlert(result2.ok, result2.body.message));
+                })
+                .catch(() => showAlert(false, 'Unexpected error while submitting.'))
+                .finally(() => { btn.disabled = false; btn.innerHTML = original; });
+        }
+
+        function sendQueryReply() {
+            const replyText = document.getElementById('queryReplyText').value;
+            if (!replyText.trim()) { alert('Please enter your reply'); return; }
+            const headers = { 'Content-Type': 'application/json' }; headers[csrfHeader] = csrfToken;
+            fetch('/vendorReg/register/' + docId + '/query-reply', { method: 'POST', headers: headers, body: JSON.stringify({ replyText: replyText }) })
+                .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
+                .then(result => {
+                    if (!result.ok) { showAlert(false, result.body.message); return; }
+                    showAlert(true, result.body.message);
+                    setTimeout(() => { window.location.reload(); }, 1000);
+                })
+                .catch(() => showAlert(false, 'Unexpected error while sending reply.'));
+        }
+
+        /* ============ Buyer review/action functions (see IVendorRegistrationService actOnVendorRegistration/submitToWorkflow/raiseQuery). ============ */
+
+        function toggleQueryBox() {
+            const box = document.getElementById('queryRaiseBox');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function sendQuery() {
+            const queryText = document.getElementById('queryText').value;
+            if (!queryText.trim()) { alert('Please enter the query'); return; }
+            const headers = { 'Content-Type': 'application/json' }; headers[csrfHeader] = csrfToken;
+            fetch('/vendorReg/approve/' + docId + '/query', { method: 'POST', headers: headers, body: JSON.stringify({ queryText: queryText }) })
+                .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
+                .then(result => {
+                    if (!result.ok) { showAlert(false, result.body.message || 'Could not send query'); return; }
+                    showAlert(true, result.body.message || 'Query sent');
+                    setTimeout(() => { window.location.reload(); }, 1000);
+                })
+                .catch(() => showAlert(false, 'Could not send query - please try again'));
+        }
+
+        function collectFinance() {
+            const whTaxTypeEl = document.getElementById('f_whTaxType');
+            if (!whTaxTypeEl) { return null; }
+            return {
+                whTaxType: whTaxTypeEl.value,
+                whTaxCode: document.getElementById('f_whTaxCode').value,
+                recType: document.getElementById('f_recType').value,
+                reconAccount: document.getElementById('f_reconAccount').value,
+                docAck: null
+            };
+        }
+
+        function act(action) {
+            if ((action === 'REJECT' || action === 'SEND_BACK') && !confirm('Are you sure you want to ' + (action === 'REJECT' ? 'reject' : 'send back') + ' this registration?')) {
+                return;
+            }
+            const body = {
+                action: action,
+                comments: document.getElementById('actionComments').value,
+                finance: collectFinance()
+            };
+            const headers = { 'Content-Type': 'application/json' }; headers[csrfHeader] = csrfToken;
+            fetch('/vendorReg/approve/' + docId + '/action', { method: 'POST', headers: headers, body: JSON.stringify(body) })
+                .then(res => res.json().then(data => ({ ok: res.ok, data: data })))
+                .then(({ ok, data }) => {
+                    if (!ok) { showAlert(false, data.message || 'Action failed'); return; }
+                    showAlert(true, data.message || 'Action recorded');
+                    setTimeout(() => { window.location.href = '/vendorReg/list'; }, 1200);
+                })
+                .catch(() => showAlert(false, 'Action failed - please try again'));
+        }
+
+        function submitToWorkflow() {
+            const btn = document.getElementById('submitToWorkflowBtn');
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = 'Submitting...';
+            const headers = {}; headers[csrfHeader] = csrfToken;
+            fetch('/vendorReg/approve/' + docId + '/submit-to-workflow', { method: 'POST', headers: headers })
+                .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
+                .then(result => {
+                    if (!result.ok) { showAlert(false, result.body.message); btn.disabled = false; btn.innerHTML = original; return; }
+                    showAlert(true, result.body.message);
+                    setTimeout(() => { window.location.reload(); }, 1000);
+                })
+                .catch(() => { showAlert(false, 'Unexpected error while submitting to workflow.'); btn.disabled = false; btn.innerHTML = original; });
+        }
+
+        function validateSap() {
+            const btn = document.getElementById('validateBtn');
+            btn.disabled = true;
+            btn.textContent = 'Validating...';
+            const headers = {}; headers[csrfHeader] = csrfToken;
+            fetch('/vendorReg/approve/' + docId + '/sap-validate', { method: 'POST', headers: headers })
+                .then(r => r.json())
+                .then(result => {
+                    btn.disabled = false;
+                    btn.textContent = 'Validate with SAP';
+                    const msgList = document.getElementById('sapMessages');
+                    msgList.innerHTML = '';
+                    if (result.ok) {
+                        showAlert(true, 'SAP validation passed. You may now post to SAP.');
+                        msgList.style.display = 'none';
+                        document.getElementById('postBtn').disabled = false;
+                    } else {
+                        (result.messages || []).forEach(m => {
+                            const li = document.createElement('li');
+                            li.textContent = m;
+                            msgList.appendChild(li);
+                        });
+                        msgList.style.display = 'block';
+                        showAlert(false, 'SAP validation returned warnings/errors - see below.');
+                        document.getElementById('postBtn').disabled = true;
+                    }
+                })
+                .catch(() => { btn.disabled = false; btn.textContent = 'Validate with SAP'; showAlert(false, 'SAP validation call failed'); });
+        }
+
+        function postToSap() {
+            if (!confirm('This will create a real vendor master record in SAP. Continue?')) { return; }
+            const btn = document.getElementById('postBtn');
+            btn.disabled = true;
+            btn.textContent = 'Posting...';
+            const headers = { 'Content-Type': 'application/json' }; headers[csrfHeader] = csrfToken;
+            fetch('/vendorReg/approve/' + docId + '/sap-post', {
+                method: 'POST', headers: headers,
+                body: JSON.stringify({ comments: document.getElementById('actionComments').value })
+            })
+                .then(res => res.json().then(data => ({ ok: res.ok, data: data })))
+                .then(({ ok, data }) => {
+                    if (!ok) { btn.disabled = false; btn.textContent = 'Post to SAP'; showAlert(false, data.message || 'SAP posting failed'); return; }
+                    showAlert(true, data.message);
+                    setTimeout(() => { window.location.href = '/vendorReg/list'; }, 1500);
+                })
+                .catch(() => { btn.disabled = false; btn.textContent = 'Post to SAP'; showAlert(false, 'SAP posting failed - please try again'); });
+        }
+
+        function openHierarchy() {
+            fetch('/vendorReg/' + docId + '/hierarchy')
+                .then(r => r.json())
+                .then(levels => {
+                    const tbody = document.querySelector('#hierarchyTable tbody');
+                    tbody.innerHTML = '';
+                    if (!levels.length) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#a7b0c0;">No workflow template configured for this registration\'s company code / plant / category.</td></tr>';
+                    } else {
+                        levels.forEach(l => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = '<td>' + l.level + '</td><td>' + (l.role || '') + '</td><td>' + (l.user || '-') + '</td><td>' + (l.type || '') + '</td>';
+                            tbody.appendChild(tr);
+                        });
+                    }
+                    $('#hierarchyModal').modal('show');
+                })
+                .catch(() => showAlert(false, 'Could not load approval hierarchy'));
+        }
+
+        function openAuditTrail() {
+            fetch('/vendorReg/' + docId + '/audit-trail')
+                .then(r => r.json())
+                .then(entries => {
+                    const tbody = document.querySelector('#auditTable tbody');
+                    tbody.innerHTML = '';
+                    if (!entries.length) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#a7b0c0;">No audit trail entries yet.</td></tr>';
+                    } else {
+                        entries.forEach(e => {
+                            const tr = document.createElement('tr');
+                            const date = e.date ? new Date(e.date).toLocaleString() : '';
+                            tr.innerHTML = '<td>' + (e.auditNo || '-') + '</td><td>' + (e.action || '') + '</td><td>' + date + '</td>';
+                            tbody.appendChild(tr);
+                        });
+                    }
+                    $('#auditModal').modal('show');
+                })
+                .catch(() => showAlert(false, 'Could not load audit trail'));
+        }
+
+        function showAlert(ok, message) {
+            const el = document.getElementById(ok ? 'successAlert' : 'errorAlert');
+            el.querySelector('span').textContent = message;
+            el.style.display = 'flex';
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function hideAlerts() {
+            document.getElementById('successAlert').style.display = 'none';
+            document.getElementById('errorAlert').style.display = 'none';
+        }
+    </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,158 @@
+select * from ezc_user_def_key_values where eudkv_user_id='KCOOPER'
+
+
+PLANT			: 	4500
+
+Comany Code		:	4500
+
+Purchasing Group	:	I01
+
+Currency 		:	USD
+
+PR 			:	0011267087-00010
+
+
+RFQ(s) added under QCF: I010000003
+
+1.RFQ:7000000743 created sucessfully against the vendor: CONGLOM INC[302090]
+
+2.RFQ:7000000744 created sucessfully against the vendor: SIGMA-ALDRICH CANADA CO.[302326]
+
+===================================================================================================
+
+PLANT			: 	4500
+
+Comany Code		:	4500
+
+Purchasing Group	:	I01
+
+Currency 		:	CAD
+
+PR 			:	0011267087-00010
+
+
+RFQ(s) added under QCF: I010000004
+
+1.RFQ:7000000745 created sucessfully against the vendor: CONGLOM INC[302090]
+
+2.RFQ:7000000746 created sucessfully against the vendor: SILICYCLE[303946]
+
+===================================================================================================
+
+Vendor: 302090
+
+LFM1:
+=====
+	Pur. Org --> 	4500   --> I1 (Schema Group)
+	Pur. Org --> 	7501   --> P1 (Schema Group)
+	
+===================================================================================================
+CREATE TABLE `ezc_pricing_schema` (
+  `EPS_PUR_ORG` varchar(10) NOT NULL,
+  `EPS_SCHEMA_GROUP` varchar(10) NOT NULL,
+  `EPS_PRIC_PROCEDURE` varchar(10) NOT NULL,
+  `EPS_EXT1` varchar(1000) DEFAULT NULL,
+  `EPS_EXT2` varchar(150) DEFAULT NULL,
+  `EPS_EXT3` varchar(150) DEFAULT NULL,
+   PRIMARY KEY (`EPS_PUR_ORG`,`EPS_SCHEMA_GROUP`,`EPS_PRIC_PROCEDURE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	
+
+CREATE TABLE `ezc_pricing_procedure` (
+  `EPP_PROCEDURE` varchar(10) NOT NULL,
+  `EPP_COND` varchar(10) NOT NULL,
+  `EPP_SEQ` varchar(5) NOT NULL,
+  `EPP_EXT1` varchar(1000) DEFAULT NULL,
+  `EPP_EXT2` varchar(150) DEFAULT NULL,
+  `EPP_EXT3` varchar(150) DEFAULT NULL,
+   PRIMARY KEY (`EPP_PROCEDURE`,`EPP_COND`,`EPP_SEQ`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+===================================================================================================
+
+CREATE TABLE `ezc_pricing_cond_desc` (
+  `EPCD_COND` varchar(10) NOT NULL,
+  `EPCD_DESC` varchar(100) NOT NULL,
+  `EPCD_EXT1` varchar(150) DEFAULT NULL,
+  `EPCD_EXT2` varchar(150) DEFAULT NULL,
+  `EPCD_EXT3` varchar(150) DEFAULT NULL,
+   PRIMARY KEY (`EPCD_COND`,`EPP_COND`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+select * from ezc_pricing_cond_desc
+
+
+
+User Id		711502
+Password	UFAS72UNQF
+
+====================================================================================================
+
+WF:
+====
+select * from EZC_WF_KEY_MAP where ewkm_template='1003' and ewkm_doc_type='QCF';
+INSERT INTO `jublqa`.`EZC_WF_KEY_MAP` (`EWKM_DOC_TYPE`, `EWKM_COMP_CODE`, `EWKM_PLANT`, `EWKM_CATEGORY`, `EWKM_TEMPLATE`) VALUES ('QCF', '4101', '4101', 'RM_PM', '1003');
+
+select * from ezc_wf_pricing_conditions where ewpc_template='1003' order by EWPC_LEVEL
+
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (1003,1,'PUR_PERSON','PUR_PERSON','LE',0);
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (1003,2,'SCMHD','SCMHD','LE',75000000);
+INSERT INTO ezc_wf_pricing_conditions (`EWPC_TEMPLATE`,`EWPC_LEVEL`,`EWPC_ROLE`,`EWPC_GROUP`,`EWPC_QCF_FLAG`,`EWPC_QCF_RELEASE`) VALUES (1003,3,'FIHEAD','FIHEAD','GE',75000000);
+
+=====================================================================================================
+
+karen.cooper@jubl.com
+junaid.hashmi@jubl.com
+swapnil.kulkarni@jubl.com
+v-hari.chowdary@jublcorp.com
+v-hari.chowdary@jubl.com
+
+select * from ezc_users where eu_id in ('KCOOPER','REVIEWER','SCMHD','FIHEAD');
+--update ezc_users set eu_email='hchowdary@answerthink.com' where eu_id in ('KCOOPER','REVIEWER','SCMHD','FIHEAD');
+
+--update ezc_users set eu_email='karen.cooper@jubl.com' where eu_id in ('KCOOPER');
+--update ezc_users set eu_email='swapnil.kulkarni@jubl.com' where eu_id in ('REVIEWER');
+--update ezc_users set eu_email='pankaj.satija@jubl.com' where eu_id in ('SCMHD');
+--update ezc_users set eu_email='Vyanjana.Bajpai@jubl.com' where eu_id in ('FIHEAD');
+=====================================================================================================
+
+AUCTION:
+========
+
+Material	:	5974628001
+
+Plant		:	4101
+
+Auction		:	524
+
+========================================================================================================
+CONGLOM INC[302090]
+
+SILICYCLE[303946]
+========================================================================================================
+
+4100003379
+
+========================================================================================================
+Material 	:  5974628001
+OLD POS		:  
+==================
+4100057500
+4100054135
+4100055819
+
+Vendors:
+==================
+305125
+305520
+
+
+===========================
+
+RFQ(s) added under QCF: 2080000014
+
+1.RFQ:7000030368 created sucessfully against the vendor: 21 FOOLS DESIGN AND ENTERTAINMENT[310509]
+
+2.RFQ:7000030369 created sucessfully against the vendor: 3A ANALYTIKS[310149]

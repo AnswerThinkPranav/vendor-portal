@@ -31,6 +31,9 @@ public class MailService {
     @org.springframework.beans.factory.annotation.Value("${spring.mail.username}")
     private String fromAddress;
 
+    @org.springframework.beans.factory.annotation.Value("${site.url}")
+    private String siteUrl;
+
     public void sendTestMail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("sap.helpdesk@aragen.com");
@@ -527,6 +530,48 @@ public class MailService {
         helper.setText(html.toString(), true);
         mailSender.send(message);
         log.info("OTP mail sent to: " + user.getEmail());
+    }
+
+    /**
+     * Invite Vendor -> temp-vendor account creation (see ezAddTempUser.jsp) - notifies the
+     * new EU_TYPE=4 vendor of their login id and one-time temporary password so they can log
+     * in and complete self-registration.
+     */
+    public void sendTempVendorInviteMail(Users vendor, String tempPassword) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom(fromAddress);
+        helper.setTo(vendor.getEmail());
+        helper.setSubject("Aragen Vendor Portal - Your Login Details");
+
+        String loginUrl = (siteUrl != null && siteUrl.startsWith("http") ? siteUrl : "http://" + siteUrl) + "/login";
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><body style='font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px;'>");
+        html.append("<div style='max-width:480px;margin:auto;background:#fff;border-radius:8px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.1);'>");
+        html.append("<h2 style='color:#003366;margin-top:0;'>Welcome to the Aragen Vendor Portal</h2>");
+        html.append("<p style='color:#333;'>Dear <strong>")
+                .append(vendor.getFirstName() != null ? vendor.getFirstName() : vendor.getUserId()).append("</strong>,</p>");
+        html.append("<p style='color:#333;'>A vendor account has been created for you. Please use the credentials below to log in and complete your registration.</p>");
+        html.append("<table style='width:100%;margin:20px 0;border-collapse:collapse;'>");
+        html.append("<tr><td style='padding:8px 0;color:#666;'>User Id</td><td style='padding:8px 0;font-weight:bold;color:#003366;'>")
+                .append(vendor.getUserId()).append("</td></tr>");
+        html.append("<tr><td style='padding:8px 0;color:#666;'>Temporary Password</td><td style='padding:8px 0;font-weight:bold;color:#003366;'>")
+                .append(tempPassword).append("</td></tr>");
+        html.append("</table>");
+        html.append("<div style='text-align:center;margin:24px 0;'>");
+        html.append("<a href='").append(loginUrl)
+                .append("' style='display:inline-block;background:#003366;color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:bold;'>Log In</a>");
+        html.append("</div>");
+        html.append("<p style='color:#666;font-size:13px;'>For security, please change your password after logging in using the Forgot Password link.</p>");
+        html.append("<hr style='border:none;border-top:1px solid #eee;margin:24px 0;'>");
+        html.append("<p style='color:#999;font-size:12px;margin:0;'>Aragen Life Sciences &mdash; SAP Portal</p>");
+        html.append("</div></body></html>");
+
+        helper.setText(html.toString(), true);
+        mailSender.send(message);
+        log.info("Temp vendor invite mail sent to: " + vendor.getEmail());
     }
 
 }

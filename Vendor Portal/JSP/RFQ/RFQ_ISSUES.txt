@@ -1,0 +1,23 @@
+Quotation End Date calendar symbol
+
+Item Level Attachments
+
+Domestic  & Import vendor
+
+Confirmation box  color  for RFQ Creation
+
+
+Fixed Columns in Quoation screen
+
+Buyer Comments need to dispaly at quote 
+
+
+Mails at Create and Requote.
+
+Material Category at RFQ creation
+
+Budget Price update at monthly
+
+
+
+

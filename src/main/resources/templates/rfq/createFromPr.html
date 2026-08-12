@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      layout:decorate="layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Create RFQ from PRs</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        .vr-breadcrumb { font-size: 13px; color: #6c7a91; margin-bottom: 18px; letter-spacing: .2px; }
+        .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
+
+        .vr-card { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08); overflow: hidden; width: 100%; margin: 0 0 24px 0; }
+        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; padding: 18px 28px; }
+        .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; }
+        .vr-card-header p { margin: 2px 0 0 0; opacity: .85; font-size: 13px; }
+        .vr-card-body { padding: 22px 28px 6px 28px; }
+        .vr-card-footer { padding: 14px 28px 18px 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #eef1f6; margin-top: 14px; }
+
+        .vr-steps { display: flex; padding: 18px 28px 0 28px; gap: 6px; }
+        .vr-step { flex: 1; text-align: center; padding-bottom: 14px; border-bottom: 3px solid #e7ecf3; color: #9aa5b8; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+        .vr-step.active { color: var(--blue-color); border-color: var(--blue-color); }
+        .vr-step.done { color: #1c7c4d; border-color: #1c7c4d; }
+
+        .vr-section-title { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--orange-color); margin: 0 0 10px 0; }
+        .vr-section-title:not(:first-child) { margin-top: 20px; }
+
+        /* Selection-criteria grid: blue label cell + input cell, matching the legacy layout */
+        .vr-crit-grid { border: 1px solid #e7ecf3; border-radius: 12px; overflow: hidden; }
+        .vr-crit-row { display: grid; grid-template-columns: 190px 1fr 190px 1fr; border-top: 1px solid #e7ecf3; }
+        .vr-crit-row:first-child { border-top: none; }
+        .vr-crit-label { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 600; font-size: 13px; padding: 12px 16px; display: flex; align-items: center; }
+        .vr-crit-label .req { color: #ffd28a; margin-left: 3px; }
+        .vr-crit-value { padding: 10px 14px; display: flex; align-items: center; gap: 8px; background: #fff; }
+        .vr-crit-value.range { gap: 6px; }
+        .vr-crit-value .form-control, .vr-crit-value .select2-container .select2-selection { border-radius: 8px; border: 1px solid #dde3ec; box-shadow: none; }
+        .vr-crit-value .form-control { height: 36px; font-size: 13px; }
+        .vr-crit-value .select2-container { flex: 1; }
+        .vr-range-arrow { color: #9aa5b8; }
+        .vr-radio-group { display: flex; gap: 16px; align-items: center; font-size: 13px; color: #33415c; }
+        .vr-radio-group label { display: flex; align-items: center; gap: 5px; margin: 0; font-weight: 500; cursor: pointer; }
+        .vr-radio-group input { accent-color: var(--blue-color); }
+
+        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #0a4fae); border: none; border-radius: 10px; padding: 11px 28px; font-weight: 600; color: #fff; letter-spacing: .2px; }
+        .vr-btn-primary:hover { color: #fff; transform: translateY(-1px); }
+        .vr-btn-primary:disabled { opacity: .6; }
+        .vr-btn-light { background: #eef1f6; border: none; border-radius: 10px; padding: 11px 22px; font-weight: 600; color: #4b5876; }
+
+        .vr-alert { display: none; border-radius: 12px; padding: 13px 18px; font-size: 13.5px; margin-bottom: 18px; align-items: center; gap: 10px; }
+        .vr-alert.success { background: #e7f7ee; color: #1c7c4d; border: 1px solid #b9ecce; }
+        .vr-alert.error { background: #fdecea; color: #c0392b; border: 1px solid #f7c9c2; }
+
+        table.vr-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.8px; }
+        table.vr-table thead th { background: #f5f7fb; color: #4b5876; font-weight: 700; text-transform: uppercase; font-size: 10.5px; letter-spacing: .3px; padding: 9px 10px; text-align: left; border-bottom: 2px solid #e7ecf3; white-space: nowrap; }
+        table.vr-table tbody td { padding: 9px 10px; border-bottom: 1px solid #f0f2f7; color: #2c3648; vertical-align: middle; }
+        table.vr-table tbody tr:hover { background: #f9fbfe; }
+        .vr-table-wrap { overflow-x: auto; border: 1px solid #eef1f6; border-radius: 10px; margin-top: 8px; max-height: 480px; overflow-y: auto; }
+        .vr-pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; background: #eaf1fd; color: #2054a6; }
+        .vr-pill.created { background: #fdecea; color: #c0392b; }
+        .vr-empty { padding: 40px 20px; text-align: center; color: #8b96ab; }
+        .vr-results-meta { font-size: 12.5px; color: #7c879b; font-weight: 600; margin: 10px 0 0 2px; }
+
+        .vr-vendor-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+        .vr-vendor-tab { padding: 8px 18px; border-radius: 999px; background: #eef1f6; color: #4b5876; font-weight: 600; font-size: 12.5px; cursor: pointer; }
+        .vr-vendor-tab.active { background: var(--blue-color); color: #fff; }
+        .vr-vendor-picker .select2-container .select2-selection--multiple { border-radius: 9px; border: 1px solid #dde3ec; min-height: 42px; }
+        .vr-selected-list { margin-top: 14px; }
+        .vr-selected-vendor { display: flex; align-items: center; justify-content: space-between; border: 1px solid #eef1f6; border-radius: 10px; padding: 9px 14px; margin-bottom: 6px; background: #fbfcfe; }
+        .vr-selected-vendor .name { font-weight: 600; font-size: 13px; color: #1f2a3c; }
+        .vr-selected-vendor .meta { font-size: 11.5px; color: #7c879b; }
+        .vr-selected-vendor .remove { color: #c0392b; cursor: pointer; font-size: 13px; }
+        .vr-selected-count { font-size: 12.5px; color: #7c879b; font-weight: 600; }
+
+        .vr-qcf-result { text-align: center; padding: 40px 20px; }
+        .vr-qcf-result i { font-size: 46px; color: #1c7c4d; }
+        .vr-qcf-result h3 { margin: 14px 0 4px 0; }
+        .vr-qcf-result .qcf-no { font-size: 22px; font-weight: 800; color: var(--blue-color); }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="vr-breadcrumb">RFQ &nbsp;/&nbsp; <span class="current">Create from PRs</span></div>
+
+        <div class="vr-card">
+            <div class="vr-card-header">
+                <h4>Create RFQ from Purchase Requisitions</h4>
+                <p>Search PRs from SAP &rarr; select lines &rarr; select vendors &rarr; enter quotation end date &rarr; create RFQ</p>
+            </div>
+
+            <div class="vr-steps">
+                <div class="vr-step active" id="stepTab1">1. Selection Criteria</div>
+                <div class="vr-step" id="stepTab2">2. Select PRs</div>
+                <div class="vr-step" id="stepTab3">3. Select Vendors</div>
+                <div class="vr-step" id="stepTab4">4. Enter End Date</div>
+                <div class="vr-step" id="stepTab5">5. Done</div>
+            </div>
+
+            <div class="vr-card-body">
+                <div class="vr-alert error" id="errorAlert"><i class="fas fa-exclamation-circle"></i> <span></span></div>
+
+                <!-- STEP 1: Search criteria -->
+                <div id="step1">
+                    <div class="vr-crit-grid">
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Purchasing Group</div>
+                            <div class="vr-crit-value">
+                                <select class="form-control select2" id="f_purGrp" multiple style="width:100%">
+                                    <option th:each="o : ${purGrpOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                                </select>
+                            </div>
+                            <div class="vr-crit-label">Plant <span class="req">*</span></div>
+                            <div class="vr-crit-value">
+                                <select class="form-control select2" id="f_plant" multiple style="width:100%">
+                                    <option th:each="o : ${plantOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Document Type</div>
+                            <div class="vr-crit-value">
+                                <select class="form-control select2" id="f_docType" multiple style="width:100%">
+                                    <option th:each="o : ${docTypeOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                                </select>
+                            </div>
+                            <div class="vr-crit-label">Material Group</div>
+                            <div class="vr-crit-value">
+                                <select class="form-control select2" id="f_matGrp" multiple style="width:100%">
+                                    <option th:each="o : ${matGrpOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Account Assignment Category</div>
+                            <div class="vr-crit-value">
+                                <select class="form-control select2" id="f_accCat" multiple style="width:100%">
+                                    <option th:each="o : ${accCatOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                                </select>
+                            </div>
+                            <div class="vr-crit-label">Item Category</div>
+                            <div class="vr-crit-value">
+                                <select class="form-control select2" id="f_itemCat" multiple style="width:100%">
+                                    <option th:each="o : ${itemCatOptions}" th:value="${o.value}" th:text="${o.label}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Purchase Requisition</div>
+                            <div class="vr-crit-value range">
+                                <input type="text" class="form-control" id="f_prLow" placeholder="From">
+                            </div>
+                            <div class="vr-crit-label">To</div>
+                            <div class="vr-crit-value range">
+                                <i class="fas fa-long-arrow-alt-right vr-range-arrow"></i>
+                                <input type="text" class="form-control" id="f_prHigh" placeholder="To">
+                            </div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Material</div>
+                            <div class="vr-crit-value range">
+                                <input type="text" class="form-control" id="f_matLow" placeholder="From">
+                            </div>
+                            <div class="vr-crit-label">To</div>
+                            <div class="vr-crit-value range">
+                                <i class="fas fa-long-arrow-alt-right vr-range-arrow"></i>
+                                <input type="text" class="form-control" id="f_matHigh" placeholder="To">
+                            </div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Amended</div>
+                            <div class="vr-crit-value">
+                                <div class="vr-radio-group">
+                                    <label><input type="radio" name="f_amended" value="Y"> Yes</label>
+                                    <label><input type="radio" name="f_amended" value="N"> No</label>
+                                    <label><input type="radio" name="f_amended" value="A" checked> All</label>
+                                </div>
+                            </div>
+                            <div class="vr-crit-label">RFQ Status</div>
+                            <div class="vr-crit-value">
+                                <div class="vr-radio-group">
+                                    <label><input type="radio" name="f_rfqStatus" value="Y"> Floated</label>
+                                    <label><input type="radio" name="f_rfqStatus" value="N" checked> Pending</label>
+                                    <label><input type="radio" name="f_rfqStatus" value="A"> All</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">No. of Day(s)</div>
+                            <div class="vr-crit-value">
+                                <input type="number" class="form-control" id="f_days" value="60" style="max-width:120px;">
+                            </div>
+                            <div class="vr-crit-label" style="background:#f5f7fb;color:transparent;"></div>
+                            <div class="vr-crit-value"></div>
+                        </div>
+                    </div>
+
+                    <div class="text-right" style="margin-top:16px;">
+                        <button type="button" class="vr-btn-light" onclick="resetCriteria()"><i class="fas fa-undo"></i>&nbsp; Reset</button>
+                        <button type="button" class="vr-btn-primary" id="searchBtn" onclick="searchPrs()">
+                            <i class="fas fa-search"></i>&nbsp; Get PRs
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: PR results / selection -->
+                <div id="step2" style="display:none;">
+                    <div class="vr-section-title"><i class="fas fa-list"></i> Purchase Requisitions</div>
+                    <div id="resultsWrap"></div>
+                </div>
+
+                <!-- STEP 3: Vendor selection -->
+                <div id="step3" style="display:none;">
+                    <div class="vr-section-title"><i class="fas fa-users"></i> Select Vendor</div>
+                    <div class="vr-vendor-tabs">
+                        <div class="vr-vendor-tab active" id="vtabS" onclick="switchVendorTab('S')">SAP Vendors</div>
+                        <div class="vr-vendor-tab" id="vtabN" onclick="switchVendorTab('N')">Non SAP Vendors</div>
+                    </div>
+                    <div class="vr-table-wrap" style="max-height:none;">
+                        <table class="vr-table vr-vendor-table" id="vendorTable" style="width:100%">
+                            <thead><tr><th style="width:36px;"></th><th>Vendor</th><th>Vendor Name</th><th>Vendor Email</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="vr-selected-count" id="vendorSelectedCount" style="margin-top:12px;">0 vendor(s) selected</div>
+                </div>
+
+                <!-- STEP 4: End date + header + items -->
+                <div id="step4" style="display:none;">
+                    <div class="vr-crit-grid">
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">RFQ Type</div>
+                            <div class="vr-crit-value">
+                                <select class="form-control select2" id="h_rfqType" style="width:100%">
+                                    <option value="DOM" selected>Domestic</option>
+                                    <option value="IMP">Import</option>
+                                </select>
+                            </div>
+                            <div class="vr-crit-label">Purchasing Group</div>
+                            <div class="vr-crit-value"><input type="text" class="form-control" id="h_purGrp" readonly></div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Purchase Org</div>
+                            <div class="vr-crit-value"><input type="text" class="form-control" id="h_purOrg"></div>
+                            <div class="vr-crit-label">Company Code</div>
+                            <div class="vr-crit-value"><input type="text" class="form-control" id="h_compCode"></div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Quotation End Date <span class="req">*</span></div>
+                            <div class="vr-crit-value">
+                                <input type="date" class="form-control" id="h_qtnEndDate">
+                                <input type="time" class="form-control" id="h_qtnEndTime" value="23:59" style="max-width:120px;">
+                            </div>
+                            <div class="vr-crit-label">Plant</div>
+                            <div class="vr-crit-value"><input type="text" class="form-control" id="h_plant" readonly></div>
+                        </div>
+                        <div class="vr-crit-row">
+                            <div class="vr-crit-label">Title</div>
+                            <div class="vr-crit-value" style="grid-column: span 3;">
+                                <input type="text" class="form-control" id="h_qcfTitle" maxlength="100" style="width:100%;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vr-section-title"><i class="fas fa-truck"></i> Vendors</div>
+                    <div class="vr-table-wrap" style="max-height:none;">
+                        <table class="vr-table">
+                            <thead><tr><th>Vendor</th><th>Vendor Name</th><th>Type</th></tr></thead>
+                            <tbody id="summaryVendorsBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="vr-section-title"><i class="fas fa-boxes"></i> Items</div>
+                    <div class="vr-table-wrap">
+                        <table class="vr-table" id="itemsTable">
+                            <thead>
+                            <tr>
+                                <th>Item</th><th>Material</th><th>Description</th><th>Qty</th><th>Per</th><th>UOM</th><th>Plant</th>
+                                <th>Deliv. Date</th><th>Remarks</th><th>Warranty</th><th>Item Text</th><th>PO Text</th><th>PR No</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="vr-section-title"><i class="fas fa-comment"></i> Comments</div>
+                    <div class="vr-field">
+                        <textarea class="form-control" id="h_comments" rows="2" placeholder="Enter Comments"></textarea>
+                    </div>
+                </div>
+
+                <!-- STEP 5: Result -->
+                <div id="step5" style="display:none;">
+                    <div class="vr-qcf-result">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>RFQ Created Successfully</h3>
+                        <div>Collective RFQ / QCF Number</div>
+                        <div class="qcf-no" id="qcfNoResult"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vr-card-footer" id="footerBar">
+                <button type="button" class="vr-btn-light" id="backBtn" style="display:none;" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i>&nbsp; Back
+                </button>
+                <span></span>
+                <div>
+                    <button type="button" class="vr-btn-primary" id="toVendorsBtn" style="display:none;" onclick="goToVendors()">
+                        Next: Select Vendors&nbsp;<i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" class="vr-btn-primary" id="toEndDateBtn" style="display:none;" onclick="goToEndDate()">
+                        Next: Enter End Date&nbsp;<i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" class="vr-btn-primary" id="createBtn" style="display:none;" onclick="createRfq()">
+                        <i class="fas fa-paper-plane"></i>&nbsp; Create RFQ
+                    </button>
+                    <button type="button" class="vr-btn-primary" id="startOverBtn" style="display:none;" onclick="window.location.reload()">
+                        Create Another RFQ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scriptContent">
+    <script th:src="@{/resources/lte3dot2/plugins/datatables/jquery.dataTables.min.js}"></script>
+    <script th:src="@{/resources/lte3dot2/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js}"></script>
+    <script th:inline="javascript">
+        var prResults = [];
+        var selectedPrKeys = {};
+        var selectedVendors = {};
+        var currentVendorType = 'S';
+
+        $(function () {
+            $('#step1 .select2, #step4 .select2').select2({ theme: 'bootstrap4' });
+        });
+
+        function csrfHeaders() {
+            var headers = { 'Content-Type': 'application/json' };
+            headers[$('meta[name="_csrf_header"]').attr('content')] = $('meta[name="_csrf"]').attr('content');
+            return headers;
+        }
+
+        function showError(msg) {
+            $('#errorAlert span').text(msg);
+            $('#errorAlert').css('display', 'flex');
+        }
+        function clearError() { $('#errorAlert').hide(); }
+
+        function multiVal(id) {
+            var v = $('#' + id).val();
+            return (v && v.length) ? v : null;
+        }
+
+        function resetCriteria() { window.location.reload(); }
+
+        function searchPrs() {
+            clearError();
+            var plant = multiVal('f_plant');
+            if (!plant) { showError('Please select at least one Plant.'); return; }
+
+            var criteria = {
+                status: 'R',
+                days: parseInt($('#f_days').val(), 10) || null,
+                amended: $('input[name="f_amended"]:checked').val(),
+                rfqStatus: $('input[name="f_rfqStatus"]:checked').val(),
+                purGrp: multiVal('f_purGrp'),
+                plant: plant,
+                docType: multiVal('f_docType'),
+                matGrp: multiVal('f_matGrp'),
+                accCat: multiVal('f_accCat'),
+                itemCat: multiVal('f_itemCat'),
+                prLow: $('#f_prLow').val() || null,
+                prHigh: $('#f_prHigh').val() || null,
+                matLow: $('#f_matLow').val() || null,
+                matHigh: $('#f_matHigh').val() || null
+            };
+
+            var $btn = $('#searchBtn');
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>&nbsp; Searching...');
+
+            fetch('/rfq/api/search', { method: 'POST', headers: csrfHeaders(), body: JSON.stringify(criteria) })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    prResults = data || [];
+                    selectedPrKeys = {};
+                    renderResults();
+                    setStep(2);
+                })
+                .catch(function () { showError('Failed to search PRs. Please try again.'); })
+                .finally(function () {
+                    $btn.prop('disabled', false).html('<i class="fas fa-search"></i>&nbsp; Get PRs');
+                });
+        }
+
+        function prKey(pr) { return pr.reqNo + '-' + pr.item; }
+
+        function renderResults() {
+            if (!prResults.length) {
+                $('#resultsWrap').html('<div class="vr-empty"><i class="fa fa-inbox"></i><br>No Purchase Requisitions found for this criteria.</div>');
+                return;
+            }
+            var html = '<div class="vr-results-meta">' + prResults.length + ' PR line(s) found</div>' +
+                '<div class="vr-table-wrap"><table class="vr-table"><thead><tr>' +
+                '<th><input type="checkbox" onchange="toggleAllPrs(this.checked)"></th><th>PR No</th><th>Item</th><th>Material</th><th>Description</th><th>Qty</th><th>UOM</th>' +
+                '<th>Plant</th><th>Pur Grp</th><th>Delivery Date</th><th>Created By</th><th>RFQ</th>' +
+                '</tr></thead><tbody>';
+            prResults.forEach(function (pr) {
+                var k = prKey(pr);
+                var disabled = pr.rfqAlreadyCreated ? 'disabled' : '';
+                html += '<tr>' +
+                    '<td><input type="checkbox" class="pr-check" data-key="' + k + '" onchange="togglePr(\'' + k + '\', this.checked)" ' + disabled + '></td>' +
+                    '<td>' + (pr.reqNo || '') + '</td>' +
+                    '<td>' + (pr.item || '') + '</td>' +
+                    '<td>' + (pr.material || '') + '</td>' +
+                    '<td>' + (pr.description || '') + '</td>' +
+                    '<td>' + (pr.qty != null ? pr.qty : '') + '</td>' +
+                    '<td>' + (pr.uom || '') + '</td>' +
+                    '<td>' + (pr.plant || '') + '</td>' +
+                    '<td>' + (pr.purGrp || '') + '</td>' +
+                    '<td>' + (pr.deliveryDate || '') + '</td>' +
+                    '<td>' + (pr.createdBy || '') + '</td>' +
+                    '<td>' + (pr.rfqAlreadyCreated ? '<span class="vr-pill created">Created</span>' : '<span class="vr-pill">Open</span>') + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table></div>';
+            $('#resultsWrap').html(html);
+        }
+
+        function toggleAllPrs(checked) {
+            $('.pr-check:not(:disabled)').prop('checked', checked).each(function () {
+                togglePr($(this).data('key'), checked);
+            });
+        }
+
+        function togglePr(key, checked) {
+            if (checked) { selectedPrKeys[key] = true; } else { delete selectedPrKeys[key]; }
+        }
+
+        function selectedPrs() {
+            return prResults.filter(function (pr) { return selectedPrKeys[prKey(pr)]; });
+        }
+
+        function setStep(n) {
+            [1, 2, 3, 4, 5].forEach(function (i) {
+                $('#step' + i).toggle(i === n);
+                $('#stepTab' + i).toggleClass('active', i === n).toggleClass('done', i < n);
+            });
+            $('#footerBar').toggle(n !== 1);
+            $('#backBtn').toggle(n > 1 && n < 5);
+            $('#toVendorsBtn').toggle(n === 2);
+            $('#toEndDateBtn').toggle(n === 3);
+            $('#createBtn').toggle(n === 4);
+            $('#startOverBtn').toggle(n === 5);
+        }
+
+        function goBack() {
+            var n = [1, 2, 3, 4, 5].find(function (i) { return $('#step' + i).is(':visible'); });
+            if (n > 1) setStep(n - 1);
+        }
+
+        function goToVendors() {
+            clearError();
+            if (!Object.keys(selectedPrKeys).length) { showError('Please select at least one PR line.'); return; }
+            var first = selectedPrs()[0];
+            if (first) { $('#h_plant').val(first.plant); }
+            setStep(3);
+            switchVendorTab(currentVendorType);
+        }
+
+        var vendorTable = null;
+
+        function initVendorTable() {
+            if (vendorTable) {
+                vendorTable.destroy();
+                $('#vendorTable tbody').empty();
+            }
+            vendorTable = $('#vendorTable').DataTable({
+                serverSide: true,
+                processing: true,
+                pageLength: 10,
+                lengthChange: false,
+                order: [],
+                ajax: {
+                    url: '/rfq/api/vendors/datatable',
+                    data: function (d) { d.type = currentVendorType; }
+                },
+                columns: [
+                    {
+                        data: null, orderable: false, className: 'text-center',
+                        render: function (row) {
+                            var checked = selectedVendors[row.id] ? 'checked' : '';
+                            return '<input type="checkbox" class="vendor-row-check" data-id="' + row.id + '" ' + checked + '>';
+                        }
+                    },
+                    { data: 'id' },
+                    { data: 'name' },
+                    { data: 'email' }
+                ],
+                language: { searchPlaceholder: 'Search vendor id, name, or email...', search: '' }
+            });
+
+            $('#vendorTable tbody').off('change', '.vendor-row-check').on('change', '.vendor-row-check', function () {
+                var id = $(this).data('id') + '';
+                var rowData = vendorTable.row($(this).closest('tr')).data();
+                if (this.checked) { selectedVendors[id] = rowData; } else { delete selectedVendors[id]; }
+                $('#vendorSelectedCount').text(Object.keys(selectedVendors).length + ' vendor(s) selected');
+            });
+        }
+
+        function switchVendorTab(type) {
+            currentVendorType = type;
+            $('#vtabS').toggleClass('active', type === 'S');
+            $('#vtabN').toggleClass('active', type === 'N');
+            initVendorTable();
+        }
+
+        function goToEndDate() {
+            clearError();
+            if (!Object.keys(selectedVendors).length) { showError('Please select at least one vendor.'); return; }
+            $('#h_purGrp').val((selectedPrs()[0] || {}).purGrp || '');
+            renderSummaryVendors();
+            renderItemsTable();
+            setStep(4);
+        }
+
+        function renderSummaryVendors() {
+            var html = '';
+            Object.values(selectedVendors).forEach(function (v) {
+                html += '<tr><td>' + v.id + '</td><td>' + (v.name || '') + '</td>' +
+                    '<td>' + (v.type === 'S' ? 'SAP' : 'Non-SAP') + '</td></tr>';
+            });
+            $('#summaryVendorsBody').html(html);
+        }
+
+        function renderItemsTable() {
+            var $tbody = $('#itemsTable tbody');
+            $tbody.empty();
+            selectedPrs().forEach(function (pr, idx) {
+                var row = '<tr data-idx="' + idx + '">' +
+                    '<td>' + (pr.item || '') + '</td>' +
+                    '<td>' + (pr.material || '') + '</td>' +
+                    '<td>' + (pr.description || '') + '</td>' +
+                    '<td>' + (pr.qty != null ? pr.qty : '') + '</td>' +
+                    '<td>1</td>' +
+                    '<td>' + (pr.uom || '') + '</td>' +
+                    '<td>' + (pr.plant || '') + '</td>' +
+                    '<td><input type="date" class="form-control" data-f="deliveryDate" value="' + (pr.deliveryDate || '') + '"></td>' +
+                    '<td><input type="text" class="form-control" data-f="remarks"></td>' +
+                    '<td><input type="text" class="form-control" data-f="warranty"></td>' +
+                    '<td><input type="text" class="form-control" data-f="itemText" value="' + (pr.itemText || '') + '"></td>' +
+                    '<td><input type="text" class="form-control" data-f="poText" value="' + (pr.poText || '') + '"></td>' +
+                    '<td>' + (pr.reqNo || '') + '-' + (pr.item || '') + '</td>' +
+                    '</tr>';
+                $tbody.append(row);
+            });
+        }
+
+        function collectItems() {
+            var prs = selectedPrs();
+            var items = [];
+            $('#itemsTable tbody tr').each(function (i) {
+                var pr = prs[i];
+                var $row = $(this);
+                items.push({
+                    prNo: pr.reqNo,
+                    prItem: pr.item,
+                    material: pr.material,
+                    materialDesc: pr.description,
+                    qty: pr.qty,
+                    uom: pr.uom,
+                    plant: pr.plant,
+                    deliveryDate: $row.find('[data-f="deliveryDate"]').val() || null,
+                    remarks: $row.find('[data-f="remarks"]').val(),
+                    warranty: $row.find('[data-f="warranty"]').val(),
+                    itemText: $row.find('[data-f="itemText"]').val(),
+                    poText: $row.find('[data-f="poText"]').val(),
+                    currency: pr.currency,
+                    accCat: pr.accAssgnCat,
+                    itemCat: pr.itemCat,
+                    docType: pr.docType,
+                    matGrp: pr.matGrp,
+                    createdBy: pr.createdBy
+                });
+            });
+            return items;
+        }
+
+        function createRfq() {
+            clearError();
+            var qtnEndDate = $('#h_qtnEndDate').val();
+            if (!qtnEndDate) { showError('Please enter the Quotation End Date.'); return; }
+
+            var payload = {
+                rfqType: $('#h_rfqType').val(),
+                purGrp: (selectedPrs()[0] || {}).purGrp || '',
+                purOrg: $('#h_purOrg').val(),
+                compCode: $('#h_compCode').val(),
+                plant: $('#h_plant').val(),
+                qtnEndDate: qtnEndDate,
+                qtnEndTime: $('#h_qtnEndTime').val() || '23:59',
+                qcfTitle: $('#h_qcfTitle').val(),
+                comments: $('#h_comments').val(),
+                vendors: Object.values(selectedVendors),
+                items: collectItems()
+            };
+
+            var $btn = $('#createBtn');
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>&nbsp; Creating...');
+
+            fetch('/rfq/api/create', { method: 'POST', headers: csrfHeaders(), body: JSON.stringify(payload) })
+                .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
+                .then(function (result) {
+                    if (result.ok) {
+                        $('#qcfNoResult').text(result.body.qcfNo);
+                        setStep(5);
+                    } else {
+                        showError(result.body.message || 'Failed to create RFQ.');
+                    }
+                })
+                .catch(function () { showError('Unexpected error while creating RFQ. Please try again.'); })
+                .finally(function () {
+                    $btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i>&nbsp; Create RFQ');
+                });
+        }
+    </script>
+</div>
+</body>
+</html>

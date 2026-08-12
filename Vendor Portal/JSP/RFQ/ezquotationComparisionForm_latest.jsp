@@ -1,0 +1,2777 @@
+<%@ include file="../Misc/ezGetUserAuthDefaults.jsp"%>   
+<%@ include file="../Misc/ezHeader.jsp"%> 
+<%@include file="../../../Includes/JSPs/Rfq/iSelectFields.jsp"%> 
+<%@include file="../../../Includes/JSPs/Rfq/iQuoteRFQDetails.jsp"%>          
+<%@ include file="../Misc/ezGetJGLVendorsList.jsp"%>    
+<%@ include file="../../../Includes/JSPs/Misc/iDocComments.jsp"%> 
+<%@ include file="../../../Includes/JSPs/Misc/iCommonMethods.jsp"%>  
+<%@ include file="../../../Includes/JSPs/Inbox/iGetUploadDocs.jsp"%>
+<%@ page import="ezc.ezutil.*"%>
+<%@ page import="java.text.*" %>
+<%@ page import ="ezc.ezpreprocurement.params.*,ezc.ezparam.*,java.util.*" %>           
+<jsp:useBean id="rfqManager" class="ezc.ezpreprocurement.client.EzPreProcurementManager"/>      
+<%//@ page import="org.apache.poi.xssf.usermodel.*"%>                
+<%//@ page import="org.apache.poi.ss.usermodel.Cell"%>            
+<%//@ page import="org.apache.poi.ss.usermodel.Row"%>
+<%//@ page import="org.apache.poi.ss.usermodel.Sheet"%> 
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFCellStyle"%> 
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFCell"%>
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFRow"%>
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFSheet"%>
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFWorkbook"%> 
+<%//@ page import="org.apache.poi.ss.usermodel.*,org.apache.poi.ss.util.RegionUtil"%>
+<%//@ page import="org.apache.poi.xssf.usermodel.XSSFColor,org.apache.poi.ss.util.CellRangeAddress"%>
+<%@ page import ="ezc.ezbasicutil.*" %>
+<%@page import="ezc.sapconnection.*, com.sap.conn.jco.JCoDestination, com.sap.conn.jco.JCoFunction, com.sap.conn.jco.JCoParameterList,com.sap.conn.jco.JCoStructure,com.sap.conn.jco.JCoTable"%>
+<%! 
+	private String checkNull(String str){ 
+		if("null".equals(str) ||str==null)   
+		str="";
+		return str.trim(); 
+	}
+ 	private String checkNull_Num(String str)
+	{
+		if("null".equals(str) ||str==null || "".equals(str))
+			str="0";
+		
+		return str;
+ 	}	
+%>
+<%
+	String status = request.getParameter("type");
+	String showSubmit = request.getParameter("showSubmit");
+	ezc.ezcommon.EzLog4j.log("status>>>>>>"+status,"I");
+	
+	String wfPlant=(String)dtlXML.getFieldValueString(0,"ERH_PLANT");
+	String compCode=(String)dtlXML.getFieldValueString(0,"ERH_COMP_CODE");
+	String category=(String)dtlXML.getFieldValueString(0,"ERH_CATEGORY");
+	
+	String readOnly="";
+	if("Sub".equals(status)) readOnly="readonly";
+	
+	Hashtable taxesHT =  new Hashtable();
+	taxesHT.put("DISC","Discount");
+	taxesHT.put("PKFW","Packing & Forwarding");
+	taxesHT.put("FRT","Freight"); 
+	taxesHT.put("GST","GST");
+
+	java.util.Hashtable hashType = new java.util.Hashtable();
+	hashType.put("P","(%)"); 
+	hashType.put("Q","(/Qty)");
+	hashType.put("V","(Value)");
+	hashType.put("","");
+	
+	String destinationPath="";
+	
+	try
+	{
+		ResourceBundle site1= ResourceBundle.getBundle("Site");
+		destinationPath=site1.getString("UPLOADFILEPATHDIR");
+	}
+	catch(Exception e)
+	{ 
+	    ezc.ezcommon.EzLog4j.log("Got Exception while getting Upload Temp Dir "+e,"E");	
+	}
+	
+	 ezc.ezcommon.EzLog4j.log("::::destinationPath::: "+destinationPath,"I");
+
+	FileOutputStream outputStream = null;
+	
+	String tempDocId="";
+	if(qcfNo.contains("/"))
+	{
+		tempDocId=qcfNo.replaceAll("/","_");
+	}
+	else
+	{
+		tempDocId=qcfNo;
+	}
+	String excelFilePath=destinationPath+"QCF\\"+tempDocId+"\\QCF_"+tempDocId+".xlsx";
+	File upFile1=new File(destinationPath+"QCF\\"+tempDocId);
+	
+	if(!((upFile1.exists()) && (upFile1.isDirectory())))
+	{
+	boolean dir=upFile1.mkdirs();
+	ezc.ezcommon.EzLog4j.log(":::directory:::::"+dir,"I");
+	}
+	/*outputStream = new FileOutputStream(excelFilePath);
+
+	Workbook wb = new XSSFWorkbook(); //or new HSSFWorkbook();
+	Sheet sheet = wb.createSheet("QCF");*/
+	
+	ArrayList rfqList = new ArrayList();
+	Hashtable rfqHash = new Hashtable();
+	int x=0;	
+
+%>
+<Html>
+<Head>
+
+<link rel="stylesheet" href="../Misc/library/assets/bootstrap-3.3.2/css/bootstrap.css">
+<style>
+#cont {
+	height: 450px;
+}
+
+#table-1 {
+	width: 1300px !important;
+}
+</style>
+<style>
+table {
+  border-collapse: collapse;
+  background: white;
+  table-layout: fixed;
+  width: 100%;
+}
+th, td {
+  padding: 5px 5px;
+  border: 1px solid black;
+  line-height: inherit !important;
+  overflow: hidden;
+  
+}
+.fborder
+{	
+    color: white;
+    background: #325786;
+    
+	
+}
+
+.pane {
+  background: #eee;
+}
+.pane-hScroll {
+ overflow: auto;
+  width: 100%;
+  
+}
+.pane-vScroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 600px;
+  
+}
+
+@media only print {
+   #idOfYourDiv {
+     width: auto;
+     height: auto;
+    overflow: visible;
+   }
+}
+</style>
+</Head>
+<body >
+<Form name="myForm">
+<input type="hidden" name="qcfNo" value="<%=qcfNo%>">  
+<input type="hidden" name="rankType" value=""> 
+<input type="hidden" name="vendorSelected" value="N">
+<input type="hidden" name="chkVal">
+<input type="hidden" name="plant" value="<%=wfPlant%>">
+<input type="hidden" name="compCode" value="<%=compCode%>">
+<input type="hidden" name="category" value="<%=category%>">
+<input type="hidden" name="type" value="<%=status%>">
+<input type="hidden" name="excelFilePath" value="<%=excelFilePath%>">
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+<!-- Content Header (Page header) -->	
+	<section class="content-header">
+   	      <h4>Quotation Comparison Form:<b> <%=qcfNo%></b></h4> 
+   	</section>
+   	
+<!-- Main content -->  
+		<div class="box-body">
+		<div class="pane pane--table1" id="idOfYourDiv">
+		  <div class="pane-hScroll">
+		  <div id="cont">
+			<table id="table-1" class="table" border=1 style="font-size:12px;margin-bottom:0px !important">
+				<thead>
+				<tr style="background-color:#58afbd !important">
+				<th colspan=7 style="width:150px;text-align:left">Name of the Party</th>
+<%	
+	String lineRfq="";
+	for(int i=0;i<rfqLen;i++)
+	{
+		lineRfq = rfqListObj.getFieldValueString(i,"ERH_RFQ_NO");
+%>
+		<input type="hidden" name="lineRfq<%=i%>" id="lineRfq<%=i%>" value="<%=lineRfq%>">		
+<%
+	}
+
+		
+
+		//out.print(rfqVendLinesRet.toEzcString());
+		String checked="";
+		String disabledStr="";
+		for(int i=0;i<rfqVendLinesRetCnt;i++)  
+		{
+			String selQcf= rfqVendLinesRet.getFieldValueString(i,"QCFNO");
+			String selRfq= rfqVendLinesRet.getFieldValueString(i,"RFQNO");
+			String selLine= rfqVendLinesRet.getFieldValueString(i,"LINENO");
+			String rfqVen= rfqVendLinesRet.getFieldValueString(i,"VENDOR"); 
+			String tempVend= rfqVendLinesRet.getFieldValueString(i,"VENDOR"); 
+			try{
+					tempVend = Long.parseLong(tempVend)+"";
+					tempVend = "0000000000"+tempVend;
+					tempVend = tempVend.substring(tempVend.length()-10,tempVend.length());
+				}catch(Exception e){} 			
+			//String selVal= selQcf+"##"+selRfq+"##"+rfqVen;
+			String selVal= selRfq;
+			
+			if(chkList.contains(rfqVen))
+				continue;
+			else
+				chkList.add(rfqVen);	
+			
+			if(chkVen.contains(rfqVen))	
+				checked="checked";
+			else
+				checked="";
+				
+			//if("".equals(checked))checked="disabled";
+			
+			if("Sub".equals(status))
+			{
+				disabledStr="onclick='return false'";
+				
+				if("".equals(checked))checked="disabled";
+			}	
+			
+%>		
+				
+				<th colspan=3 style="width:75px;text-align:center"><input class="" type="checkbox"  name="selVen" id="selVen" value="<%=selVal%>" <%=checked%> <%=disabledStr%> onclick="chkRecQty('<%=selRfq%>','<%=selLine%>','<%=selQcf%>')" >&nbsp;<%=gv_VendorsHT.get(tempVend)+"["+rfqVen+"]"%></th>
+<%
+		}
+		
+%>		
+				</tr>
+		<!--<tr style="background-color:#575f9452 !important">
+			<th colspan=7 style="width:150px;text-align:left">Rank</th>
+<%			
+			chkList = new ArrayList();			
+			for(int i=0;i<rfqVendLinesRetCnt;i++)
+			{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))          
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));	
+			
+			String vend=rfqLinesRet.getFieldValueString(i,"VENDOR");
+			
+%>
+			<th colspan=3 style="width:60px;text-align:center">
+			<select class="form-control" name="rank" style="width:50%;display: inline-block;" disabled>
+			<option valie="">Select Rank</option>
+<%			
+			Enumeration names = vendRankHT.keys(); 
+			   while(names.hasMoreElements()) 
+			   {
+			      String key = (String) names.nextElement();
+			      String val=(String)vendRankHT.get(key);
+			      String rank=(String)rankWiseHT.get(vend);
+			      String selectStr=""; 
+			      if(val.equals(rank))selectStr="selected"; 
+%>
+				<option value="<%=vendRankHT.get(key)%>" <%=selectStr%>><%=vendRankHT.get(key)%></option>
+<%	
+			  }
+%>
+			</select>
+			</th>  
+<%			
+			} 
+%>
+		    <tr>-->
+		    <!--<tr style="background-color:#575f9452 !important">
+			<th colspan=7 style="width:150px;text-align:left">Reason</th>
+			
+<%			
+			chkList = new ArrayList();
+			int p=0;
+			for(int i=0;i<rfqVendLinesRetCnt;i++)
+			{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));	
+				
+						
+%>
+			<th colspan=3 style="width:60px;text-align:center">
+			<div>
+			<select class="form-control" name="reason<%=p%>" id="reason<%=p%>" style="width:50%;display: inline-block;">
+			<option value="">Select Reason</option>
+			<option value="SS" <%if("SS".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%>>Single Source</option>
+			<option value="OEM" <%if("OEM".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%> >OEM</option>
+			<option value="OAD" <%if("OAD".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%>>OEM-Authorized Dealer</option>
+			<option value="SOP" <%if("SOP".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%>>SOP</option>
+			<option value="LPO" <%if("LPO".equals(rfqLinesRet.getFieldValueString(i,"REASON")))out.println("selected");%>>LPO</option>
+			</select>
+			</div>
+			</th>  
+
+<%			p++;			
+			}
+%>
+		</tr> -->
+				<tr style="background-color:skyblue !important">
+					<th colspan=7 style="width:150px;text-align:left">Quotation Ref.No.</th>
+<%
+
+		chkList = new ArrayList();
+		for(int i=0;i<rfqVendLinesRetCnt;i++)
+		{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));				
+			
+%>					
+					<!--<th colspan=3 style="width:200px;text-align:center"><%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%>[RO]</th>-->
+					<th colspan=3 style="width:60px;text-align:center"><%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%></th>
+<%
+		}
+%>		
+				</tr>
+				<tr style="background-color:skyblue !important">
+					<th colspan=7 style="width:150px;text-align:left">Payment Terms</th>
+<%
+		chkList = new ArrayList();			
+		for(int i=0;i<rfqVendLinesRetCnt;i++) 
+		{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));			
+%>					
+					<th colspan=3 style="width:60px;text-align:center"><%=pmntHash.get(rfqVendLinesRet.getFieldValueString(i,"PMNT"))%>[<%=rfqVendLinesRet.getFieldValueString(i,"PMNT")%>]</th>
+					
+<%
+		}
+%>
+				</tr>
+				<tr style="background-color:skyblue !important">
+					<th colspan=7 style="width:150px;text-align:left">Inco Terms</th>
+<%
+		chkList = new ArrayList();			
+		for(int i=0;i<rfqVendLinesRetCnt;i++)    
+		{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));		
+%>					
+					<th colspan=3 style="width:60px;text-align:center"><%=incoHash.get(rfqVendLinesRet.getFieldValueString(i,"INCO"))%>[<%=rfqVendLinesRet.getFieldValueString(i,"INCO")%>]</th>
+					
+<%
+		}
+%>
+		</tr>	
+			<tr style="background-color:skyblue !important">
+			<th rowspan=2  style="width:100px;text-align:center">S.No.</th>
+			<!--<th rowspan=2  style="width:100px;text-align:center">Mat Group</th>
+			<th rowspan=2  style="width:100px;text-align:center">PR No.</th>
+			<th rowspan=2  style="width:50x;text-align:center">PR Item.</th> -->			
+			<th rowspan=2  style="width:200px;text-align:center">Material</th>
+			<th rowspan=2  style="width:100px;text-align:center">Description</th>
+			<th rowspan=2  style="width:100px;text-align:center">Qty</th>
+			<th rowspan=2  style="width:100px;text-align:center">UOM</th>
+			<!--<th rowspan=2  style="width:100px;text-align:center">Item<br>Text</th>
+			<th rowspan=2  style="width:100px;text-align:center">PO<br>Text</th> -->
+			<th rowspan=2  style="width:50px;text-align:center">Budget Price</th>
+			<th rowspan=2  style="width:50px;text-align:center">Last PO <br> Price</th>
+<%		
+		chkList = new ArrayList();
+		for(int i=0;i<rfqVendLinesRetCnt;i++)
+		{
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));		
+%>					
+				<!--<th style="width:80px;text-align:center">Rate<br>Rs./UOM </th>
+				<th style="width:100px;text-align:center">Total<br>Amount Rs.</th> -->
+				<th style="width:100px;text-align:center">Rate<br>Rs./UOM </th>
+				<th style="width:100px;text-align:center">Total<br>Amount Rs.</th>
+				<th style="width:100px;text-align:center">Qty<br>Recommended</th>
+				
+<%
+		}
+%>
+		</tr>	
+		</thead>
+		<tbody>
+<%      	 rfqLinesList = new ArrayList();
+		for(int i=0;i<rfqLinesRetCnt;i++)
+		{
+			String qcfH = rfqLinesRet.getFieldValueString(i,"QCFNO");
+			String lineH = rfqLinesRet.getFieldValueString(i,"LINENO");
+			String vend=rfqLinesRet.getFieldValueString(i,"VENDOR");
+			String payMentType=checkNull(rfqLinesRet.getFieldValueString(i,"PAYMENTTYPE"));
+			String leadDays=checkNull(rfqLinesRet.getFieldValueString(i,"LEADTIME"));
+			String percent=checkNull(rfqLinesRet.getFieldValueString(i,"PERCENT"));
+			if("".equals(percent))percent="NA";
+			vendWisePaymentTypeHT.put(vend,payMentType+"#"+leadDays+"#"+percent);
+ 
+			if(rfqLinesList.contains(rfqLinesRet.getFieldValueString(i,"QCFNO")+"##"+rfqLinesRet.getFieldValueString(i,"LINENO")))
+				continue;
+			else
+				rfqLinesList.add(rfqLinesRet.getFieldValueString(i,"QCFNO")+"##"+rfqLinesRet.getFieldValueString(i,"LINENO"));
+
+			String myQty = rfqLinesRet.getFieldValueString(i,"QTY");
+
+			try
+			{
+				myQty = (Double.parseDouble(myQty))+"";
+				myQty  = new java.math.BigDecimal(myQty).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e){}
+			totalQuantity=Double.parseDouble(myQty);  
+			
+			String purOrg =(String)dtlXML.getFieldValueString(0,"ERH_PUR_ORG");
+			ezc.ezcommon.EzLog4j.log(":::purOrg:::::"+purOrg,"I");
+			String rfqPlant=(String)dtlXML.getFieldValueString(0,"ERD_PLANT");
+		
+		//To fetch last PO price			
+		java.math.BigDecimal netPR=new java.math.BigDecimal(0);
+		JCoFunction function =null;	
+		String logonSite = (String)session.getValue("SITE");
+
+		JCoDestination destination = EzSAPHandler.getDestination(logonSite+"~999");	
+		function = EzSAPHandler.getJCoFunction(destination,"Z_EZ_GET_LAST_PO_PRICE");
+
+		JCoParameterList sapPreProc = function.getImportParameterList();
+		sapPreProc.setValue("PUR_ORG",purOrg);
+
+		JCoParameterList sapTabParam= function.getTableParameterList();
+		JCoTable poItemTable = sapTabParam.getTable("POITEMS");
+
+		poItemTable.appendRow();
+		
+		//poItemTable.setValue("MATNR","000000000000402102");
+		String matNo = rfqLinesRet.getFieldValueString(i,"MATERIAL");
+		matNo ="000000000000000000"+matNo;
+		matNo =matNo.substring(matNo.length()-18);
+		poItemTable.setValue("MATNR",matNo);
+
+		try
+		{
+			function.execute(destination);
+		}catch(Exception qe){
+			ezc.ezcommon.EzLog4j.log("Exception in Z_EZ_GET_LAST_PO_PRICE FM Exectution:::::::::::::::"+qe,"I");
+		}	
+
+
+		int poCnt =0;
+		ArrayList items =null;
+		JCoTable sapPoList = function.getTableParameterList().getTable("POITEMS"); 
+		poCnt 	= 	sapPoList.getNumRows();
+		ezc.ezcommon.EzLog4j.log("poCnt:::::::::::::::"+poCnt,"I");
+		ezc.ezparam.ReturnObjFromRetrieve myRet= null;
+
+		if(poCnt > 0)
+		{
+			myRet= new ReturnObjFromRetrieve(new String[]{"VENDOR","VENDNAME","PLANT","MATERAIL","PONUM","CREATED_ON","UOM","CURRENCY","NETPR"});
+
+		try 
+		{		
+			do
+			{
+				String chkStr = (String)sapPoList.getValue("EBELN");
+				//if(chkStr.startsWith("6"))
+				 	//continue;
+				myRet.setFieldValue("VENDOR", sapPoList.getValue("LIFNR"));		
+				myRet.setFieldValue("VENDNAME",sapPoList.getValue("NAME1"));		
+				myRet.setFieldValue("PLANT",sapPoList.getValue("WERKS"));
+				myRet.setFieldValue("MATERAIL",sapPoList.getValue("MATNR"));
+				myRet.setFieldValue("PONUM",sapPoList.getValue("EBELN"));
+				myRet.setFieldValue("CREATED_ON",sapPoList.getValue("AEDAT"));
+				myRet.setFieldValue("UOM",sapPoList.getValue("MEINS"));
+				myRet.setFieldValue("CURRENCY",sapPoList.getValue("WAERS"));
+				myRet.setFieldValue("NETPR",sapPoList.getValue("NETPR"));
+				myRet.addRow();
+
+
+				
+				String lastPOPlant=(String)sapPoList.getValue("WERKS");
+				if(netPR.compareTo(java.math.BigDecimal.ZERO)!=0)
+					if(rfqPlant.equals(lastPOPlant))
+						netPR=(java.math.BigDecimal)sapPoList.getValue("NETPR");
+
+			  	ezc.ezcommon.EzLog4j.log("rfqPlant"+rfqPlant,"I");
+			  	ezc.ezcommon.EzLog4j.log("lastPOPlant"+lastPOPlant,"I");
+			  		
+			  }while(sapPoList.nextRow());
+			  		
+			  //out.println("myRet"+myRet.toEzcString());
+
+		}
+		catch (Exception e) {
+		}
+		ezc.ezcommon.EzLog4j.log("CHECK1>>>>","I");
+		String netPrStr= checkNull(myRet.getFieldValueString(0,"NETPR"));   
+		java.math.BigDecimal netprBD=new java.math.BigDecimal(netPrStr);
+		if(netPR.compareTo(java.math.BigDecimal.ZERO)==0)netPR=netprBD;
+		}
+		totPOPrice=(netPR.doubleValue()*Double.parseDouble(myQty))+totPOPrice;
+		totPOPriceStr=new java.math.BigDecimal(totPOPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		String prNum=rfqVendLinesRet.getFieldValueString(i,"PRDET");
+		
+		ezc.ezcommon.EzLog4j.log("CHECK2>>>>","I");
+		
+      		String budgetPrice = "0";
+      		budgetPrice = checkNull_Num(rfqLinesRet.getFieldValueString(i,"BPRICE"));
+		try
+		{
+			budgetPrice = (Double.parseDouble(budgetPrice))+"";
+			budgetPrice  = new java.math.BigDecimal(budgetPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}catch(Exception e)
+		{
+			budgetPrice="0";
+		}      		
+      		/*
+		ezc.ezparam.ReturnObjFromRetrieve budgetRet	=  null;
+		    		
+      		//Getting Budget Price
+      	
+      		String qryStr="SELECT EMBP_BASIC_PRICE FROM EZC_MAT_BUDGET_PRICE WHERE EMBP_MATERIAL='"+matNo+"'" ;
+		ezc.ezcommon.EzLog4j.log("** qryStrPRICE>>>"+qryStr,"I");
+
+		quoteTableRow.setQuery(qryStr);
+		quoteTable.appendRow(quoteTableRow);
+		quoteParams.setLocalStore("Y");
+		quoteParams.setObject(quoteTable);
+		Session.prepareParams(quoteParams);  
+		
+		
+		try
+		{
+			budgetRet=(ezc.ezparam.ReturnObjFromRetrieve)quoteMgr.ezGetMiscTransactions(quoteParams);
+		
+		}
+		catch(Exception e)
+		{
+			out.println("Exception in getting conditions>>>>>"+e);
+		}
+		
+		if(budgetRet!=null && budgetRet.getRowCount()>0)
+		{
+			budgetPrice = budgetRet.getFieldValueString(0,"EMBP_BASIC_PRICE");
+
+		}	*/		
+		
+		String dispMat = "";
+		try
+		{
+			dispMat = Long.parseLong(rfqLinesRet.getFieldValueString(i,"MATERIAL"))+"";
+		}catch(Exception e){
+		}
+		String uom = rfqLinesRet.getFieldValueString(i,"UOM");
+		if("LE".equals(uom))
+			uom="AU";	
+			
+		
+	
+%>	
+		<input type=hidden name="rfqItem" value="<%=i%>">		      	
+		<tr>
+			<td style="width:100px;text-align:center" ><%=rfqLinesRet.getFieldValueString(i,"LINENO")%>&nbsp;</td> 
+							
+			<td style="width:100px;text-align:center" ><%=dispMat%></td>
+			<td style="width:200px;text-align:center;" ><%=rfqLinesRet.getFieldValueString(i,"MATDESC")%>&nbsp;</td>
+			<td style="width:20px;text-align:center"><input type="hidden" name="prItemQty<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" id="prItemQty<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" value="<%=myQty%>"><%=myQty%></td>
+			<td style="width:200px;text-align:center" ><%=uom%>&nbsp;</td>
+			<!--<td style="width:200px;text-align:center;"><a href="javascript:openLongItem('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"ITEMTEXT"))%>','I')"> <span class="glyphicon glyphicon-new-window"></span> </a></td> 
+			<td style="width:100px;text-align:center;"><a href="javascript:openLongItem('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"POTEXT"))%>','P')"> <span class="glyphicon glyphicon-new-window"></span> </a></td> -->
+			<td style="width:100px;text-align:center" ><%=budgetPrice%></td>
+			<td style="width:100px;text-align:center" >
+			<%if(netPR.compareTo(java.math.BigDecimal.ZERO)==0){%>
+			<a><b><%=netPR%></b></a>&nbsp; 
+			<!--<a href="javascript:openLastPO('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>')"> <span class="glyphicon glyphicon-new-window"></span> </a>-->
+			<%}else{%>
+			<a><b><%=netPR%></b></a>&nbsp; 
+			<a href="javascript:openLastPO('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=purOrg%>','<%=rfqPlant%>')"> <span class="glyphicon glyphicon-new-window"></span> </a>
+			<%}%>
+		</td>
+<%
+		
+		//chkList = new ArrayList();  
+		for(int j=0;j<rfqVendLinesRetCnt;j++)
+		{
+			/*if(chkList.contains(rfqVendLinesRet.getFieldValueString(j,"RFQNO")))
+				continue; 
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(j,"RFQNO"));*/
+
+			String vendorLoop=rfqLinesRet.getFieldValueString(j,"VENDOR");	 
+
+			if(qcfH.equals(rfqVendLinesRet.getFieldValueString(j,"QCFNO")) && lineH.equals(rfqVendLinesRet.getFieldValueString(j,"LINENO")))
+			{
+			String material="";
+			try{
+			material=(Long.parseLong(rfqLinesRet.getFieldValueString(i,"MATERIAL")))+"";
+			}catch(Exception e){
+			material=rfqLinesRet.getFieldValueString(i,"MATERIAL");
+			}
+			String quotCurr = rfqVendLinesRet.getFieldValueString(j,"CURR");
+			if("".equals(quotCurr) || "null".equals(quotCurr) || quotCurr==null) quotCurr = "INR";
+			String HSNCode=	rfqVendLinesRet.getFieldValueString(j,"HSNCODE");
+			String itemCat = rfqVendLinesRet.getFieldValueString(j,"ITEMCAT");
+			String quotPrice = rfqVendLinesRet.getFieldValueString(j,"PRICE");
+			
+			if("".equals(quotPrice) || "null".equals(quotPrice) || quotPrice==null) quotPrice = "0";
+			try
+			{
+				quotPrice  = new java.math.BigDecimal(quotPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e){}
+
+			try
+			{
+				totVal= (Double.parseDouble(myQty) * Double.parseDouble(quotPrice));
+				totValStr  = new java.math.BigDecimal(totVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{
+				totVal = 00.0;
+			}
+			ezc.ezcommon.EzLog4j.log("prNum111>>>>"+prNum,"I");
+			String leaddays1 = checkNull(rfqVendLinesRet.getFieldValueString(j,"LEADDAYS"));
+			String leaddaysCurr = checkNull(rfqVendLinesRet.getFieldValueString(j,"LEADVAL"));
+			String leaddaysHis = checkNull(rfqVendLinesRet.getFieldValueString(j,"LEADHISVAL"));
+			ezc.ezcommon.EzLog4j.log("leaddaysCurr:::::::::::::::"+leaddaysCurr,"I");   
+			ezc.ezcommon.EzLog4j.log("leaddaysHis:::::::::::::::"+leaddaysHis,"I");   
+			String quotHisPrice = rfqVendLinesRet.getFieldValueString(j,"PRICEHIS");   
+			if("".equals(quotHisPrice) || "null".equals(quotHisPrice) || quotHisPrice==null) quotHisPrice = "0";
+			try
+			{
+				quotHisPrice  = new java.math.BigDecimal(quotHisPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}						
+			catch(Exception e){}
+			try
+			{
+				totHisVal= (Double.parseDouble(myQty) * Double.parseDouble(quotHisPrice));
+				totHisValStr  = new java.math.BigDecimal(totHisVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{
+				totHisVal = 00.0;
+			}
+			//out.println("quotHisPrice"+quotHisPrice+"myQty"+myQty);
+			String styleCl="";  
+			String keyStr=rfqLinesRet.getFieldValueString(i,"MATERIAL")+"#"+rfqVendLinesRet.getFieldValueString(j,"VENDOR")+"#"+rfqVendLinesRet.getFieldValueString(j,"RFQNO");
+			String chkStr=rfqVendLinesRet.getFieldValueString(j,"RFQNO")+rfqVendLinesRet.getFieldValueString(j,"LINENO");
+			String chkRfq=rfqVendLinesRet.getFieldValueString(j,"RFQNO");
+			String chkLine=rfqVendLinesRet.getFieldValueString(j,"LINENO");
+			ezc.ezcommon.EzLog4j.log("chkRfq:::::::::::::::"+chkRfq,"I");	
+			if(!rfqList.contains(chkRfq))
+			{
+				x++;
+				rfqList.add(chkRfq);
+				rfqHash.put(x,chkRfq);
+			}	
+			ezc.ezcommon.EzLog4j.log("chkRfq:::::::::::::::"+chkRfq,"I");						
+
+			discType = checkNull(rfqVendLinesRet.getFieldValueString(j,"DISCTYPE")); 
+			condDisc = checkNull(rfqVendLinesRet.getFieldValueString(j,"DISCVAL"));
+			condGST	 =checkNull(rfqVendLinesRet.getFieldValueString(j,"TAXVAL"));
+			if("".equals(condDisc) || "null".equals(condDisc) || condDisc==null) condDisc = "0";
+			if("".equals(condGST) || "null".equals(condGST) || condGST==null) condGST = "0";
+
+			try
+			{
+				if("P".equals(discType))
+					discVal= Double.parseDouble(totValStr) * Double.parseDouble(condDisc)/100;
+				else if("Q".equals(discType))
+					discVal= Double.parseDouble(condDisc) * Double.parseDouble(myQty);
+				else if("V".equals(discType))
+					discVal= Double.parseDouble(condDisc);	
+				else
+					discVal=0.00;
+
+				discValStr  = new java.math.BigDecimal(discVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{
+				discVal = 00.0;
+			}
+			try
+			{
+
+				basicVal=  totVal - discVal;
+				basicValStr  = new java.math.BigDecimal(basicVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+
+			}
+			catch(Exception e)
+			{ 
+				discTotVal = 00.0;  
+			}	
+						
+			//PKFW
+			PKFWType = checkNull(rfqVendLinesRet.getFieldValueString(j,"PKFWTYPE"));
+			//out.println("PKFWType>>>"+PKFWType);
+			condPKFW = checkNull(rfqVendLinesRet.getFieldValueString(j,"PKFWVAL"));
+			//out.println("condPKFW>>>>"+condPKFW);
+			if("".equals(condPKFW) || "null".equals(condPKFW) || condPKFW==null) 
+				condPKFW = "0"; 
+					
+			try
+			{
+				if("P".equals(PKFWType))
+				{
+					PKFWVal= Double.parseDouble(basicValStr) * Double.parseDouble(condPKFW)/100; 
+					PKFWRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condPKFW)/100;
+				}	
+				else if("Q".equals(PKFWType))
+				{
+					PKFWVal= Double.parseDouble(condPKFW) * totalQuantity;
+					PKFWRecVal= Double.parseDouble(condPKFW) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(PKFWType))
+				{
+					PKFWVal= Double.parseDouble(condPKFW);	
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						PKFWRecVal= Double.parseDouble(condPKFW);
+					else
+						PKFWRecVal = 00.0; 
+				}	
+				else
+				{
+					PKFWVal = 00.0; 
+					PKFWRecVal = 00.0; 
+				}	
+				//out.println("PKFWRecVal>>>>"+PKFWRecVal);
+				PKFWValStr  = new java.math.BigDecimal(PKFWVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				PKFWRecValStr  = new java.math.BigDecimal(PKFWRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				//out.println("PKFWValStr in QCF"+PKFWValStr);
+			}
+			catch(Exception e)
+			{ 
+				PKFWVal = 00.0; 
+				PKFWRecVal = 00.0;
+			}
+			
+			//FRT
+			FRTType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"FRTTYPE"));
+			condFRT  = checkNull(rfqVendLinesRet.getFieldValueString(j,"FRTVAL"));
+			String totValFRT =((String)vendWiseTotqtyWithoutDis.get(vend)).split("#")[1];
+			if("".equals(condFRT) || "null".equals(condFRT) || condFRT==null) 
+				condFRT = "0"; 			
+			try
+			{
+				if("P".equals(FRTType))
+				{
+					FRTVal= Double.parseDouble(basicValStr) * Double.parseDouble(condFRT)/100;
+					FRTRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condFRT)/100;
+				}	
+				else if("Q".equals(FRTType))
+				{
+					FRTVal= Double.parseDouble(condFRT) * totalQuantity;
+					FRTRecVal= Double.parseDouble(condFRT) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(FRTType))
+				{
+					FRTVal= Double.parseDouble(condFRT);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						FRTRecVal= Double.parseDouble(condFRT);
+					else
+						FRTRecVal = 00.0; 
+				}		
+				else
+				{
+					FRTVal = 00.0;
+					FRTRecVal = 00.0;
+				}	
+
+				FRTValStr  = new java.math.BigDecimal(FRTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				FRTRecValStr  = new java.math.BigDecimal(FRTRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				FRTVal = 00.0;  
+				FRTRecVal = 00.0;
+			}
+			
+			//BFRT
+			BFRTType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"BFRTTYPE"));
+			condBFRT  = checkNull(rfqVendLinesRet.getFieldValueString(j,"BFRTVAL"));
+			//String totValBFRT =((String)vendWiseTotqtyWithoutDis.get(vend)).split("#")[1];
+			if("".equals(condBFRT) || "null".equals(condBFRT) || condBFRT==null) 
+				condBFRT = "0"; 
+			if("".equals(BFRTType) || "null".equals(BFRTType) || BFRTType==null) 
+				BFRTType = ""; 				
+			try
+			{
+				if("P".equals(BFRTType))
+				{
+					BFRTVal= Double.parseDouble(basicValStr) * Double.parseDouble(condBFRT)/100;
+					BFRTRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condBFRT)/100;					
+				}	
+				else if("Q".equals(BFRTType))
+				{
+					BFRTVal= Double.parseDouble(condBFRT) * totalQuantity;
+					BFRTRecVal= Double.parseDouble(condBFRT) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(BFRTType))
+				{
+					BFRTVal= Double.parseDouble(condBFRT);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						BFRTRecVal= Double.parseDouble(condBFRT);
+					else
+						BFRTRecVal = 00.0; 
+				}		
+				else
+				{
+					BFRTVal = 00.0;
+					BFRTRecVal = 00.0;
+				}	
+
+				BFRTValStr  = new java.math.BigDecimal(BFRTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				BFRTRecValStr  = new java.math.BigDecimal(BFRTRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				BFRTVal = 00.0;  
+				BFRTRecVal = 00.0;
+			}
+			
+			//INS
+			
+			INSType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"INSTYPE"));
+			condINS  = checkNull(rfqVendLinesRet.getFieldValueString(j,"INSVAL"));
+			String totValINS =((String)vendWiseTotqtyWithoutDis.get(vend)).split("#")[1];
+			if("".equals(condINS) || "null".equals(condINS) || condINS==null) 
+				condINS = "0"; 
+			if("".equals(INSType) || "null".equals(INSType) || INSType==null) 
+				INSType = ""; 				
+			try
+			{
+				if("P".equals(INSType))
+				{
+					INSVal= Double.parseDouble(basicValStr) * Double.parseDouble(condINS)/100;
+					INSRecVal= Double.parseDouble(basicValStr) * Double.parseDouble(condINS)/100;															
+				}	
+				else if("Q".equals(INSType))
+				{
+					INSVal= Double.parseDouble(condINS) * totalQuantity;
+					INSRecVal= Double.parseDouble(condINS) * Double.parseDouble((String)vendWiseRecQty.get(vend));
+				}	
+				else if("V".equals(INSType))
+				{
+					INSVal= Double.parseDouble(condINS);
+					if(Double.parseDouble((String)vendWiseRecVal.get(vend))>0)					
+						INSRecVal= Double.parseDouble(condINS);
+					else
+						INSRecVal = 00.0; 
+				}		
+				else
+				{
+					INSVal = 00.0;
+					INSRecVal = 00.0;
+				}	
+
+				INSValStr  = new java.math.BigDecimal(INSVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				INSRecValStr  = new java.math.BigDecimal(INSRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e)
+			{ 
+				INSVal = 00.0;  
+				INSRecVal = 00.0;
+			}	
+			sPrice=Double.parseDouble(basicValStr)+Double.parseDouble(PKFWValStr)+Double.parseDouble(FRTValStr)+Double.parseDouble(BFRTValStr)+Double.parseDouble(INSValStr);
+			sPriceStr  = new java.math.BigDecimal(sPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			
+	
+			
+			//TAX
+			TAXType  = checkNull(rfqVendLinesRet.getFieldValueString(j,"TAXTYPE"));
+			condGST  = checkNull(rfqVendLinesRet.getFieldValueString(j,"TAXVAL"));
+			
+			if("".equals(condGST) || "null".equals(condGST) || condGST==null) 
+				condGST = "0"; 			
+			try
+			{
+				GSTVal= sPrice * Double.parseDouble(condGST)/100;
+				GSTValStr  = new java.math.BigDecimal(GSTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+				ezc.ezcommon.EzLog4j.log("GSTValStr in ADD GST>>>>>>>"+GSTValStr,"I"); 
+				GSTRecVal= sPriceRec * Double.parseDouble(condGST)/100;
+				GSTRecValStr  = new java.math.BigDecimal(GSTRecVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();	
+				ezc.ezcommon.EzLog4j.log("GSTRecValStr in ADD GST>>>>>>>"+GSTRecValStr,"I"); 				
+			}
+			catch(Exception e)
+			{ 
+				GSTVal = 00.0;  
+				GSTRecVal = 00.0;
+			}
+			double grossValue= sPrice+GSTVal;
+			String grossValueStr = new java.math.BigDecimal(grossValue).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			
+			//totRfqVal = grossValue;
+			
+			
+			
+			
+						
+			//Recommended Quantity
+			String qtyRec = "0";
+			try
+			{
+				qtyRec =  rfqVendLinesRet.getFieldValueString(j,"POQTY");  
+				qtyRec = (Double.parseDouble(qtyRec))+"";
+				qtyRec  = new java.math.BigDecimal(qtyRec).setScale(0,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			}
+			catch(Exception e){
+				qtyRec="0";
+			}
+			ezc.ezcommon.EzLog4j.log(":::qtyRecDec:::::"+qtyRec,"I");      						
+
+			String saphsnCode=checkNull(rfqVendLinesRet.getFieldValueString(j,"SAPHSNCODE")); 
+			String sapgstCode=checkNull(rfqVendLinesRet.getFieldValueString(j,"SAPGSTCODE")); 
+			String gstCode=checkNull(rfqVendLinesRet.getFieldValueString(j,"GSTCODE"));
+			String hsnCode=checkNull(rfqVendLinesRet.getFieldValueString(j,"HSNCODE"));  
+			//   out.println(minMatHT+"minMatHT");
+			double minMatCost=minMatHT.get(material);
+			//if(totVal==minMatCost)styleCl="background-color:greenyellow;"; 
+%>
+
+						
+						<input type="hidden" name="itemPrice<%=chkStr%>" id="itemPrice<%=chkStr%>" value="<%=quotPrice%>">
+						<input type="hidden" name="itemVal<%=chkStr%>" value="<%=totValStr%>"> 
+						<input type="hidden" name="itemCurr<%=chkStr%>" id="itemCurr<%=chkStr%>" value="<%=quotCurr%>">
+						<input type="hidden" name="itemQty<%=chkStr%>" id="itemQty<%=chkStr%>" value="<%=myQty%>">
+						<input type="hidden" name="valTypeDISC<%=chkStr%>" value="<%=discType%>">
+						<input type="hidden" name="itemDISC<%=chkStr%>" value="<%=condDisc%>">
+						<input type="hidden" name="itemDISCCode<%=chkStr%>" value="DISC">
+						<input type="hidden" name="itemDISCVal<%=chkStr%>" value="<%=discValStr%>"> 
+						<input type="hidden" name="valTypePKFW<%=chkStr%>" value="<%=PKFWType%>">
+						<input type="hidden" name="itemPKFW<%=chkStr%>" value="<%=checkNull(condPKFW)%>">   						
+						<input type="hidden" name="itemPKFWCode<%=chkStr%>" value="PKFW"> 
+						<input type="hidden" name="itemPKFWVal<%=chkStr%>" value="<%=checkNull(PKFWValStr)%>">
+						
+						<input type="hidden" name="valTypeFRT<%=chkStr%>" value="<%=FRTType%>">
+						<input type="hidden" name="itemFRT<%=chkStr%>" value="<%=checkNull(condFRT)%>">  						
+						<input type="hidden" name="itemFRTCode<%=chkStr%>" value="FRT">
+						<input type="hidden" name="itemFRTVal<%=chkStr%>" value="<%=checkNull(FRTValStr)%>">  
+						
+						<input type="hidden" name="valTypeBFRT<%=chkStr%>" value="<%=BFRTType%>">
+						<input type="hidden" name="itemBFRT<%=chkStr%>" value="<%=checkNull(condBFRT)%>">  						
+						<input type="hidden" name="itemBFRTCode<%=chkStr%>" value="BFRT">
+						<input type="hidden" name="itemBFRTVal<%=chkStr%>" value="<%=checkNull(BFRTValStr)%>">  
+						
+						<input type="hidden" name="valTypeINS<%=chkStr%>" value="<%=INSType%>">
+						<input type="hidden" name="itemINS<%=chkStr%>" value="<%=checkNull(condINS)%>">  						
+						<input type="hidden" name="itemINSCode<%=chkStr%>" value="INS">
+						<input type="hidden" name="itemINSVal<%=chkStr%>" value="<%=checkNull(INSValStr)%>"> 
+						
+						<input type="hidden" name="itemSupplyPrice<%=chkStr%>" value="<%=checkNull(sPriceStr)%>">
+						
+						<input type="hidden" name="valTypeTAX<%=chkStr%>" value="<%=TAXType%>">
+						<input type="hidden" name="itemTAX<%=chkStr%>" value="<%=checkNull(condGST)%>">  						
+						<input type="hidden" name="itemTAXCode<%=chkStr%>" value="TAX">
+						<input type="hidden" name="itemTAXVal<%=chkStr%>" value="<%=checkNull(GSTValStr)%>">  													
+						
+						<input type="hidden" name="itemValue<%=chkStr%>" value="<%=checkNull(grossValueStr)%>"> 
+						
+<%
+						if("D".equals(itemCat))
+						{
+%>						
+							<td  style="width:100px;text-align:center;" ><%=quotPrice%>
+								<a href="javascript:viewService('<%=chkRfq%>','<%=chkLine%>')"><img src="services4.PNG" style="VERTICAL-ALIGN: -webkit-baseline-middle;"></a>
+							</td>
+<%
+						}else{
+%>
+							<td  style="width:100px;text-align:center;" ><%=quotPrice%></td>
+<%
+						}
+%>							
+						<td  style="width:100px;text-align:center;<%=styleCl%>" ><%=checkNull(grossValueStr)%>&nbsp;<a href="javascript:showConditions('<%=chkRfq%>','<%=chkLine%>','<%=i%>');"><img src="../../../Vendor2/Images/Common/cond1.PNG"></a></td>
+<%
+						if("New".equals(status)){
+%>						
+							<td  style="width:100px;text-align:center;<%=styleCl%>" ><input type="number" name="rfqQty<%=chkStr%>" id="rfqQty<%=chkStr%>" value="<%=qtyRec%>" onchange="calcBot('<%=chkStr%>','<%=chkRfq%>','<%=chkLine%>','<%=qcfH%>')"></td>
+<%
+						}else{
+%>	
+							<td  style="width:100px;text-align:center;<%=styleCl%>" ><b><%=qtyRec%></b></td>		
+<%
+						}
+
+						/*
+						if(rfqTotHT.containsKey(vend))
+						{
+							totRfqVal = Double.parseDouble((String)rfqTotHT.get(vend))+grossValue;
+							rfqTotHT.put(vend,totRfqVal);
+						}
+						else
+							rfqTotHT.put(vend,grossValue);*/
+							
+						vendWiseRfqHT.put(chkStr,grossValue); 
+						rfqTotHT.put(chkRfq+"##"+chkLine,grossValueStr); 
+						
+				}
+			}
+
+			
+			}		
+
+%>			
+			</tr>
+			
+<%
+		//out.println("vendWiseRfqHT>>>"+vendWiseRfqHT);
+		
+			
+
+		java.math.BigDecimal netRfq=new java.math.BigDecimal(0);
+		String totRfqValStr="0.00";
+		
+		Hashtable chkRfqHT=new Hashtable();
+				
+		Set<String> keyHT = rfqTotHT.keySet();
+		for(String key: keyHT)
+		{
+			String chkHT = key.split("##")[0];
+			//out.println("chkHT>>>>"+chkHT);
+			
+			if(chkRfqHT.containsKey(chkHT))
+			{
+				//out.println("rfqTOT in IF>>>>"+(String)chkRfqHT.get(chkHT)); 
+				netRfq =(java.math.BigDecimal)chkRfqHT.get(chkHT);
+				netRfq= netRfq.add(new java.math.BigDecimal((String)rfqTotHT.get(key)));
+				
+				chkRfqHT.put(chkHT,netRfq);
+				//out.println("chkRfqHT in IF>>>>"+chkRfqHT); 
+			}
+			else
+			{
+
+				netRfq = new java.math.BigDecimal((String)rfqTotHT.get(key));
+				chkRfqHT.put(chkHT,netRfq);
+
+			}
+			
+			
+		} 
+%>					
+		<tr style="background-color:#43eac452 !important">
+			<th colspan=7 style="width:150px;text-align:right">Landed Cost</th>
+<%
+		chkList = new ArrayList();			
+		for(int i=0;i<rfqVendLinesRetCnt;i++) 
+		{
+			String rfqChk= rfqVendLinesRet.getFieldValueString(i,"RFQNO");
+			if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+			continue;
+			else
+			chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));			
+%>			
+				<th colspan=2 style="width:60px;text-align:center">&nbsp;</th>
+				<!--<th colspan=1 style="width:60px;text-align:center"><input type="hidden" name="rfqTotVal<%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%>" value="<%=chkRfqHT.get(rfqChk)%>"><%=chkRfqHT.get(rfqChk)%></th>-->
+				<input type="hidden" name="rfqTotVal<%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%>" value="<%=chkRfqHT.get(rfqChk)%>">
+<%
+			if("New".equals(status)){
+%>						
+				<td style="width:100px;text-align:center"><b><input type="text" name="botTotVal<%=rfqVendLinesRet.getFieldValueString(i,"RFQNO")%>" value="0.00" readOnly></b></td>			
+<%
+			}else{
+%>
+				<td style="width:100px;text-align:center"><b><%=checkNull_Num(rfqVendLinesRet.getFieldValueString(i,"RECVAL"))%></b></td>						
+<%
+			}
+		}
+%>
+		</tr>
+		<tr style="background-color:#efe81ca8 !important">
+			<th colspan=7 style="width:150px;text-align:right">Total Cost</th>
+<%
+		String docVal="0.00";
+		
+		chkList = new ArrayList();
+		//out.println("rfqLen>>>"+rfqLen);
+		for(int i=0;i<rfqVendLinesRetCnt;i++) 
+		{
+			//out.println("rfqVendLinesRetCnt Loop>>>"+rfqVendLinesRetCnt);
+			
+			String rfqChk= rfqVendLinesRet.getFieldValueString(i,"RFQNO");
+				if(chkList.contains(rfqVendLinesRet.getFieldValueString(i,"RFQNO")))  
+				continue;
+			else
+				chkList.add(rfqVendLinesRet.getFieldValueString(i,"RFQNO"));
+				
+			try
+			{
+				docVal =  rfqVendLinesRet.getFieldValueString(i,"DOCVAL");  
+				docVal = (Double.parseDouble(docVal))+"";
+				docVal  = new java.math.BigDecimal(docVal).setScale(2,java.math.BigDecimal.ROUND_DOWN).toString();
+			}
+			catch(Exception e){
+				docVal="0.00";
+			}
+				
+			if(i==0)
+			{
+				if("New".equals(status) || "Sub".equals(status)){
+%>			
+					<td colspan=<%=(rfqLen*3)%> style="width:100px;text-align:right"><b><input type="text" name="botDocVal<%=rfqVendLinesRet.getFieldValueString(i,"QCFNO")%>" value="<%=docVal%>" readOnly></b></td>
+<%
+				}else{
+%>					
+					<td colspan=6 style="width:100px;text-align:center"><b><%=docVal%></b></td>
+<%
+				}
+			}
+			
+		}
+%>		
+		</tr>
+		</tbody>
+	</table>
+	<br>
+
+<%
+	String trBGColor = "Bgcolor=\"#325786\"  style=\"color:white\"";
+	int commentsCount =0;
+	ReturnObjFromRetrieve commentsRet = getJGLDocComments(Session,qcfNo,"QCF");
+	
+	if(commentsRet!= null)
+		commentsCount = commentsRet.getRowCount();
+		
+	if("Sub".equals(status))
+	{
+	if(commentsCount>0)
+	{
+		commentsRet.sort(new String[]{"EDC_DATE"},true);
+		SimpleDateFormat sdf=new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+%>
+	<div>
+	<h5>
+			<b> Comments</b>
+	</h5>
+	<table class="table table-bordered">
+<%
+		String displayStr ="";
+		for(int i=0;i<commentsCount;i++)
+		{
+			if(i == 0)
+			{
+%>	
+				<Tr <%=trBGColor%>>
+				
+					<Th width="20%">User</Th>
+					<Th width="20%">Date</Th>
+					<Th width="60%">Comments</Th>
+				</Tr>				
+<%
+			}
+					displayStr = commentsRet.getFieldValueString(i,"EDC_COMMENTS");
+%>				
+				<Tr>
+					<Td align="center">&nbsp;<%=commentsRet.getFieldValueString(i,"EDC_USER_ID")+"["+checkNull(commentsRet.getFieldValueString(i,"EU_FIRST_NAME"))+"]"%></Td>
+					<Td align="center">&nbsp;<%=sdf.format((Date)commentsRet.getFieldValue(i,"EDC_DATE"))%></Td>					
+					<Td title='<%=displayStr%>' align="center"><textarea style='width:100%' rows='2' readonly><%=checkNull(displayStr)%></textarea></td>
+				</Tr>
+			
+<%
+		}	
+%>
+	</Table>
+	</div>
+<%
+	}
+
+	ReturnObjFromRetrieve retUploadList = getDocUploadList(Session,qcfNo,"QCF","H"); 
+	int retUploadListCnt = 0; 
+	if(retUploadList != null)
+		retUploadListCnt = retUploadList.getRowCount();
+%>
+		<h5>
+			<b>Attachment(s)</b>
+		</h5>
+		<div class="row">
+		  <div class="col-md-12 col-xs-12">
+			<!-- general form elements -->
+			<div class="box box-default">
+				<div class="box-body table-responsive no-padding">
+					<div class="box-body">
+					       <table id="uploadTable" class="table  table-bordered dt-responsive nowrap" >
+							<tr <%=trBGColor%>>
+								<th width="95%" align='left'>File Name</th>
+								<th width="5%"></th>
+							</tr>
+<%
+		if(retUploadListCnt == 0)
+		{
+%>
+			<tr id="noDataStatUpload">
+				<td>No files attached</td>
+			</tr>
+<%
+		}
+		for(int r=0;r<retUploadListCnt;r++)
+		{
+%>
+			<tr>
+				<td align="center" width="95%"><input type="hidden" name="fileItem" value="<%=retUploadList.getFieldValueString(r,"EUF_CLIENT_FILE_NAME")%>"><a href="javascript:downloadFile('<%=retUploadList.getFieldValueString(r,"EUF_UPLOAD_NO")%>','<%=retUploadList.getFieldValueString(r,"EUF_CLIENT_FILE_NAME")%>')"><%=retUploadList.getFieldValueString(r,"EUF_CLIENT_FILE_NAME")%></a></td>
+				<td width="5%" align="center"><span onclick="javascript:deleteFile(this,'<%=retUploadList.getFieldValueString(r,"EUF_UPLOAD_NO")%>','<%=retUploadList.getFieldValueString(r,"EUF_CLIENT_FILE_NAME")%>')" class="fa fa-trash fa-lg" style="margin-left: 25%;"></span></td>
+			</tr>
+<%
+		}
+%>
+		</table>
+	
+			</div>
+		      </div>
+		     </div>
+		    <!-- Your Page Content Here -->
+		  </div>
+		</div><!--row-->
+
+
+	<div class="row">
+		<div class="col-xs-12" align="center">
+			<button type="button" class="btn btn-primary" onclick="javascript:history.go(-1)" ><i class="fa fa-backward"></i>&nbsp;Back</button>	
+			<button id="btnExport" class="btn btn-primary" onclick="fnExcelReport();"> <i class="fa fa-check"></i>&nbsp;Download Excel </button>
+			<!--<button id="btnExport" class="btn btn-primary" onclick="createPO();"> <i class="fa fa-check"></i>&nbsp;Create PO </button>-->
+		</div>
+	</div>
+<%
+	}
+	if("New".equals(status))
+	{
+%>			
+		
+		<div class="row">
+		<div class="col-md-12 col-xs-12">
+		<div class="box box-primary">
+		<div class="box-body">
+		<h5>
+				<b> Comments</b>
+		</h5>
+			<table class="table table-bordered">
+				<td colspan=3><textarea class="form-control" name="comment" placeholder="Enter Comments" rows="2" ></textarea></td>
+			</table>
+			
+		<h5>
+			 <b>Attachment(s)</b>
+		</h5>			
+			<table id="uploadTableH" class="table  table-bordered dt-responsive nowrap" >	
+						<tr>
+							<th class="fborder" width="95%" align='left'>File Name</th>
+							<th class="fborder" width="5%"></th>
+						</tr>
+						<tr id="noDataStatUpload">
+							<td>No files attached</td>
+						</tr>						
+						</table>
+				
+		</div>
+		</div>
+		</div>
+		</div>	
+	
+
+			<div class="row">
+			<div class="col-xs-12" align="center">
+				<button type="button" class="btn btn-primary" onclick="javascript:history.go(-1)" ><i class="fa fa-backward"></i>&nbsp;Back</button>
+<%
+			//if("New".equals(status) && "N".equals(showSubmit))
+			if("New".equals(status))
+			{
+%>			
+			<button type="button"  value="H" class="btn btn-primary uploadDialogBtn" ><i class="fa fa-upload"></i>&nbsp;Upload Attachments</button>
+			<button type="button" class="btn btn-primary" onclick="funSubmit()" ><i class="fa fa-check"></i>&nbsp;Submit</button>
+<%
+			}
+%>			
+			<!--<button type="button" class="btn btn-primary" onclick="funDownloadExcel()" ><i class="fa fa-check"></i>&nbsp;Download Excel</button>-->
+			<!--<button id="btnExport" class="btn btn-primary" onclick="fnExcelReport();"> <i class="fa fa-check"></i>&nbsp;Download Excel </button>-->
+			<!--<button type="button" class="btn btn-primary" onclick="funPrint()" ><i class="fa fa-check"></i>&nbsp;Print</button>-->
+		</div>
+ 	 	</div>	
+<%
+	}
+%> 	 	
+		</div>
+		
+	
+</form>
+<!--<iframe id="txtArea1" style="display:none"></iframe>-->
+</body>
+</html>
+<div id="woModal2" class="modal fade" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-lg">
+<div class="modal-content" style="width: 85%;">
+<div class="modal-body">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <iframe src="" width="100%" height="580" frameborder="0" allowtransparency="true"></iframe>
+ </div>
+</div>
+</div>
+</div>
+<div id="woModalSer" class="modal fade" tabindex="-1" role="dialog">
+   <div class="modal-dialog modal-lg">
+      <div class="modal-content" style="width: 80%;">
+         <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <iframe src="" width="100%" height="300" frameborder="0" allowtransparency="true"></iframe>
+         </div>
+      </div>
+   </div>
+</div>
+<div id="uploadMod" class="modal fade" tabindex="-1" role="dialog">
+   <div class="modal-dialog">
+      <form id="uploadForm" action="../Inbox/ezUploadFileTemp.jsp" method="post" enctype="multipart/form-data">
+      <div class="modal-content">
+      <div class="modal-header">
+	      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		<span aria-hidden="true">×</span></button>
+	      <h4 class="modal-title">Attachments</h4>
+	</div>
+	 <div class="modal-body">	    
+	         <fieldset>
+			<input type="hidden" id="upDocType" name="upDocType" value="">
+			<input type="hidden" id="upDocId" name="upDocId" value="">
+			<input type="hidden" id="upItemNo" name="upItemNo" value="">
+			<input type="file" id="file" name="file"/>
+				<!--<input type="submit" id="uploadbutton" value="upload" />-->
+			<div id="loadingInd" style="display:none;margin-left: 25%;">
+				<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+				<span class="sr-only">Loading...</span>
+			</div>
+	         </fieldset>
+   		
+	 </div>
+	 <div class="modal-footer">
+	 	<button type="submit" id="uploadbutton" class="btn btn-primary">Upload</button>
+	 </div>
+      </div>
+     </form>
+   </div>  
+</div> 	 
+<%@ include file="../Misc/ezSubFooter.jsp"%>
+<%@ include file="../Misc/ezFooter.jsp"%>
+<link rel="stylesheet" type="text/css" href="../../Library/jquery/jquery-ui-1.12.1.custom/jquery-ui.css">
+<link rel="stylesheet" href="../Misc/library/fancybox2/jquery.fancybox.css" type="text/css" media="screen" />
+<script type="text/javascript" src="../Misc/library/fancybox2/jquery.fancybox.js"></script>
+<script type="text/javascript" src="../Misc/library/fancybox2/jquery.fancybox.pack.js"></script>
+<script src="../Misc/library/js/tableHeadFixer.js"></script>
+<script>
+/*
+$(document).ready(function() {
+$("#table-1").tableHeadFixer({"left" : 7}); 
+}); */
+$( function() {
+
+$(".sidebar-toggle").trigger("click"); 
+});
+function showConditions(rfqNo,lineNo)
+{
+	var itemPos  =  rfqNo+lineNo;
+	var itemQty   = eval("document.myForm.itemQty"+itemPos).value;
+	var itemPrice = eval("document.myForm.itemPrice"+itemPos).value;
+	var currency = eval("document.myForm.itemCurr"+itemPos).value;
+	//alert("itemPrice>>"+itemPrice);
+
+	var vendCat= "DOM";
+	//alert("vendCat>>>"+vendCat);
+	var reqFrom="Apr";
+	var userType="2"
+
+	var url="ezGetConditions.jsp?rfqNo="+rfqNo+"&lineNo="+lineNo+"&itemPos="+itemPos+"&itemQty="+itemQty+"&itemPrice="+itemPrice+"&vendCat="+vendCat+"&reqFrom="+reqFrom+"&userType="+userType+"&currency="+currency;
+	$('iframe').attr("src",url);
+	$('#woModal2').modal({show:true});
+	$('.modal-dialog').draggable({
+		handle: ".modal-body"
+	});			
+
+
+}	
+function funBack()
+{
+	
+	document.myForm.action ="ezListQcfs.jsp"; 
+	document.myForm.submit(); 
+		
+}
+function funDownloadExcel()
+{
+	document.myForm.action="ezQCFDownloadExcel.jsp";
+	document.myForm.submit();
+}
+
+function funSubmit()
+{
+
+			var chkObj = document.myForm.selVen;
+			var len = chkObj.length;
+			var count = 0;
+			var chkVal;
+			//var reason;
+			var chkCount = 0;
+
+			if(isNaN(len))
+			{
+				if(chkObj.checked)
+				{
+					count++;
+				}
+			}
+			else
+			{
+				for(i=0;i<len;i++)
+				{
+					if(chkObj[i].checked)
+					{
+						count++;
+					}
+				}
+			}
+			
+			if(count==0)
+			{
+				alert("Please select atleast one vendor");
+				return;
+			}
+			
+			
+			if(isNaN(len))
+			{
+				chkVal = chkObj.value;
+				//reason=document.getElementById("reason0").value;
+				chkVal=chkVal;
+			}
+			else
+			{
+				var countChk = 0;
+				for(i=0;i<len;i++)
+				{
+					if(chkObj[i].checked)
+					{
+						countChk++;
+						if(countChk==1)
+						{
+							chkVal = chkObj[i].value;
+							
+							chkVal=chkVal;
+						}
+						else
+						{
+							//reason=document.getElementById("reason"+i).value;
+							chkVal = chkVal+','+chkObj[i].value;  
+						} 
+						
+						
+					}
+				}
+			}
+			
+			//alert("chkVal"+chkVal);
+			//Total Quantity check 
+		
+		var Count='<%=rfqLen%>';
+		const chkRfqQty = new Map();
+		const chkRfqQty1 = new Map();
+		var itemsLen = document.myForm.rfqItem.length;
+		var lineTotQty=0;
+		//alert("chkObj.length=="+count);
+		var chkLen=0;
+		if(isNaN(chkObj.length))chkLen=1;
+		else chkLen=chkObj.length;
+		for(var k=0;k<chkLen;k++)
+		{
+			var rfqChk= "";
+			if(chkLen==1)rfqChk=chkObj.value;
+			else rfqChk=chkObj[k].value;
+			//alert("rfqChk>>>"+rfqChk);
+			
+			if(isNaN(itemsLen))
+			{
+				var j=0;
+				var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+((j+1)*10));
+				//alert("lineQtyObj>>>"+lineQtyObj.value);
+				lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+
+				if(chkRfqQty.has(rfqChk))
+				{
+
+					var rfqTotQty=parseFloat(chkRfqQty.get(rfqChk))+parseFloat(lineQtyObj.value);
+					chkRfqQty.set(rfqChk,rfqTotQty);
+				}	
+				else
+				chkRfqQty.set(rfqChk,lineQtyObj.value);
+				
+				//alert("lineTotQty>>>"+lineTotQty);
+				var prItemQtyObj = eval("document.myForm.prItemQty"+((j+1)*10));
+				//alert("prItemQtyObj>>>"+prItemQtyObj.value);
+				
+				if(k==(chkLen-1))
+				{
+					if(lineTotQty != prItemQtyObj.value)
+					{
+						if(lineTotQty > prItemQtyObj.value)
+						{
+							alert("Total Line Qty should not be greater than PR Qty at line"+((j+1)*10));
+							itemQtyObj.value=0;
+						}
+						if(lineTotQty < prItemQtyObj.value)
+						{
+							alert("Total Line Qty is lesser than PR Qty at line"+((j+1)*10));
+						}
+						itemQtyObj.focus()
+						return;
+					}
+				}
+				
+			}
+			else
+			{
+				for(j=0;j<itemsLen;j++)
+				{
+					var liItem=(j+1)*10;
+					var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+liItem);
+					//alert("lineQtyObj>>>"+lineQtyObj.value);
+					//lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+
+					if(chkRfqQty.has(rfqChk))
+					{
+
+						var rfqTotQty=parseFloat(chkRfqQty.get(rfqChk))+parseFloat(lineQtyObj.value);
+						chkRfqQty.set(rfqChk,rfqTotQty);
+					}	
+					else
+						chkRfqQty.set(rfqChk,lineQtyObj.value);
+						
+					/*
+					if(chkRfqQty1.has(liItem))
+					{
+						var rfqTotQty1=parseFloat(chkRfqQty1.get(liItem))+parseFloat(lineQtyObj.value);
+						chkRfqQty1.set(liItem,rfqTotQty1);
+					}
+					else
+						chkRfqQty1.set(liItem,lineQtyObj.value);*/
+						
+					//alert("lineTotQty>>>"+lineTotQty);
+					var prItemQtyObj = eval("document.myForm.prItemQty"+liItem);
+					alert("prItemQtyObj>>>"+prItemQtyObj.value);
+
+					/*
+					if(k==(count-1))
+					{
+						if(parseFloat(chkRfqQty1.get(liItem)) != prItemQtyObj.value)
+						{
+							if(parseFloat(chkRfqQty1.get(liItem)) > prItemQtyObj.value)
+							{
+								alert("Total Line Qty should not be greater than PR Qty at line"+liItem);
+								itemQtyObj.value=0;
+							}
+							if(parseFloat(chkRfqQty1.get(liItem)) < prItemQtyObj.value)
+							{
+								alert("Total Line Qty is lesser than PR Qty at line"+liItem);
+							}
+							itemQtyObj.focus()
+							return;
+						}
+					}
+					*/
+				}
+				
+			}
+		
+					
+		}	
+		/*
+		var mapItr = chkRfqQty.keys();
+		for(k=0;k<chkRfqQty.size;k++)
+		{
+			var rfqChk = mapItr.next().value;
+			
+			alert("rfqChk>>>>"+rfqChk)
+			alert("rfqChk Val>>>>"+chkRfqQty.get(rfqChk))
+			
+			if(parseFloat(chkRfqQty.get(rfqChk)) == parseFloat(0))
+			{
+				document.myForm.selVen[1].checked= false;
+			}
+				
+			
+		}*/
+			
+		document.myForm.chkVal.value  = chkVal; 
+		if(document.myForm.comment.value=="")
+		{
+			alert("Please Enter Comments");
+			document.myForm.comment.focus()
+			return;
+		}				
+		       
+		       if(confirm("Are sure to submit the QCF Form?"))
+		       {
+		       		document.myForm.action="ezSaveQuotationComparisionForm.jsp"; 
+		       		document.myForm.submit();
+        	       }
+}        	       
+function funPrint()
+{
+	window.print();
+}
+function createPO()
+{
+	document.myForm.action="ezCreatePO.jsp";
+	document.myForm.submit();
+}
+function fnExcelReport()
+{
+    var tab_text="<table border='2px'><tr bgcolor='#87AFC6'>";
+    var textRange; var j=0;
+    tab = document.getElementById('table-1'); // id of table
+
+    for(j = 0 ; j < tab.rows.length ; j++) 
+    {     
+        tab_text=tab_text+tab.rows[j].innerHTML+"</tr>";
+        //tab_text=tab_text+"</tr>";
+    }
+ 
+tab_text=tab_text+"</table>";
+    tab_text= tab_text.replace(/<A[^>]*>|<\/A>/g, "");//remove if u want links in your table
+    tab_text= tab_text.replace(/<img[^>]*>/gi,""); // remove if u want images in your table
+    tab_text= tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
+
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE "); 
+
+    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // If Internet Explorer
+    {
+        txtArea1.document.open("txt/html","replace");
+        txtArea1.document.write(tab_text);
+        txtArea1.document.close();
+        txtArea1.focus(); 
+        sa=txtArea1.document.execCommand("SaveAs",true,"QCF.xls");
+    }  
+    else     
+    {
+    	 let a = $("<a />", {
+             href: 'data:application/vnd.ms-excel,' + encodeURIComponent(tab_text),
+             download: "QCF_<%=qcfNo%>.xls"
+         })
+         .appendTo("body")
+         .get(0)
+         .click();
+         e.preventDefault();
+   }   
+
+    return (sa);
+}
+function openLastPO(mat,purOrg,plant)
+{ 
+	var url="ezLastPOPriceDet.jsp?mat="+mat+"&purOrg="+purOrg+"&plant"+plant;
+	$.fancybox.open({
+		href : url, 
+		type : 'iframe',
+		
+		width:'80%',
+		height:'78%',
+		autoSize : false,
+		closeBtn : false,
+		keys : {
+		    close  : true,
+		},			
+		helpers     : {  
+			overlay : {closeClick: false}
+			}
+		});
+
+}
+function openLongItem(mat,text,type)
+{ 
+	var url="ezItemTextPopup.jsp?mat="+mat+"&text="+text+"&type="+type;     
+
+
+	$('iframe').attr("src",url);
+
+	$.fancybox.open({
+		href : url, 
+		type : 'iframe',
+		
+		width:'80%',
+		height:'50%',
+		autoSize : false,
+		closeBtn : false,
+		keys : {
+		    close  : true,
+		},			
+		helpers     : {  
+			overlay : {closeClick: false}
+			}
+		});  				
+
+}
+function openDet(basicVal,leadDays,disc,type,sapHsn,sapGst,gst,hsn)
+{ 
+	var url="ezDiscDet.jsp?basicVal="+basicVal+"&leadDays="+leadDays+"&disc="+disc+"&type="+type+"&sapHsn="+sapHsn+"&sapGst="+sapGst+"&gst="+gst+"&hsn="+hsn;
+	$.fancybox.open({
+		href : url, 
+		type : 'iframe',
+		
+		width:'40%',
+		height:'40%',
+		autoSize : false,
+		closeBtn : false,
+		keys : {
+		    close  : true,
+		},			
+		helpers     : {  
+			overlay : {closeClick: false}
+			}
+		});
+
+} 
+function calcBot1(chkStr,chkRfq,chkLine)
+{ 
+	
+		//alert("chkStr"+chkStr);
+		//alert("chkRfq"+chkRfq);
+		//alert("chkLine"+chkLine);
+		var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+chkLine);
+		//alert("itemQtyObj"+itemQtyObj.value);
+		if(itemQtyObj.value=='')
+		{
+			alert("Enter Recommended Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		
+		var prItemQtyObj = eval("document.myForm.prItemQty"+chkLine);
+		//alert("prItemQtyObjNew"+prItemQtyObj.value);
+		
+		if( parseFloat(itemQtyObj.value) > parseFloat(prItemQtyObj.value))
+		{
+			alert("Recommended Qty should not be greater than PR Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		var rfqCount='<%=rfqHash.size()%>';
+		//alert("rfqCount>>>>"+rfqCount);
+				
+		var lineTotQty=0;
+<%
+		for(int j=0;j<rfqHash.size();j++)
+		{
+			String  rfqChk = (String)rfqHash.get(j+1);
+%> 
+			var rfqChk= '<%=rfqChk%>';
+			alert("rfqChk>>>"+rfqChk);
+			var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+chkLine);
+			alert("lineQtyObj>>>"+lineQtyObj.value);
+			lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+<%
+		}
+%>
+		//alert("lineTotQty>>>"+lineTotQty);
+		//alert("prItemQtyObj>>>"+prItemQtyObj.value);
+		if(lineTotQty >prItemQtyObj.value)
+		{
+			alert("Total Line Qty should not be greater than PR Qty at line"+chkLine);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		var Count='<%=rfqLen%>';
+		//alert("Count"+Count);
+		var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+		var botPKGValObj = eval("document.myForm.botPKGVal"+chkRfq);		
+		var botFRTValObj = eval("document.myForm.botFRTVal"+chkRfq);
+		var botBFRTValObj = eval("document.myForm.botBFRTVal"+chkRfq);
+		var botINSValObj = eval("document.myForm.botINSVal"+chkRfq);
+		var botSupValObj = eval("document.myForm.botSupVal"+chkRfq);
+		var itemGSTObj = eval("document.myForm.itemGST"+chkRfq);
+		var botGSTValObj = eval("document.myForm.botGSTVal"+chkRfq);
+		var botLCValObj = eval("document.myForm.botLCVal"+chkRfq);
+		var itemPKFWObj = eval("document.myForm.itemPKFW"+chkRfq);
+		var valTypePKFWObj = eval("document.myForm.valTypePKFW"+chkRfq);		
+		var itemFRTObj = eval("document.myForm.itemFRT"+chkRfq);
+		var valTypeFRTObj = eval("document.myForm.valTypeFRT"+chkRfq);
+		var itemBFRTObj = eval("document.myForm.itemBFRT"+chkRfq);
+		var valTypeBFRTObj = eval("document.myForm.valTypeBFRT"+chkRfq);				
+		var itemINSObj = eval("document.myForm.itemINS"+chkRfq);
+		var valTypeINSObj = eval("document.myForm.valTypeINS"+chkRfq);				
+		var totPriceVal=0;
+		var totalQuantity=0.0;
+		for(var k=0;k<Count;k++)
+		{
+			var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+			//alert("itemQtyObj"+itemQtyObj.value);
+			var itemPriceObj = eval("document.myForm.itemPrice"+chkRfq+((k+1)*10));
+			//alert("itemPriceObj"+itemPriceObj.value);
+			var itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 
+			//alert("itemValObj"+parseFloat(itemValObj));
+			totalQuantity=(parseFloat(totalQuantity)+parseFloat(itemQtyObj.value)).toFixed(2);
+			totPriceVal=(parseFloat(totPriceVal)+parseFloat(itemValObj)).toFixed(2);
+			
+		}
+		//alert("totalQuantity>>>>"+totalQuantity);
+		//alert(totPriceVal);
+		totPriceVal=(parseFloat(totPriceVal)).toFixed(2); 	
+		botTotValObj.value = totPriceVal;
+		if(totalQuantity>0)
+		{
+			if(valTypePKFWObj.value == "P")
+				botPKGValObj.value = (((botTotValObj.value) * itemPKFWObj.value)/100).toFixed(2);
+			if(valTypePKFWObj.value == "V")
+				botPKGValObj.value = eval("document.myForm.itemPKFWVal"+chkRfq).value;
+			if(valTypePKFWObj.value == "Q")
+				botPKGValObj.value = itemPKFWObj.value * parseFloat(totalQuantity);
+				
+			if(valTypeFRTObj.value == "P")
+				botFRTValObj.value = (((botTotValObj.value) * itemFRTObj.value)/100).toFixed(2);
+			if(valTypeFRTObj.value == "V")
+				botFRTValObj.value = eval("document.myForm.itemFRTVal"+chkRfq).value;
+			if(valTypeFRTObj.value == "Q")
+				botFRTValObj.value = itemFRTObj.value * parseFloat(totalQuantity);
+				
+			if(valTypeBFRTObj.value == "P")
+				botBFRTValObj.value = (((botTotValObj.value) * itemBFRTObj.value)/100).toFixed(2);
+			if(valTypeBFRTObj.value == "V")
+				botBFRTValObj.value = eval("document.myForm.itemBFRTVal"+chkRfq).value;
+			if(valTypeBFRTObj.value == "Q")
+				botBFRTValObj.value = itemBFRTObj.value * parseFloat(totalQuantity);				
+				
+			if(valTypeINSObj.value == "P")
+				botINSValObj.value = (((botTotValObj.value) * itemINSObj.value)/100).toFixed(2);
+			if(valTypeINSObj.value == "V")
+				botINSValObj.value = eval("document.myForm.itemINSVal"+chkRfq).value;
+			if(valTypeINSObj.value == "Q")
+				botINSValObj.value = itemINSObj.value * parseFloat(totalQuantity);								
+			
+			var itemSupplyPrice = (parseFloat(botTotValObj.value)+ parseFloat(botPKGValObj.value) + parseFloat(botFRTValObj.value)+ parseFloat(botBFRTValObj.value)+ parseFloat(botINSValObj.value)).toFixed(2);
+			botSupValObj.value= itemSupplyPrice;
+			botGSTValObj.value = ((parseFloat(botSupValObj.value)) * parseFloat(itemGSTObj.value)/100).toFixed(2);
+			botLCValObj.value = (parseFloat(botSupValObj.value) + parseFloat(botGSTValObj.value)).toFixed(2);
+		}
+		else
+		{
+			botPKGValObj.value = "0.00";
+			botFRTValObj.value = "0.00";
+			botBFRTValObj.value = "0.00";
+			botINSValObj.value = "0.00";
+			botSupValObj.value = "0.00";
+			botGSTValObj.value = "0.00";
+			botLCValObj.value = "0.00";
+		}	
+}
+function calcBotOld(chkStr,chkRfq,chkLine,chkQcf)
+{ 
+		alert("IN CALCBOT");
+		var chkObj = document.myForm.selVen;
+		var len = chkObj.length;
+		
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+		var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+chkLine);
+
+		var chkCount = 0;
+		if(isNaN(len))
+		{
+				if(chkObj.checked)
+				{
+					if(chkRfq === chkObj.value)
+						chkCount++;
+				}
+			
+		}
+		else
+		{	
+			for(i=0;i<len;i++)
+			{
+				if(chkObj[i].checked)
+				{
+					if(chkRfq === chkObj[i].value)
+						chkCount++;
+				}
+			}
+			
+		}
+		if(chkCount == 0)
+		{
+			alert("Please Select the vendor");
+			itemQtyObj.value=0;
+			return;				
+
+		}
+
+		//alert("chkStr"+chkStr);
+		//alert("chkRfq"+chkRfq);
+		//alert("chkLine"+chkLine);
+		
+		//alert("itemQtyObj"+itemQtyObj.value);
+		if(itemQtyObj.value=='')
+		{
+			alert("Enter Recommended Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus();
+			return;
+		}
+		var prItemQtyObj = eval("document.myForm.prItemQty"+chkLine);
+		//alert("prItemQtyObjNew"+prItemQtyObj.value);
+		
+		if( parseFloat(itemQtyObj.value) > parseFloat(prItemQtyObj.value))
+		{
+			alert("Recommended Qty should not be greater than PR Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		var lineTotQty=0;
+<%
+		for(int j=0;j<rfqHash.size();j++)
+		{
+			String  rfqChk = (String)rfqHash.get(j+1);
+%> 
+			var rfqChk= '<%=rfqChk%>';
+			//alert("rfqChk>>>"+rfqChk);
+			var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+chkLine);
+			//alert("lineQtyObj>>>"+lineQtyObj.value);
+			lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+<%
+		}
+%>
+		//alert("lineTotQty>>>"+lineTotQty);
+		if(lineTotQty > prItemQtyObj.value)
+		{
+			alert("Total Line Qty should not be greater than PR Qty at line"+chkLine);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}	
+		var Count='<%=rfqLen%>';
+		//alert("Count"+Count);	
+		
+		var botTotVal=0;
+		
+		for(var k=0;k<Count;k++)
+		{
+			var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+			//alert("itemQtyObj>>>>"+itemQtyObj.value);
+			var itemPriceObj = eval("document.myForm.itemPrice"+chkRfq+((k+1)*10));
+			//alert("itemPriceObj"+itemPriceObj.value);
+			var itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 
+			//alert("itemValObj"+parseFloat(itemValObj));
+			var totalQuantity=parseFloat(itemQtyObj.value).toFixed(2);
+			var totPriceVal=parseFloat(itemValObj).toFixed(2);
+			
+			//DISC
+			
+			var valTypeDISCObj = eval("document.myForm.valTypeDISC"+chkRfq+((k+1)*10));
+			//alert("valTypeDISCObj"+valTypeDISCObj.value);
+			var itemDISCObj = eval("document.myForm.itemDISC"+chkRfq+((k+1)*10));
+			
+			if(valTypeDISCObj.value == "P")
+				botDISCVal = (((totPriceVal) * itemDISCObj.value)/100).toFixed(2);
+			else if(valTypeDISCObj.value == "V")
+				botDISCVal = itemDISCObj.value;
+			else if(valTypeDISCObj.value == "Q")
+				botDISCVal = itemDISCObj.value * parseFloat(totalQuantity);
+			else
+				botDISCVal = 0;
+			
+			
+			var botSupVal = parseFloat(totPriceVal)- parseFloat(botDISCVal); 
+			//alert("botSupVal>>>"+botSupVal);
+			
+			//PKFW
+			var valTypePKFWObj = eval("document.myForm.valTypePKFW"+chkRfq+((k+1)*10));
+			//alert("valTypePKFWObj"+valTypePKFWObj.value);
+			var itemPKFWObj = eval("document.myForm.itemPKFW"+chkRfq+((k+1)*10));
+			
+			
+			if(valTypePKFWObj.value == "P")
+				botPKGVal = (((botSupVal) * itemPKFWObj.value)/100).toFixed(2);
+			else if(valTypePKFWObj.value == "V")
+				botPKGVal = itemPKFWObj.value;
+			else if(valTypePKFWObj.value == "Q")
+				botPKGVal = itemPKFWObj.value * parseFloat(totalQuantity);
+			else
+				botPKGVal = 0;
+				
+			//FRT
+			var valTypeFRTObj = eval("document.myForm.valTypeFRT"+chkRfq+((k+1)*10));
+			//alert("valTypeFRTObj"+valTypeFRTObj.value);
+			var itemFRTObj = eval("document.myForm.itemFRT"+chkRfq+((k+1)*10));
+			
+			
+			if(valTypeFRTObj.value == "P")
+				botFRTVal = (((botSupVal) * itemFRTObj.value)/100).toFixed(2);
+			else if(valTypeFRTObj.value == "V")
+				botFRTVal = itemFRTObj.value;
+			else if(valTypeFRTObj.value == "Q")
+				botFRTVal = itemFRTObj.value * parseFloat(totalQuantity);
+			else
+				botFRTVal = 0;				
+				
+			//BFRT
+			var valTypeBFRTObj = eval("document.myForm.valTypeBFRT"+chkRfq+((k+1)*10));
+			//alert("valTypeBFRTObj"+valTypeBFRTObj.value);
+			var itemBFRTObj = eval("document.myForm.itemBFRT"+chkRfq+((k+1)*10));
+			
+			
+			if(valTypeBFRTObj.value == "P")
+				botBFRTVal = (((botSupVal) * itemBFRTObj.value)/100).toFixed(2);
+			else if(valTypeBFRTObj.value == "V")
+				botBFRTVal = itemBFRTObj.value;
+			else if(valTypeBFRTObj.value == "Q")
+				botBFRTVal = itemBFRTObj.value * parseFloat(totalQuantity);
+			else
+				botBFRTVal = 0;
+				
+				
+			//INS
+			var valTypeINSObj = eval("document.myForm.valTypeINS"+chkRfq+((k+1)*10));
+			//alert("valTypeINSObj"+valTypeINSObj.value);
+			var itemINSObj = eval("document.myForm.itemINS"+chkRfq+((k+1)*10));
+			
+			
+			if(valTypeINSObj.value == "P")
+				botINSVal = (((botSupVal) * itemINSObj.value)/100).toFixed(2);
+			else if(valTypeINSObj.value == "V")
+				botINSVal = itemINSObj.value;
+			else if(valTypeINSObj.value == "Q")
+				botINSVal = itemINSObj.value * parseFloat(totalQuantity);
+			else
+				botINSVal = 0;		
+			
+			var botNetVal = parseFloat(botSupVal) + parseFloat(botPKGVal)+ parseFloat(botFRTVal)+ parseFloat(botBFRTVal)+ parseFloat(botINSVal);
+			
+			//TAX
+			
+			
+			var itemTAXObj = eval("document.myForm.itemTAX"+chkRfq+((k+1)*10));
+			botTAXVal = (((botNetVal) * itemTAXObj.value)/100).toFixed(2);
+							
+			
+			botTotVal = botTotVal + ( parseFloat(botNetVal) + parseFloat(botTAXVal)); 	
+			
+		
+			
+		}	
+		
+		botTotVal=(parseFloat(botTotVal)).toFixed(2); 
+		//alert("botTotVal out>>>"+botTotVal);
+		
+		var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+		
+		botDocObj.value = (parseFloat(botDocObj.value) - parseFloat(botTotValObj.value)).toFixed(2); 
+		
+		botTotValObj.value = botTotVal;
+		botDocObj.value = (parseFloat(botDocObj.value) + parseFloat(botTotVal)).toFixed(2); 
+		
+		
+		
+		
+}
+function chkRecQty(chkRfq,chkLine,chkQcf)
+{
+
+		//const collection = new Map();
+		//collection.set("Pr1","10");
+		//alert("collection"+collection.size);
+
+		var chkObj = document.myForm.selVen;
+		var len = document.myForm.rfqItem.length;
+		//alert("length"+len);
+		
+		var Count='<%=rfqLen%>';
+		//alert("Count"+Count+"len>>>"+len);
+		
+		const chkQty = new Map();
+		const chkRfqQty = new Map();
+		for(i=0;i<Count;i++)
+		{
+
+			//alert("CHK1"+isNaN(len));
+			var lineRfq = eval("document.myForm.lineRfq"+i).value;
+			//alert("lineRfq>>>"+lineRfq);
+			
+			var lineTotQty=0;
+			if(isNaN(len))
+			{
+			
+				var lineItem = 10;
+				//alert("lineItem>>>"+lineItem)
+				var chkPrItemQtyObj = eval("document.myForm.prItemQty"+lineItem);
+				//alert("chkPrItemQtyObj>>>"+chkPrItemQtyObj.value);
+				chkQty.set(lineItem,chkPrItemQtyObj.value);
+				
+				
+				//alert("CHK1"+lineRfq);
+				
+				var lineRfqQtyObj = eval("document.myForm.rfqQty"+lineRfq+lineItem);
+				if(chkRfqQty.has(lineItem))
+				{
+					//alert("IF>>>"+lineItem);
+					lineTotQty =parseFloat(chkRfqQty.get(lineItem)) + parseFloat(lineRfqQtyObj.value) ;
+					chkRfqQty.set(lineItem,lineTotQty);
+				}
+				else
+				{
+					//alert("ELSE>>>"+lineItem);
+					//alert("lineRfqQtyObj"+lineRfqQtyObj.value)
+					chkRfqQty.set(lineItem,lineRfqQtyObj.value);
+				}
+			}
+			else
+			{
+				for(j=0;j<len;j++)
+				{
+					var lineItem = (j+1)*10;
+					//alert("lineItem>>>"+lineItem)
+					var chkPrItemQtyObj = eval("document.myForm.prItemQty"+lineItem);
+					//alert("chkPrItemQtyObj>>>"+chkPrItemQtyObj.value);
+					chkQty.set(lineItem,chkPrItemQtyObj.value);
+					
+					
+					
+					var lineRfqQtyObj = eval("document.myForm.rfqQty"+lineRfq+lineItem);
+
+					if(chkRfqQty.has(lineItem))
+					{
+						//alert("IF>>>"+lineItem);
+						lineTotQty =parseFloat(chkRfqQty.get(lineItem)) + parseFloat(lineRfqQtyObj.value) ;
+						chkRfqQty.set(lineItem,lineTotQty);
+					}
+					else
+					{
+						//alert("ELSE>>>"+lineItem);
+						//alert("lineRfqQtyObj"+lineRfqQtyObj.value)
+						chkRfqQty.set(lineItem,lineRfqQtyObj.value);
+					}	
+
+					//alert("chkQty in FOR LOOP"+chkRfqQty.get(lineItem));
+				}
+			}
+			
+	
+		}
+		
+		//alert("chkQty"+chkQty.size);
+		//alert("chkQtybefore"+chkQty.get(10));
+		//alert("chkQtybefore"+chkQty.get(20));
+		//alert("chkQtybefore"+chkQty.get(30));
+		
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+
+		var chkCount = 0;
+		var chkTotCount = 0;
+		
+		
+			
+		for(i=0;i<Count;i++)
+		{
+
+			if(Count==1)
+			{
+				if(chkObj.checked)
+				{
+					if(chkRfq === chkObj.value)
+					{
+
+						chkCount++;
+					}
+				}
+			}
+			else
+			{
+				if(chkObj[i].checked)
+				{
+					chkTotCount ++;
+					if(chkRfq === chkObj[i].value)
+					{
+
+						chkCount++;
+					}	
+				}
+			}
+		}
+			
+
+		//alert("chkQty"+chkQty.size);
+		//alert("chkQty"+chkQty.get(10));
+		//alert("chkQty"+chkQty.get(20));
+
+		
+		//alert("chkCount>>>"+chkCount);
+
+		if(chkCount>0)
+		{
+			//alert("chkCount"+chkCount);
+			var lineTotQty=0;
+			var prItemQtyObj = 0;
+			//alert("prItemQtyObj>>>"+prItemQtyObj.value);		
+<%
+			for(int j=0;j<rfqHash.size();j++)
+			{
+				
+				String  rfqChk = (String)rfqHash.get(j+1);
+%> 
+				prItemQtyObj=eval("document.myForm.prItemQty"+chkLine);
+				var rfqChk= '<%=rfqChk%>';
+				//alert("rfqChk>>>"+rfqChk);
+				var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+chkLine);
+				//alert("lineQtyObj>>>"+lineQtyObj.value);
+				lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+<%
+			}
+%>
+			//alert("lineTotQty>>>"+lineTotQty);
+			//alert("prItemQtyObj>>>"+prItemQtyObj.value);
+
+			if(lineTotQty > prItemQtyObj.value)
+			{
+					var chkObj = document.myForm.selVen;
+										
+					if(isNaN(chkObj.length))
+					{
+						if(chkObj.checked)
+						{
+							if(chkRfq === chkObj.value)
+							chkObj.checked = false;
+						}					
+	
+					}
+					else
+					{
+						for(i=0;i<chkObj.length;i++)
+						{
+							if(chkObj[i].checked)
+							{
+								if(chkRfq === chkObj[i].value)
+								chkObj[i].checked = false;
+							}
+						}
+					}	
+
+					alert("Total Line Qty should not be greater than PR Qty at line"+chkLine);
+					return false;
+			}
+			else
+			{
+				//alert("IN ELSE CHK"+prItemQtyObj.value);
+				//BOT VALUES
+				for(var k=0;k<Count;k++)
+				{
+				
+					if(isNaN(len))
+					{				
+						var chkLine = 10;
+						var prItemQtyObj = eval("document.myForm.prItemQty"+chkLine);
+						var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+chkLine);
+						//alert("prItemQtyObj.value111>>"+prItemQtyObj.value);
+						//alert("chkRfqQty111>>"+chkRfqQty.get(10));
+						itemQtyObj.value = (parseFloat(prItemQtyObj.value)-parseFloat(chkRfqQty.get(10))).toFixed(0);
+						//alert("itemQtyObj>>>>"+itemQtyObj.value);
+						calcBot(chkRfq,chkRfq,chkLine,chkQcf);
+					}
+					else
+					{
+						for(x=0;x<len;x++)
+						{					
+							var chkLine = (x+1)*10;
+							var prItemQtyObj = eval("document.myForm.prItemQty"+chkLine);
+							var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+chkLine);
+							//alert("prItemQtyObj.value111>>"+prItemQtyObj.value);
+							//alert("chkRfqQty111>>"+chkRfqQty.get((x+1)*10));
+							itemQtyObj.value = (parseFloat(prItemQtyObj.value)-parseFloat(chkRfqQty.get((x+1)*10))).toFixed(0);
+							//alert("itemQtyObj>>>>"+itemQtyObj.value);
+							calcBot(chkRfq,chkRfq,chkLine,chkQcf);	
+						}	
+
+					}
+				}	
+	
+				/*
+				var rfqTotValObj = eval("document.myForm.rfqTotVal"+chkRfq);
+				var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+				if(chkTotCount == 1)
+					botTotValObj.value = rfqTotValObj.value;
+				else
+					botTotValObj.value = "0.00";
+				
+					botDocObj.value = (parseFloat(botDocObj.value) + parseFloat(botTotValObj.value)).toFixed(2); */
+
+			}	
+		}
+		else
+		{
+
+			for(var k=0;k<Count;k++)
+			{
+				if(isNaN(len))
+				{
+						var k=10;
+						var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+k);
+						itemQtyObj.value = "0";				
+					
+				}
+				else
+				{
+					for(i=0;i<len;i++)
+					{
+						var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((i+1)*10));
+						itemQtyObj.value = "0";
+					}	
+				}	
+
+			}	
+
+			var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+			botDocObj.value = (parseFloat(botDocObj.value) - parseFloat(botTotValObj.value)).toFixed(2); 
+			botTotValObj.value = "0.00";
+
+		}
+		
+}
+function calcBot(chkStr,chkRfq,chkLine,chkQcf)
+{ 
+		//alert("IN CALCBOTNEW");
+		var chkObj = document.myForm.selVen;
+		
+		
+		var len = document.myForm.rfqItem.length;
+		//alert("length"+len);		
+		
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+		var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+chkLine);
+
+		var Count='<%=rfqLen%>';
+
+		var chkCount = 0;
+		var chkTotCount = 0;
+		
+		for(i=0;i<Count;i++)
+		{
+			if(Count==1)
+			{
+				if(chkObj.checked)
+				{
+					chkTotCount ++;
+					if(chkRfq === chkObj.value)
+					{
+
+						chkCount++;
+					}
+				}
+			}
+			else
+			{
+				if(chkObj[i].checked)
+				{
+					chkTotCount ++;
+					if(chkRfq === chkObj[i].value)
+					{
+
+						chkCount++;
+					}	
+				}
+			}
+		}
+		if(chkCount == 0)
+		{
+			alert("Please Select the vendor");
+			itemQtyObj.value=0;
+			return;				
+
+		}
+
+		//alert("chkStr"+chkStr);
+		//alert("chkRfq"+chkRfq);
+		//alert("chkLine"+chkLine);
+		
+		//alert("itemQtyObj"+itemQtyObj.value);
+		if(itemQtyObj.value=='')
+		{
+			alert("Enter Recommended Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus();
+			return;
+		}
+		var prItemQtyObj = eval("document.myForm.prItemQty"+chkLine);
+		//alert("prItemQtyObjNew"+prItemQtyObj.value);
+		
+		if( parseFloat(itemQtyObj.value) > parseFloat(prItemQtyObj.value))
+		{
+			alert("Recommended Qty should not be greater than PR Qty at line"+chkLine+" against RFQ:"+chkRfq);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}
+		var lineTotQty=0;
+<%
+		for(int j=0;j<rfqHash.size();j++)
+		{
+			String  rfqChk = (String)rfqHash.get(j+1);
+%> 
+			var rfqChk= '<%=rfqChk%>';
+			//alert("rfqChk>>>"+rfqChk);
+			var lineQtyObj = eval("document.myForm.rfqQty"+rfqChk+chkLine);
+			//alert("lineQtyObj>>>"+lineQtyObj.value);
+			lineTotQty=lineTotQty+parseFloat(lineQtyObj.value);
+<%
+		}
+%>
+		//alert("lineTotQty>>>"+lineTotQty);
+		if(lineTotQty > prItemQtyObj.value)
+		{
+			alert("Total Line Qty should not be greater than PR Qty at line"+chkLine);
+			itemQtyObj.value=0;
+			itemQtyObj.focus()
+			return;
+		}	
+		var Count='<%=rfqLen%>';
+		//alert("Count"+Count);	
+		
+		var botTotVal=0;
+		var botTotValObj = eval("document.myForm.botTotVal"+chkRfq);
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+		//alert("chkTotCount=="+chkTotCount);
+		for(var i=0;i<chkCount;i++)
+		{
+			if(isNaN(len))
+			{
+				var k=0;
+				var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+				//alert("itemQtyObj>>>>"+itemQtyObj.value);
+				var itemPriceObj = eval("document.myForm.itemPrice"+chkRfq+((k+1)*10));
+				//alert("itemPriceObj"+itemPriceObj.value);
+				var itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 
+				//alert("itemValObj"+parseFloat(itemValObj));
+				var totalQuantity=parseFloat(itemQtyObj.value).toFixed(2);
+				var totPriceVal=parseFloat(itemValObj).toFixed(2);
+
+				//DISC
+
+				var valTypeDISCObj = eval("document.myForm.valTypeDISC"+chkRfq+((k+1)*10));
+				//alert("valTypeDISCObj"+valTypeDISCObj.value);
+				var itemDISCObj = eval("document.myForm.itemDISC"+chkRfq+((k+1)*10));
+
+				if(valTypeDISCObj.value == "P")
+					botDISCVal = (((totPriceVal) * itemDISCObj.value)/100).toFixed(2);
+				else if(valTypeDISCObj.value == "V")
+					botDISCVal = itemDISCObj.value;
+				else if(valTypeDISCObj.value == "Q")
+					botDISCVal = itemDISCObj.value * parseFloat(totalQuantity);
+				else
+					botDISCVal = 0;
+
+
+				var botSupVal = parseFloat(totPriceVal)- parseFloat(botDISCVal); 
+				//alert("botSupVal>>>"+botSupVal);
+
+				//PKFW
+				var valTypePKFWObj = eval("document.myForm.valTypePKFW"+chkRfq+((k+1)*10));
+				//alert("valTypePKFWObj"+valTypePKFWObj.value);
+				var itemPKFWObj = eval("document.myForm.itemPKFW"+chkRfq+((k+1)*10));
+
+
+				if(valTypePKFWObj.value == "P")
+					botPKGVal = (((botSupVal) * itemPKFWObj.value)/100).toFixed(2);
+				else if(valTypePKFWObj.value == "V")
+					botPKGVal = itemPKFWObj.value;
+				else if(valTypePKFWObj.value == "Q")
+					botPKGVal = itemPKFWObj.value * parseFloat(totalQuantity);
+				else
+					botPKGVal = 0;
+
+				//FRT
+				var valTypeFRTObj = eval("document.myForm.valTypeFRT"+chkRfq+((k+1)*10));
+				//alert("valTypeFRTObj"+valTypeFRTObj.value);
+				var itemFRTObj = eval("document.myForm.itemFRT"+chkRfq+((k+1)*10));
+
+
+				if(valTypeFRTObj.value == "P")
+					botFRTVal = (((botSupVal) * itemFRTObj.value)/100).toFixed(2);
+				else if(valTypeFRTObj.value == "V")
+					botFRTVal = itemFRTObj.value;
+				else if(valTypeFRTObj.value == "Q")
+					botFRTVal = itemFRTObj.value * parseFloat(totalQuantity);
+				else
+					botFRTVal = 0;				
+
+				//BFRT
+				var valTypeBFRTObj = eval("document.myForm.valTypeBFRT"+chkRfq+((k+1)*10));
+				//alert("valTypeBFRTObj"+valTypeBFRTObj.value);
+				var itemBFRTObj = eval("document.myForm.itemBFRT"+chkRfq+((k+1)*10));
+
+
+				if(valTypeBFRTObj.value == "P")
+					botBFRTVal = (((botSupVal) * itemBFRTObj.value)/100).toFixed(2);
+				else if(valTypeBFRTObj.value == "V")
+					botBFRTVal = itemBFRTObj.value;
+				else if(valTypeBFRTObj.value == "Q")
+					botBFRTVal = itemBFRTObj.value * parseFloat(totalQuantity);
+				else
+					botBFRTVal = 0;
+
+
+				//INS
+				var valTypeINSObj = eval("document.myForm.valTypeINS"+chkRfq+((k+1)*10));
+				//alert("valTypeINSObj"+valTypeINSObj.value);
+				var itemINSObj = eval("document.myForm.itemINS"+chkRfq+((k+1)*10));
+
+
+				if(valTypeINSObj.value == "P")
+					botINSVal = (((botSupVal) * itemINSObj.value)/100).toFixed(2);
+				else if(valTypeINSObj.value == "V")
+					botINSVal = itemINSObj.value;
+				else if(valTypeINSObj.value == "Q")
+					botINSVal = itemINSObj.value * parseFloat(totalQuantity);
+				else
+					botINSVal = 0;		
+
+				var botNetVal = parseFloat(botSupVal) + parseFloat(botPKGVal)+ parseFloat(botFRTVal)+ parseFloat(botBFRTVal)+ parseFloat(botINSVal);
+
+				//TAX
+				//alert("botNetVal>>"+botNetVal);
+
+
+				var itemTAXObj = eval("document.myForm.itemTAX"+chkRfq+((k+1)*10));
+				//alert("itemTAXObj>>"+itemTAXObj.value);
+				botTAXVal = (((botNetVal) * itemTAXObj.value)/100).toFixed(2);
+
+				//alert("botNetVal"+botNetVal);
+				//alert("itemPriceObj"+itemPriceObj.value);
+				botTotVal = botTotVal + ( parseFloat(botNetVal) + parseFloat(botTAXVal)); 
+				//botTotVal=(parseFloat(botTotVal)).toFixed(2); 
+				//alert("botTotVal out>>>"+botTotVal);
+			}
+			else
+			{
+				for(k=0;k<len;k++)
+				{
+					var itemQtyObj = eval("document.myForm.rfqQty"+chkRfq+((k+1)*10));
+					//alert("itemQtyObj>>>>"+itemQtyObj.value);
+					var itemPriceObj = eval("document.myForm.itemPrice"+chkRfq+((k+1)*10));
+					//alert("itemPriceObj"+itemPriceObj.value);
+					var itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 
+					//alert("itemValObj"+parseFloat(itemValObj));
+					var totalQuantity=parseFloat(itemQtyObj.value).toFixed(2);
+					var totPriceVal=parseFloat(itemValObj).toFixed(2);
+
+					//DISC
+
+					var valTypeDISCObj = eval("document.myForm.valTypeDISC"+chkRfq+((k+1)*10));
+					//alert("valTypeDISCObj"+valTypeDISCObj.value);
+					var itemDISCObj = eval("document.myForm.itemDISC"+chkRfq+((k+1)*10));
+
+					if(valTypeDISCObj.value == "P")
+						botDISCVal = (((totPriceVal) * itemDISCObj.value)/100).toFixed(2);
+					else if(valTypeDISCObj.value == "V")
+						botDISCVal = itemDISCObj.value;
+					else if(valTypeDISCObj.value == "Q")
+						botDISCVal = itemDISCObj.value * parseFloat(totalQuantity);
+					else
+						botDISCVal = 0;
+
+
+					var botSupVal = parseFloat(totPriceVal)- parseFloat(botDISCVal); 
+					//alert("botSupVal>>>"+botSupVal);
+
+					//PKFW
+					var valTypePKFWObj = eval("document.myForm.valTypePKFW"+chkRfq+((k+1)*10));
+					//alert("valTypePKFWObj"+valTypePKFWObj.value);
+					var itemPKFWObj = eval("document.myForm.itemPKFW"+chkRfq+((k+1)*10));
+
+
+					if(valTypePKFWObj.value == "P")
+						botPKGVal = (((botSupVal) * itemPKFWObj.value)/100).toFixed(2);
+					else if(valTypePKFWObj.value == "V")
+						botPKGVal = itemPKFWObj.value;
+					else if(valTypePKFWObj.value == "Q")
+						botPKGVal = itemPKFWObj.value * parseFloat(totalQuantity);
+					else
+						botPKGVal = 0;
+
+					//FRT
+					var valTypeFRTObj = eval("document.myForm.valTypeFRT"+chkRfq+((k+1)*10));
+					//alert("valTypeFRTObj"+valTypeFRTObj.value);
+					var itemFRTObj = eval("document.myForm.itemFRT"+chkRfq+((k+1)*10));
+
+
+					if(valTypeFRTObj.value == "P")
+						botFRTVal = (((botSupVal) * itemFRTObj.value)/100).toFixed(2);
+					else if(valTypeFRTObj.value == "V")
+						botFRTVal = itemFRTObj.value;
+					else if(valTypeFRTObj.value == "Q")
+						botFRTVal = itemFRTObj.value * parseFloat(totalQuantity);
+					else
+						botFRTVal = 0;				
+
+					//BFRT
+					var valTypeBFRTObj = eval("document.myForm.valTypeBFRT"+chkRfq+((k+1)*10));
+					//alert("valTypeBFRTObj"+valTypeBFRTObj.value);
+					var itemBFRTObj = eval("document.myForm.itemBFRT"+chkRfq+((k+1)*10));
+
+
+					if(valTypeBFRTObj.value == "P")
+						botBFRTVal = (((botSupVal) * itemBFRTObj.value)/100).toFixed(2);
+					else if(valTypeBFRTObj.value == "V")
+						botBFRTVal = itemBFRTObj.value;
+					else if(valTypeBFRTObj.value == "Q")
+						botBFRTVal = itemBFRTObj.value * parseFloat(totalQuantity);
+					else
+						botBFRTVal = 0;
+
+
+					//INS
+					var valTypeINSObj = eval("document.myForm.valTypeINS"+chkRfq+((k+1)*10));
+					//alert("valTypeINSObj"+valTypeINSObj.value);
+					var itemINSObj = eval("document.myForm.itemINS"+chkRfq+((k+1)*10));
+
+
+					if(valTypeINSObj.value == "P")
+						botINSVal = (((botSupVal) * itemINSObj.value)/100).toFixed(2);
+					else if(valTypeINSObj.value == "V")
+						botINSVal = itemINSObj.value;
+					else if(valTypeINSObj.value == "Q")
+						botINSVal = itemINSObj.value * parseFloat(totalQuantity);
+					else
+						botINSVal = 0;		
+
+					var botNetVal = parseFloat(botSupVal) + parseFloat(botPKGVal)+ parseFloat(botFRTVal)+ parseFloat(botBFRTVal)+ parseFloat(botINSVal);
+
+					//TAX
+
+
+					var itemTAXObj = eval("document.myForm.itemTAX"+chkRfq+((k+1)*10));
+					botTAXVal = (((botNetVal) * itemTAXObj.value)/100).toFixed(2);
+
+					
+					botTotVal = botTotVal + ( parseFloat(botNetVal) + parseFloat(botTAXVal)); 
+					//alert("botTotVal"+k+">>"+botTotVal);
+					
+					//alert("botNetVal"+botNetVal);
+					//alert("itemPriceObj"+itemPriceObj.value);
+					//botTotVal = botTotVal + ( parseFloat(botNetVal) + parseFloat(botTAXVal)); 
+					//botTotVal=(parseFloat(botTotVal)).toFixed(2); 
+					//alert("botTotVal out>>>"+botTotVal);
+
+				}	
+			
+			}
+			
+		}	
+		
+		botTotVal=(parseFloat(botTotVal)).toFixed(2);
+		//alert("botTotVal out>>>"+botTotVal);
+		var botDocObj = eval("document.myForm.botDocVal"+chkQcf);
+		botDocObj.value = (parseFloat(botDocObj.value) - parseFloat(botTotValObj.value)).toFixed(2);
+		botTotValObj.value = botTotVal;
+		botDocObj.value = (parseFloat(botDocObj.value) + parseFloat(botTotVal)).toFixed(2); 
+		
+		
+		
+		
+}
+function viewService(rfqNo,rfqItem)
+{ 
+	var url="ezViewServices.jsp?rfqNo="+rfqNo+"&rfqItem="+rfqItem;      
+	$('iframe').attr("src",url);
+	$('#woModalSer').modal({show:true});
+	$('.modal-dialog').draggable({
+		   handle: ".modal-body"
+	});   		
+}
+function downloadFile(upItemNo,fileName)
+{
+	var upDocId 	= upItemNo;
+	var upDocType 	= "QCF";
+	window.open("../Inbox/ezFileDownloadPost.jsp?upDocId="+upDocId+"&upDocType="+upDocType+"&upItemNo="+upItemNo+"&fileName="+fileName);
+}
+function downloadFilePreView(upItemNo,fileName)
+{
+	var upDocId 	= upItemNo;
+	var upDocType 	= "QCF";
+	window.open("../Inbox/ezFileDownloadEnter.jsp?upDocId="+upplant+"&upDocType="+upDocType+"&upItemNo="+upItemNo+"&fileName="+fileName);
+}
+ function valUploadForm()
+ {
+ 	var upItemNo = $('#upItemNo').val();
+ 	var fileName = $('#file').val().replace(/C:\\fakepath\\/i, '');
+ 	var isValid = true;
+ 	if(fileName == "")
+	{
+		alert("Please upload file");
+		isValid = false;
+		return false;
+	}
+ 	$('input[name="fileItem'+upItemNo+'"]').each(function(){
+	  if($(this).val() == fileName)
+	  {
+	  	alert("File already uploaded");
+	  	isValid = false;
+		return false;
+	  }	  
+	});
+	if(isValid)
+	{
+		$('#uploadbutton').hide(); 	
+       		$('#loadingInd').show();
+	}
+	return isValid;
+ }
+ 
+ function deleteFile(thisObj,upItemNo,fileName)
+ {
+ 	var upDocId 	= $('#upDocId').val();
+ 	var upDocType 	= $('#upDocType').val();
+ 	$.ajax({
+	    url: '../Inbox/ezDeleteFileTemp.jsp',
+	    data: { upDocId: upDocId, upDocType : upDocType,upItemNo:upItemNo,fileName:fileName},
+	    dataType: "json",
+	    type: 'POST',
+	    success: function(result) {
+	      result=$.trim(result);  
+	      if(result === 'true')
+	      {
+	      	$(thisObj).closest("tr").remove();	
+	      }
+	    }
+	});
+ }
+   $( function() {
+     $( ".uploadDialogBtn" ).button().on( "click", function() {
+        $("#upItemNo").val($(this).val());
+        $("#file").val("");
+       $('#uploadMod').modal('show');
+       	return false;
+     });
+     $('#uploadForm').ajaxForm({
+     	  beforeSubmit: valUploadForm,	
+	  success: function(msg) {
+	      $('#uploadbutton').show(); 	
+       	      $('#loadingInd').hide();
+	      msg=$.trim(msg);
+	      //alert(msg);
+	      if(msg.split("##")[0] === 'true')
+	      {
+	      	  $('#noDataStatUpload').hide();
+	      	  var upItemNo = $('#upItemNo').val();
+	      	  var fileNameTemp = msg.split("##")[1];
+	      	   $('#uploadTable'+upItemNo).append('<tr><td align="left" width="95%"><input type="hidden" name="fileItem" value="'+fileNameTemp+'"><a href="javascript:downloadFilePreView(\''+upItemNo+'\',\''+fileNameTemp+'\')">'+fileNameTemp+'</a></td><td width="5%"><span onclick="javascript:deleteFile(this,\''+upItemNo+'\',\''+fileNameTemp+'\')" class="fa fa-trash fa-lg" style="margin-left: 25%;"></span></td></tr>')
+	      }
+	      //alert("File has been uploaded successfully");
+	      $('#uploadMod').modal('hide');
+	  },
+	  error: function(msg) {
+	     $('#uploadbutton').show(); 	
+       	     $('#loadingInd').hide();	
+	     alert("Couldn't upload file");
+	  }
+     });
+
+   } );
+</script>

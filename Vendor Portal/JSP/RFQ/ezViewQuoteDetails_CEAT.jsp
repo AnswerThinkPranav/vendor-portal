@@ -1,0 +1,3198 @@
+<%@ include file="../../Library/Globals/errorPagePath.jsp"%>
+<%@ include file="../Misc/ezVendHeader.jsp"%>   
+<%@ include file="../../../Includes/JSPs/Misc/iDocComments.jsp"%>
+<%@ include file="../../../Includes/JSPs/Misc/iCommonMethods.jsp"%>  
+<%@include file="../../../Includes/JSPs/Rfq/iBOTViewQuoteDetails.jsp"%>            
+<%@include file="../../../Includes/JSPs/Rfq/iSelectFields.jsp"%> 
+<%@ include file="../../../Includes/JSPs/Inbox/iGetUploadDocs.jsp"%>
+<%@ include file="../../../../EzCommon/Includes/iShowCal.jsp"%>
+<%@page import="ezc.ezutil.*,java.util.*,java.lang.*"%>  
+<jsp:useBean id="ConfigManager" class="ezc.client.EzSystemConfigManager" scope="session"></jsp:useBean>  
+<%@ page import="java.text.*" %>
+<%!      
+	public String checkNull(String str) 
+	{ 
+		String retStr = "";
+		 
+		if(str == null || "null".equals(str) || "".equals(str))
+			retStr = "";
+		else
+			retStr = str;
+			
+		return retStr;	
+	}
+%>
+<%
+	String rfqType="Quotation";
+	SimpleDateFormat formatter2   = new SimpleDateFormat("dd/MM/yyyy"); 	
+	ezc.ezbasicutil.EzCurrencyFormat myFormat= new ezc.ezbasicutil.EzCurrencyFormat();
+	myFormat.setLocale((java.util.Locale)session.getValue("LOCALE"));
+	myFormat.setNeedSybmol(((Boolean)session.getValue("SREQUIRED")).booleanValue());
+	myFormat.isPre(((Boolean)session.getValue("CPOSITION")).booleanValue());
+	myFormat.setSymbol((String)session.getValue("CURRENCY"));
+	
+	java.util.Hashtable hashDisc = new java.util.Hashtable();
+	hashDisc.put("P","Discount % on Basic");
+	hashDisc.put("Q","Discount/Qty");
+	hashDisc.put("V","Discount(Value)");
+	hashDisc.put("","N/A");
+	
+	java.util.Hashtable hashPKFW = new java.util.Hashtable();
+	hashPKFW.put("P","Pkg&Fwd chrgs(%)");
+	hashPKFW.put("Q","Pkg&Fwd/Qty");
+	hashPKFW.put("V","Pkg&Fwd chrg-value");
+	hashPKFW.put("","N/A");
+	
+	java.util.Hashtable hashFRT = new java.util.Hashtable();
+	hashFRT.put("P","Freight(%)");
+	hashFRT.put("Q","Freight/Qty");
+	hashFRT.put("V","Freight(Value)");
+	hashFRT.put("","N/A");
+	
+	String typeErh=dtlXML.getFieldValueString(0,"ERH_type");  
+	String leaddays=checkNull(dtlXML.getFieldValueString(0,"ERH_LEAD_DAYS"));   
+	String percent=checkNull(dtlXML.getFieldValueString(0,"ERH_PERCENTAGE")); 
+	String poType=checkNull(dtlXML.getFieldValueString(0,"ERH_PO_TYPE"));
+	String retType=checkNull(dtlXML.getFieldValueString(0,"ERH_RET_TYPE")); 
+	String retPer=checkNull(dtlXML.getFieldValueString(0,"ERH_RET_PER")); 
+	String dpCatType=checkNull(dtlXML.getFieldValueString(0,"ERH_DP_CAT")); 
+	String dpPer=checkNull(dtlXML.getFieldValueString(0,"ERH_DP_PER")); 
+	String dpAmt=checkNull(dtlXML.getFieldValueString(0,"ERH_DP_AMT")); 
+	java.util.Date dpDueDate = (java.util.Date)dtlXML.getFieldValue(0,"ERH_DUE_DATE");
+	String dpDueDateStr="";
+	if("".equals(dpDueDate) || "null".equals(dpDueDate) || dpDueDate==null)  
+		dpDueDateStr="";
+	else
+		dpDueDateStr= formatter2.format(dpDueDate);	
+	//Payment Processing for Service
+	String retTypeSer=checkNull(dtlXML.getFieldValueString(0,"ERH_SRV_RET_TYPE")); 
+	String retPerSer=checkNull(dtlXML.getFieldValueString(0,"ERH_SRV_RET_PER")); 
+	String dpCatTypeSer=checkNull(dtlXML.getFieldValueString(0,"ERH_SRV_DP_CAT")); 
+	String dpPerSer=checkNull(dtlXML.getFieldValueString(0,"ERH_SRV_DP_PER")); 
+	String dpAmtSer=checkNull(dtlXML.getFieldValueString(0,"ERH_SRV_DP_AMT")); 
+	java.util.Date dpDueDateSer = (java.util.Date)dtlXML.getFieldValue(0,"ERH_SRV_DUE_DATE");
+	String dpDueDateSerStr="";
+	if("".equals(dpDueDateSer) || "null".equals(dpDueDateSer) || dpDueDateSer==null)  
+		dpDueDateSerStr="";
+	else
+		dpDueDateSerStr= formatter2.format(dpDueDateSer);
+		
+	//******************************find Quote history*********************
+	
+	String counter="0";
+	String rfqNumber=(String)dtlXML.getFieldValue(0,"ERH_RFQ_NO");		
+	String dbInsQry = "SELECT MAX(ERQH_COUNTER) COUNT FROM EZC_RFQ_QUOTE_HISTORY  WHERE ERQH_RFQ_NO='"+rfqNumber+"'";		
+	ezc.ezparam.ReturnObjFromRetrieve retObj = null;
+	if("".equals(leaddays))leaddays="0";
+	ezc.ezparam.EzcParams hisParams = new ezc.ezparam.EzcParams(false); 				
+	
+	miscRfqTableRow.setQuery(dbInsQry);
+
+	try
+	{
+		miscRfqTable.appendRow(miscRfqTableRow);
+		hisParams.setLocalStore("Y");
+		hisParams.setObject(miscRfqTable);
+		Session.prepareParams(hisParams);
+		retObj=(ezc.ezparam.ReturnObjFromRetrieve)rfqMgr.ezGetMiscTransactions(hisParams);
+		if(retObj!=null)counter=(String)retObj.getFieldValueString(0,"COUNT");
+
+	}
+	catch(Exception e){
+	ezc.ezcommon.EzLog4j.log("Error while updatingRFQheader"+e,"E");
+	}
+	int cnt=Integer.parseInt(counter);
+	
+	if("2".equals(userType))
+	{
+		if(cnt>1)
+			rfqType="Re-Quoted RFQ Review by Buyer";
+		else
+			rfqType="Quotation Review by Buyer";
+	}
+	//Currency
+	String curr="INR";//This is hardcoded for CEAT testing
+	
+	ReturnObjFromRetrieve retcur = null;
+	EzcSysConfigParams sparams1 = new EzcSysConfigParams();
+	EzcSysConfigNKParams snkparams1 = new EzcSysConfigNKParams();
+	snkparams1.setLanguage("EN");
+	sparams1.setObject(snkparams1);
+	Session.prepareParams(sparams1);
+	retcur = (ReturnObjFromRetrieve)ConfigManager.getCurrencyDesc(sparams1);
+	
+	String fields[]= new String []{ "ECD_LONG_DESC"};
+	retcur.sort(fields,true);
+	int currLength = retcur.getRowCount();	
+	
+%>
+<style>
+
+.modal-dialog {
+  position: fixed;
+  width: 50%;
+  margin: 0;
+  padding: 10px;
+}
+
+.table thead th {
+   
+    padding: 10px;
+    text-align: left;
+   
+    white-space: nowrap;
+}
+.table tbody td {
+   
+    padding: 10px;
+  
+    white-space: nowrap;
+}
+.zui-wrapper {
+    position: relative;
+}
+.zui-scroller {
+
+    overflow-x: scroll;
+    overflow-y: visible;
+    padding-bottom: 5px;
+    
+       width: auto;
+   
+}
+.table .zui-sticky-col {
+    border-left: solid 1px #DDEFEF;
+    border-right: solid 1px #DDEFEF;
+    left: 22px;
+    position: absolute;
+    top: auto;
+    width: 120px;
+}
+</style>
+<link href="../../Library/Styles/ezCurrecy.css" rel="stylesheet">
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+<!-- Content Header (Page header) --> 
+<section class="content-header">
+   <h1>
+      <%=rfqType%>
+   </h1>
+</section>
+<!-- Main content -->  
+<section class="invoice">
+<form name="myForm" method="post"> 
+	<input type="hidden" name="type" value=<%=request.getParameter("type")%>>
+	<input type="hidden" name="rfqType" value=<%=request.getParameter("rfqType")%>>
+	<input type="hidden" name="EndDate" value="<%=CDate%>">  
+	<input type="hidden" name="OrderDate" value="<%=ordDate%>">
+	<input type="hidden" name="PurchaseOrder" value="<%=poNum%>">
+	<input type="hidden" name="rfqVendor" value="<%=rfqVendor%>" >
+	<input type="hidden" name="rfqBuyer" value="<%=rfqBuyer%>" >
+	<input type="hidden" name="vendCat" value="<%=vendCat%>" >
+	<input type="hidden" name="calType" value="" >
+	
+<%
+	String reqFrom =request.getParameter("type");
+	String expStat1 =request.getParameter("expStat");
+	//out.println("expStat1>>>>>"+expStat1); 
+	ezc.ezutil.FormatDate fd = new ezc.ezutil.FormatDate();    
+	String OrderDate = fd.getStringFromDate(ordDate,(String)session.getValue("DATESEPERATOR"),Integer.parseInt((String)session.getValue("DATEFORMAT")));
+	SimpleDateFormat formatter1   = new SimpleDateFormat("dd/MM/yyyy HH:mm"); 	
+	//SimpleDateFormat formatter2   = new SimpleDateFormat("dd/MM/yyyy"); 	
+	Date             rfqCloseDate = (java.util.Date)dtlXML.getFieldValue(0,"ERH_VALID_UPTO");
+	
+	
+	
+%>
+	<input type="hidden" name="type" value="<%=reqFrom%>">
+<%
+ 	String discType = checkNull(rfqLinesRet.getFieldValueString(0,"DISCTYPE"));
+ 	//out.println("discType>>"+discType);
+	
+	String PKFWType = checkNull(rfqLinesRet.getFieldValueString(0,"PKFWTYPE"));
+	String condPKFW = rfqLinesRet.getFieldValueString(0,"PKFWVAL");
+	String FRTType = checkNull(rfqLinesRet.getFieldValueString(0,"FRTTYPE"));
+	String condFRT = rfqLinesRet.getFieldValueString(0,"FRTVAL");
+	
+	//IMPORT
+	String condBCD 	= rfqLinesRet.getFieldValueString(0,"BCDVAL");
+	String condSWC 	= rfqLinesRet.getFieldValueString(0,"SWCVAL");
+	String condCHA 	= rfqLinesRet.getFieldValueString(0,"CHAVAL");
+	String IFRTType = rfqLinesRet.getFieldValueString(0,"IFRTTYPE");
+	String condIFRT = rfqLinesRet.getFieldValueString(0,"IFRTVAL");
+	String DUTYType = rfqLinesRet.getFieldValueString(0,"DUTYTYPE");
+	String condDUTY = rfqLinesRet.getFieldValueString(0,"DUTYVAL");
+	
+	
+	//String CUSTType = checkNull(rfqLinesRet.getFieldValueString(0,"CUSTTYPE"));
+	//String condCUST = "0";   //rfqLinesRet.getFieldValueString(0,"CUSTVAL");	
+	//String condCESS = "0";   //rfqLinesRet.getFieldValueString(0,"CESSVAL");
+	
+	
+	
+	String condGST ="0";
+	
+	for(int i=0;i<rfqLinesRetCnt;i++)
+      	{
+		String itemcondGST= rfqLinesRet.getFieldValueString(i,"GSTVAL");
+		if("".equals(itemcondGST) || "null".equals(itemcondGST) || itemcondGST==null)  
+		itemcondGST = "0";
+		
+		double condGSTDb=Double.parseDouble(condGST)+Double.parseDouble(itemcondGST);
+		condGST=new java.math.BigDecimal(condGSTDb).setScale(0,java.math.BigDecimal.ROUND_HALF_UP).toString(); 
+		
+	}	
+
+	
+	if("".equals(condPKFW) || "null".equals(condPKFW) || condPKFW==null) 
+		condPKFW = "0"; 
+	if("".equals(condFRT) || "null".equals(condFRT) || condFRT==null) 
+		condFRT = "0";
+	if("".equals(condBCD) || "null".equals(condBCD) || condBCD==null) 
+		condBCD = "0"; 		
+
+	  
+
+	double totVal = 0.0;
+	double totQty = 0.0;
+	double totdiscVal = 0.0;
+	double discVal = 0.0;
+	double PKFWVal = 0.0;
+	double totPKFWVal = 0.0;
+	double FRTVal = 0.0;
+	double totFRTVal = 0.0;
+	double GSTVal = 0.0;
+	double sPrice = 0.0;
+	double BCDVal = 0.0;
+	double SWCVal = 0.0;
+	double CHAVal = 0.0;
+	double IFRTVal = 0.0;
+	double DUTYVal=0.0;
+	double grossVal = 0.0;
+	double grossValInr = 0.0;
+	double landCostValue=0.0;
+	double landCostValueImp=0.0;
+	double lineItemVal=0.0;
+	double lineItemPrice=0.0;
+	double lineGSTVal=0.0;
+	double totGSTVal=0.0;
+	double totCostVal=0.0;
+	
+	
+	
+	String landCostValueStr="0";
+	String landCostValueImpStr="0";
+	String totValStr="0";
+	String discValStr="0";
+	String PKFWValStr="0";
+	String FRTValStr="0";
+	String GSTValStr="0";
+	String sPriceStr = "0";
+	String BCDValStr = "0";
+	String SWCValStr = "0";
+	String CHAValStr = "0";
+	String IFRTValStr = "0";
+	String DUTYValStr = "0";
+	String grossValStr = "0";
+	String grossValInrStr="0";
+	String totalCostStr = "0";
+	
+	
+	String condDisc ="0";
+	for(int d=0;d<rfqLinesRet.getRowCount();d++)
+	{
+		condDisc = rfqLinesRet.getFieldValueString(d,"DISCVAL"); 
+		String myQtyLines = rfqLinesRet.getFieldValueString(d,"QTY");
+		
+		//out.println("myQtyLines>>"+myQtyLines);
+		String quotPriceLines = rfqLinesRet.getFieldValueString(d,"PRICE");
+		if("".equals(condDisc) || "null".equals(condDisc) || condDisc==null) 
+			condDisc = "0";
+		String itemcondGST= rfqLinesRet.getFieldValueString(d,"GSTVAL");
+		if("".equals(itemcondGST) || "null".equals(itemcondGST) || itemcondGST==null)  
+			itemcondGST = "0";		
+		totQty=totQty+(Double.parseDouble(myQtyLines));
+		try
+		{
+		//totVal= (Double.parseDouble(myQtyLines) * Double.parseDouble(quotPriceLines));
+		totVal=totVal+(Double.parseDouble(myQtyLines) * Double.parseDouble(quotPriceLines));
+		
+		}
+		catch(Exception e){ 
+		totVal = 00.0;  
+		}
+		
+		try
+		{
+		lineItemVal= (Double.parseDouble(myQtyLines) * Double.parseDouble(quotPriceLines));
+		}
+		catch(Exception e){ 
+		lineItemVal = 00.0;  
+		}		
+		//out.println("lineItemVal>>>"+lineItemVal);
+		try
+		{
+		//out.println("condDisc>>"+condDisc);
+		
+		if("P".equals(discType))
+			discVal= lineItemVal * Double.parseDouble(condDisc)/100;
+		else if("Q".equals(discType))
+			discVal= (Double.parseDouble(myQtyLines)* Double.parseDouble(condDisc))/100 ;
+		else if("V".equals(discType))
+			discVal= Double.parseDouble(condDisc);	
+
+		totdiscVal=totdiscVal+discVal;
+		}
+		catch(Exception e){ 
+		discVal = 00.0;  
+		}
+		try
+		{
+		if("P".equals(PKFWType))
+			PKFWVal= (lineItemVal-discVal) * Double.parseDouble(condPKFW)/100;
+		else if("Q".equals(PKFWType))
+			PKFWVal= (Double.parseDouble(myQtyLines) * Double.parseDouble(condPKFW))/100;
+		else if("V".equals(PKFWType))
+			PKFWVal= Double.parseDouble(condPKFW);	
+		
+		if("V".equals(PKFWType))
+			totPKFWVal= PKFWVal;
+		else
+			totPKFWVal=totPKFWVal+PKFWVal;
+
+		}
+		catch(Exception e){ 
+		PKFWVal = 00.0;  
+		}
+		try
+		{
+		if("P".equals(FRTType))
+			FRTVal= (lineItemVal-discVal) * Double.parseDouble(condFRT)/100;
+		else if("Q".equals(FRTType))
+			FRTVal= Double.parseDouble(condFRT) * totQty;
+		else if("V".equals(FRTType))
+			FRTVal= Double.parseDouble(condFRT);
+		
+		if("V".equals(FRTType))
+			totFRTVal=FRTVal;
+		else
+			totFRTVal=totFRTVal+FRTVal; 
+		}
+		catch(Exception e){ 
+		FRTVal = 00.0;  
+		}
+		try
+		{
+		lineItemPrice= lineItemVal - discVal +PKFWVal+FRTVal;
+		}
+		catch(Exception e){ 
+		lineItemPrice = 00.0;  
+		}
+		//out.println("lineItemPrice>>>"+lineItemPrice);
+		//GST VAL LINE ITEM WISE
+		
+		lineGSTVal= lineItemPrice * Double.parseDouble(itemcondGST)/100;
+		//out.println("lineGSTVal>>>"+lineGSTVal);
+		totGSTVal= totGSTVal+ lineGSTVal;
+		//out.println("totGSTVal>>>"+totGSTVal);
+		
+		
+		
+		
+	}
+	/*
+	if("Credit".equals(typeErh))
+	{
+	
+		landCostValue=totVal-(((totVal)*(Double.parseDouble("8")/Double.parseDouble("100")*(Double.parseDouble("1")/Double.parseDouble("365")))*Double.parseDouble(leaddays)));
+		landCostValueImp=totVal-(((totVal)*(Double.parseDouble("8")/Double.parseDouble("100")*(Double.parseDouble("1")/Double.parseDouble("365")))*Double.parseDouble(leaddays)));
+	
+	}
+	if("Advance".equals(typeErh))
+	{
+	       landCostValue=totVal-(((totVal)*(Double.parseDouble("8")/Double.parseDouble("100"))*(Double.parseDouble("1")/Double.parseDouble("365"))*(Double.parseDouble("1")/(Double.parseDouble(percent))))*Double.parseDouble(leaddays));
+	       landCostValueImp=totVal-(((totVal)*(Double.parseDouble("8")/Double.parseDouble("100")*(Double.parseDouble("1")/Double.parseDouble("365")))*Double.parseDouble(leaddays)));
+	
+	}*/
+	
+	totValStr  = new java.math.BigDecimal(totVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString(); 
+	discValStr  = new java.math.BigDecimal(totdiscVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+	PKFWValStr  = new java.math.BigDecimal(totPKFWVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+	FRTValStr  = new java.math.BigDecimal(totFRTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+	GSTValStr  = new java.math.BigDecimal(totGSTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		
+	//SUPPLY PRICE
+	try
+	{
+	sPrice= totVal-totdiscVal+totPKFWVal+totFRTVal;
+	sPriceStr  = new java.math.BigDecimal(sPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+	}
+	catch(Exception e){ 
+	sPrice = 00.0;  
+	}
+	
+	if("Credit".equals(typeErh))
+	{
+	
+		landCostValue=sPrice-(((sPrice)*(Double.parseDouble("8")/Double.parseDouble("100")*(Double.parseDouble("1")/Double.parseDouble("365")))*Double.parseDouble(leaddays)));
+	
+	}
+	if("Advance".equals(typeErh))
+	{
+	       landCostValue=sPrice-(((sPrice)*(Double.parseDouble("8")/Double.parseDouble("100"))*(Double.parseDouble("1")/Double.parseDouble("365"))*(Double.parseDouble("1")/(Double.parseDouble(percent))))*Double.parseDouble(leaddays));
+	
+	}	
+	
+	landCostValueStr=new java.math.BigDecimal(landCostValue).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString(); 
+	
+	
+	if("IMP".equals(vendCat))
+	{
+		try
+		{
+			BCDVal= sPrice * Double.parseDouble(condBCD)/100;
+			BCDValStr  = new java.math.BigDecimal(BCDVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}
+		catch(Exception e){ 
+			BCDVal = 0.0;  
+		}
+		try
+		{
+			SWCVal= BCDVal * Double.parseDouble(condSWC)/100;
+			SWCValStr  = new java.math.BigDecimal(SWCVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}
+		catch(Exception e){ 
+			SWCVal = 0.0;  
+		}
+		try
+		{
+			CHAVal= Double.parseDouble(condCHA);
+			CHAValStr  = new java.math.BigDecimal(CHAVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}
+		catch(Exception e){ 
+			CHAVal = 0.0;  
+		}
+		try
+		{
+			if("P".equals(IFRTType))
+				IFRTVal= sPrice * Double.parseDouble(condIFRT)/100;
+			else if("Q".equals(IFRTType))
+				IFRTVal= Double.parseDouble(condIFRT) * totQty;
+			else if("V".equals(IFRTType))
+				IFRTVal= Double.parseDouble(condIFRT);
+
+			IFRTValStr  = new java.math.BigDecimal(IFRTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}
+		catch(Exception e){ 
+			IFRTVal = 0.0;  
+		}
+		try
+		{
+			condGST  = Double.parseDouble(condGST)/(rfqLinesRet.getRowCount())+"";
+			condGST  = new java.math.BigDecimal(condGST).setScale(0,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			
+		}
+		catch(Exception e){ 
+			condGST = "0";  
+		}		
+		try
+		{
+			totGSTVal  = ((sPrice + BCDVal +SWCVal)* Double.parseDouble(condGST)/100);
+			GSTValStr  = new java.math.BigDecimal(totGSTVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			
+		}
+		catch(Exception e){ 
+			totGSTVal = 0.0;  
+		}
+		try
+		{
+		if("E".equals(DUTYType))
+			DUTYVal=  BCDVal+SWCVal;
+		else if("D".equals(FRTType))
+			DUTYVal= Double.parseDouble("0");
+			
+			DUTYValStr  = new java.math.BigDecimal(DUTYVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();	
+		}
+		catch(Exception e){ 
+			DUTYVal = 0.0;  
+		}
+		if("Credit".equals(typeErh))
+		{
+
+			landCostValue=sPrice-(((sPrice)*(Double.parseDouble("8")/Double.parseDouble("100")*(Double.parseDouble("1")/Double.parseDouble("365")))*Double.parseDouble(leaddays)));
+
+		}
+		if("Advance".equals(typeErh))
+		{
+		       landCostValue=sPrice-(((sPrice)*(Double.parseDouble("8")/Double.parseDouble("100"))*(Double.parseDouble("1")/Double.parseDouble("365"))*(Double.parseDouble("1")/(Double.parseDouble(percent))))*Double.parseDouble(leaddays));
+
+		}			
+		
+	}
+	
+	//GROSS VALUE
+	try
+	{
+		if("DOM".equals(vendCat))
+		{
+			grossVal= totVal-totdiscVal+totPKFWVal+totFRTVal+totGSTVal;
+			grossValStr  = new java.math.BigDecimal(grossVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}
+		else
+		{
+			grossVal= totVal-totdiscVal+totPKFWVal+totFRTVal;
+			grossValStr  = new java.math.BigDecimal(grossVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			grossValInr = grossVal * 74.25;
+			grossValInrStr  = new java.math.BigDecimal(grossValInr).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+			
+			totCostVal= grossVal+BCDVal+SWCVal+CHAVal+IFRTVal+totGSTVal;
+			totalCostStr  = new java.math.BigDecimal(totCostVal).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();	
+			
+			landCostValueImp= grossVal+BCDVal+SWCVal+CHAVal+IFRTVal+totGSTVal-DUTYVal-totGSTVal;
+			landCostValueImpStr=new java.math.BigDecimal(landCostValueImp).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString(); 	
+			
+		}
+	}
+	catch(Exception e){ 
+	grossVal = 00.0;  
+	}	
+
+			
+		
+ 	String 	         qtndate      = convertDateObjToString(new Date());
+ 	String readonlyLeadTime="readonly";
+ 	String readOnlySer="";
+ 	if ((QuotNo!=null)&&(QuotNo.trim().length() > 0))  
+	{
+%>
+	<!-- Table row -->
+      <div class="row">
+	<div class="col-xs-12 table-responsive" style="overflow-x: hidden;"> 	    
+	<table class="table table-bordered">
+	<tr>
+	<th align="left" width="25%">RFQ Ref. No</th>
+      	<td valign="middle" align="left" width="25%"><%=poNum%><input type="hidden" name="RfqNo" value="<%=poNum%>"></td>
+	<th align="left" width="25%">RFQ Date</th>
+      	<td valign="middle" align="left" width="25%" colspan=3><%=OrderDate%></td>
+	</tr>
+	<tr>
+	<th align="left" width="25%">Quotation End Date</th>
+	<td valign="middle" align="left" width="25%"><%=formatter2.format(rfqCloseDate)%></td>	
+	<th align="left" width="25%">Qtn. Date</th>
+      	<td valign="middle" align="left" width="25%" colspan=3><%=formatter2.format(new Date())%>
+	<input type="hidden" name="QtnDate" value="<%=qtndate%>">
+	<input type="hidden" name="QtnEndDate" value="<%=formatter2.format(rfqCloseDate)%>">
+	&nbsp;</td>
+	
+	</tr>
+	<!--	<tr>
+	<th align="left" width="25%">All Conditions</th>
+	<td width="75%"><a href='javascript:funOpen()'>Click</a></td>
+	</tr>	-->
+	<tr>
+		<th align="left" width="25%">Payment Terms</th>
+		<td width="25%" >
+		 <%if("3".equals(userType) && "Req".equals(reqFrom)) {%>
+		 
+		<select id="CalendarDiv" name=PaymentTerms class="form-control select2" style="width:100% !important" >
+				<option value="">Select Payment Terms</option>
+	<%
+				int pmntLen   = pmntObj.getRowCount();
+				String payterm=dtlXML.getFieldValueString(0,"ERH_PAYMENT_TERMS");
+				for(int j=0;j<pmntLen;j++)
+				{
+					
+					String payStr = pmntObj.getFieldValueString(j,"EMKV_KEY").trim();
+					if(payStr.equals(payterm))
+					{
+	%>
+						<Option value=<%=payStr%> selected><%=payStr%>--><%=pmntHash.get(payStr)%></Option>
+	<%
+					}
+					else
+					{
+	%>
+						<Option value=<%=payStr%> ><%=payStr%>--><%=pmntHash.get(payStr)%></Option>
+	<%
+					}
+				}
+	%>
+				</select>
+		 
+		 <%}else{
+		 try{
+				out.println(dtlXML.getFieldValueString(0,"ERH_PAYMENT_TERMS")+"-->"+pmntHash.get(dtlXML.getFieldValueString(0,"ERH_PAYMENT_TERMS")));
+			}catch(Exception e){
+				out.println("&nbsp;");
+			}
+		    }	
+		%>
+		</td>
+	
+	<th align="left" width="15%">Discount</th>
+	<td width="50%" colspan=3>
+	 <%if("3".equals(userType) && "Req".equals(reqFrom)) {
+	 
+	 %>
+	 
+	<select name="valTypeDISC" class="form-control input-sm select2"  onChange="chkSel(this,'0','DISC')" style="width:60% !important">
+		<option value="">-- Select--</option>
+<%
+			if("DOM".equals(vendCat))
+			{
+%>					
+				<option value="P" <%if("P".equals(discType))out.println("Selected");%>>Discount % on Basic</option>
+				<!--<option value="Q" <%if("Q".equals(discType))out.println("Selected");%>>Discount/Qty</option>
+				<option value="V" <%if("V".equals(discType))out.println("Selected");%>>Discount(Value)</option> -->
+<%	
+			}
+			else if("IMP".equals(vendCat))
+			{
+%>
+				<option value="P" <%if("P".equals(discType))out.println("Selected");%>>Discount % on Gross</option>
+				<!--<option value="Q" <%if("Q".equals(discType))out.println("Selected");%>>Discount/Qty</option>
+				<option value="V" <%if("V".equals(discType))out.println("Selected");%>>Absolute discount</option> -->
+<%
+			}
+%>
+		</select>
+		<input type="number" value="0" min="1" size="2" name="discHeader" style="width:20%;" onchange="funSetItemDisc(this)"/>
+
+	<%}else{%>
+	<input type="hidden" name="valTypeDISCHid" value="<%=discType%>"/>
+	<%
+			try{
+				out.println(hashDisc.get(discType));
+			}catch(Exception e){
+				out.println("&nbsp;");   
+			}
+		}	
+	%></td>
+	</Tr>
+	<tr>
+	<th align="left" width="25%">Inco Terms</th>
+	<td width="25%" colspan=1>
+	 <%if("3".equals(userType) && "Req".equals(reqFrom)) {%>
+	 <select name=IncoTerms class="form-control select2" style="width:100% !important" onChange="funIncoDom(this)">
+		<option value="">Select Inco Terms</option>
+<%
+	 int incoLen   = incoObj.getRowCount();
+	 String incoterm=dtlXML.getFieldValueString(0,"ERH_INCO_TERMS1");
+	 
+	for(int j=0;j<incoLen;j++)
+	{
+		String incoStr = incoObj.getFieldValueString(j,"EMKV_KEY").trim();
+		if(incoStr.equals(incoterm))
+		{
+%>
+			<Option value=<%=incoStr%> selected><%=incoStr%>--><%=incoHash.get(incoStr)%></Option>
+<%
+		}
+		else
+		{
+			if("DOM".equals(vendCat))
+			{	
+				if("EXW".equals(incoStr)||"DAP".equals(incoStr)) 
+				{
+%>
+					<Option value=<%=incoStr%> ><%=incoStr%>--><%=incoHash.get(incoStr) %></Option>
+<%
+				}
+			}	
+			else
+			{
+%>
+				<Option value=<%=incoStr%> ><%=incoStr%>--><%=incoHash.get(incoStr) %></Option>	
+<%
+			}
+
+		}
+	}
+%>
+		</select>
+	 
+	<%}else{
+		try{
+			out.println(dtlXML.getFieldValueString(0,"ERH_INCO_TERMS1")+"-->"+incoHash.get(dtlXML.getFieldValueString(0,"ERH_INCO_TERMS1")));
+		}catch(Exception e){
+			out.println("&nbsp;");   
+		}
+	}	
+	%></td>	
+
+		<%if("3".equals(userType) && "Req".equals(reqFrom))
+		{
+			readonlyLeadTime="";
+		%>
+		<th align="left" width="25%">Lead Time( in days)</th>
+			
+	<td width="25%" ><input type="number" value="0" min="1"  name="leaddaysHeader" onchange="funSetItemLead(this)" <%=readonlyLeadTime%>/></td>
+		<%}%>
+		<%if("2".equals(userType)){
+			
+		String disabledStr="",displayCredit="none",displayAdvance="none",displayInt="none",displayRet="none",displayDp="none",displayRetCol="",displayDpCol="",readonlyStr="";
+		String displayRetSer="none",displayDpSer="none",displayRetColSer="",displayDpColSer="",readonlySerStr="";
+		if("Credit".equals(typeErh)){displayCredit="";displayInt="";readonlyStr="readonly";}
+		if("Advance".equals(typeErh)){displayAdvance="";displayInt="";readonlyStr="readonly";}
+		
+		if("H".equals(retType)){displayRet="";readonlyStr="readonly";displayRetCol="none";}
+		if("M".equals(dpCatType)|| "V".equals(dpCatType) ){displayDp="";readonlyStr="readonly";displayDpCol="none";}		
+		
+		if("H".equals(retTypeSer)){displayRetSer="";readonlySerStr="readonly";displayRetColSer="none";}
+		if("M".equals(dpCatTypeSer)|| "V".equals(dpCatTypeSer) ){displayDpSer="";readonlySerStr="readonly";displayDpColSer="none";}
+		
+		if("Apr".equals(reqFrom))disabledStr="disabled";
+		%>
+		
+		<th align="left" width="15%">Currency</th>
+		<td width="20%" ><%=curr%></td>
+	</tr>
+	<tr>
+		<th align="left" width="15%">Inco Terms Location</th>
+		<td valign="middle" align="left" width="25%"><%=checkNull(dtlXML.getFieldValueString(0,"ERH_INCO_TERMS2"))%><input type="hidden" name="IncoTermsLoc" id="IncoTermsLoc" value="<%=dtlXML.getFieldValueString(0,"ERH_INCO_TERMS2")%>"></td>	
+		<th>PO Document Type</th>
+		<td>
+			<select name="docType" class="form-control input-sm select2"  style="width:100% !important" <%=disabledStr%>>
+				<option value="">Select Type</option>
+				<option value="ZEPO" <%if("ZEPO".equals(poType))out.println("selected");%>>ZEPO</option>
+				<option value="ZPPO" <%if("ZPPO".equals(poType))out.println("selected");%>>ZPPO</option>
+				<option value="ZSRV" <%if("ZSRV".equals(poType))out.println("selected");%>>ZSRV</option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<th align="left" width="15%">Inco Terms Version</th>
+		<td valign="middle" align="left" width="25%">
+		<input type="hidden" name="incoVerHid" value="<%=dtlXML.getFieldValueString(0,"ERH_INCO_TERMS3")%>"/>
+<%		
+		String incoVerChk =  dtlXML.getFieldValueString(0,"ERH_INCO_TERMS3");
+		
+			if("".equals(incoVerChk) || "null".equals(incoVerChk) || incoVerChk==null)  
+				incoVerChk = "0001";
+			
+		try{
+			
+			out.println(incoVerChk+"-->"+incoVerHash.get(incoVerChk));
+		}catch(Exception e){
+			out.println("&nbsp;");   
+		}
+%>		
+		</td>							
+		<th>Payment Term Category</th>
+		<td>
+			<select name="selPayCal" class="form-control input-sm select2"  onChange="showField(this)" style="width:100% !important" <%=disabledStr%>>
+				<option value="">Select Type</option>
+				<option value="CRD" <%if("Credit".equals(typeErh))out.println("selected");%>>Credit</option>
+				<option value="ADV" <%if("Advance".equals(typeErh))out.println("selected");%>>Advance</option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<th id="creditCal" style="display:<%=displayCredit%>;">Number of Credit Days</th><td id="creditCalVal" style="display:<%=displayCredit%>;" <%=disabledStr%>>
+		<input type="number" value="<%=leaddays%>" min="0" onchange="funCalLandCost('C')" name="creditDays" <%=readonlyStr%> <%=disabledStr%>/></td></tr>
+
+		<tr id="AdvCal" style="display:<%=displayAdvance%>;"><th>Advance Payment days</th><td><input type="number" value="<%=leaddays%>" min="1" name="leadTime" onchange="funCalLandCost('A')" <%=readonlyStr%>/></td>
+		<th>Percentage(%)</th><td><input type="number" value="<%=percent%>" min="0" onchange="funCalLandCost('A')" name="leadTimePercent" <%=readonlyStr%>/></td>
+	</tr>
+	<tr>
+		<th id="interest" style="display:<%=displayInt%>;">Interest(%)</th><td id="intVal" style="display:<%=displayInt%>;">
+		<input type="number" value="8" min="0"  name="interest" disabled/></td>
+	
+	</tr>
+	
+
+	
+	</table>
+	</div>
+	<!-- /.col -->
+      </div>
+      <!-- /.row -->
+<%      
+	if(isSupply)
+	{
+%>	
+	 
+      	<div>
+      		<table class="table table-bordered  table-responsive">	
+      		<tr>
+				<th colspan="4" style="text-align:left;">Payment Processing(Supply)</th>
+		</tr>
+		<tr>
+				<th>Retention</th>
+				<td>
+					<select name="retType" class="form-control input-sm select2"  onChange="showRetention(this,'S')" style="width:60% !important" <%=disabledStr%>>
+						<option value="N" <%if("N".equals(retType))out.println("selected");%>>Not Applicable</option>
+						<option value="H" <%if("H".equals(retType))out.println("selected");%>>Applicable(Header Level)</option>
+						<option value="I" <%if("I".equals(retType))out.println("selected");%>>Applicable(Item Level)</option>
+						<option value="B" <%if("B".equals(retType))out.println("selected");%>>Secured by Bond</option>
+					</select>
+				</td>	
+				<td id="retDisp" colspan='2' style="display:<%=displayRetCol%>;">&nbsp;</td>
+				<th id="retPerDisp" style="display:<%=displayRet%>;">Retention(%)</th>
+				<td id="retPerVal" style="display:<%=displayRet%>;">
+					<input type="number" value="<%=retPer%>" min="0"  name="retPer" <%=readonlyStr%>/>
+				</td>				
+		</tr>	
+		<tr>
+			<th >DP Category</th>
+			<td >
+				<select name="dpCatType" class="form-control input-sm select2"  onChange="showDP(this,'S')" style="width:60% !important" <%=disabledStr%>>
+					<option value="N" <%if("N".equals(dpCatType))out.println("selected");%>>No Down Payment</option>
+					<option value="M" <%if("M".equals(dpCatType))out.println("selected");%>>Mandatory Down Payment</option>
+					<option value="V" <%if("V".equals(dpCatType))out.println("selected");%>>Valuntary Down Payment</option>
+
+				</select>
+			</td>	
+			<td id="dpDisp" colspan='2' style="display:<%=displayDpCol%>;">&nbsp;</td>
+			<th id="dpPerDisp" style="display:<%=displayDp%>;">Down Payment(%)</th>
+			<td id="dpPerVal" style="display:<%=displayDp%>;">
+				<input type="number" value="<%=dpPer%>" min="0"  name="dpPer" onChange="calcDPAmt(this,'S')" <%=readonlyStr%>/>
+			</td>				
+
+		</tr>
+		<tr id="trDp" style="display:<%=displayDp%>;">
+			<th >Down Payment Amount</th>
+			<td><input type="number" value="<%=dpAmt%>" min="0"  name="dpAmt" id="dpAmt" <%=readonlyStr%>/>&nbsp;<%=curr%></td>
+			<th >Due Date</th>
+			<td align="left" valign=center>
+				<div class="input-group">
+					  <input class="form-control input-sm" type="text"  name="dpDueDate" id="dpDueDate" value="<%=dpDueDateStr%>" readonly>
+					  <%=getDateImageFromToday("dpDueDate")%> 
+				</div>				
+			</td>
+
+		</tr>	
+<%	
+	}
+	if(isService)
+	{
+%>		
+      	<div>
+      		<table class="table table-bordered  table-responsive">	
+      		<tr>
+				<th colspan="4" style="text-align:left;">Payment Processing(Service)</th>
+		</tr>
+		<tr>
+				<th>Retention</th>
+				<td>
+					<select name="retTypeSer" class="form-control input-sm select2"  onChange="showRetention(this,'D')" style="width:60% !important" <%=disabledStr%>>
+						<option value="N" <%if("N".equals(retTypeSer))out.println("selected");%>>Not Applicable</option>
+						<option value="H" <%if("H".equals(retTypeSer))out.println("selected");%>>Applicable(Header Level)</option>
+						<option value="I" <%if("I".equals(retTypeSer))out.println("selected");%>>Applicable(Item Level)</option>
+						<option value="B" <%if("B".equals(retTypeSer))out.println("selected");%>>Secured by Bond</option>
+					</select>
+				</td>	
+				<td id="retDispSer" colspan='2' style="display:<%=displayRetColSer%>;">&nbsp;</td>
+				<th id="retPerDispSer" style="display:<%=displayRetSer%>;">Retention(%)</th>
+				<td id="retPerValSer" style="display:<%=displayRetSer%>;">
+					<input type="number" value="<%=retPerSer%>" min="0"  name="retPerSer" <%=readonlyStr%>/>
+				</td>				
+		</tr>	
+		<tr>
+			<th >DP Category</th>
+			<td >
+				<select name="dpCatTypeSer" class="form-control input-sm select2"  onChange="showDP(this,'D')" style="width:60% !important" <%=disabledStr%>>
+					<option value="N" <%if("N".equals(dpCatTypeSer))out.println("selected");%>>No Down Payment</option>
+					<option value="M" <%if("M".equals(dpCatTypeSer))out.println("selected");%>>Mandatory Down Payment</option>
+					<option value="V" <%if("V".equals(dpCatTypeSer))out.println("selected");%>>Valuntary Down Payment</option>
+
+				</select>
+			</td>	
+			<td id="dpDispSer" colspan='2' style="display:<%=displayDpColSer%>;">&nbsp;</td>
+			<th id="dpPerDispSer" style="display:<%=displayDpSer%>;">Down Payment(%)</th>
+			<td id="dpPerValSer" style="display:<%=displayDpSer%>;">
+				<input type="number" value="<%=dpPerSer%>" min="0"  name="dpPerSer" onChange="calcDPAmt(this,'D')" <%=readonlyStr%>/>
+			</td>				
+
+		</tr>
+		<tr id="trDpSer" style="display:<%=displayDp%>;">
+			<th >Down Payment Amount</th>
+			<td><input type="number" value="<%=dpAmtSer%>" min="0"  name="dpAmtSer" id="dpAmtSer" <%=readonlyStr%>/>&nbsp;<%=curr%></td>
+			<th >Due Date</th>
+			<td align="left" valign=center>
+				<div class="input-group">
+					  <input class="form-control input-sm" type="text"  name="dpDueDateSer" id="dpDueDateSer" value="<%=dpDueDateSerStr%>" readonly>
+					  <%=getDateImageFromToday("dpDueDateSer")%> 
+				</div>				
+			</td>
+
+		</tr>			
+<%
+	}
+	}
+			
+%>		
+	</table>
+	</div>
+<%
+	if(isSupply && "2".equals(userType)) 
+	{
+				String warranty=dtlXML.getFieldValueString(0,"ERH_WARRANTY");
+				if(warranty==null || "null".equals(warranty))warranty="";
+				String deliveryPeriod=dtlXML.getFieldValueString(0,"ERH_DLV_PERIOD");
+				if(deliveryPeriod==null || "null".equals(deliveryPeriod))deliveryPeriod="";
+				String addnlPaymentTerms=dtlXML.getFieldValueString(0,"ERH_ADDL_TERMS");
+				if(addnlPaymentTerms==null || "null".equals(addnlPaymentTerms) || "".equals(addnlPaymentTerms))addnlPaymentTerms="0";
+				String addnlPaymentTerms2=dtlXML.getFieldValueString(0,"ERH_ADDL_TERMS2");
+				if(addnlPaymentTerms2==null || "null".equals(addnlPaymentTerms2) || "".equals(addnlPaymentTerms2))addnlPaymentTerms2="0";
+%>	
+	<div>
+		      		<table class="table table-bordered  table-responsive">	
+		      		<tr>
+					<th colspan="4" style="text-align:left;">Commercial Terms(Supply)</th>
+				</tr>
+				<tr>
+					<th>Warranty</th>
+					<td><input type="text" id="warranty" name="warranty" size="75" value="<%=warranty%>" ></td>	
+				</tr>				
+				<tr>
+					<th>Inst and comissioning of Product/Equipment</th>
+					<td  colspan="3"><input type="text" id="deliveryPeriod" name="deliveryPeriod" size="75" value="<%=deliveryPeriod%>" ></td>		
+				</tr>	
+
+				<tr>
+					<th>Overdeliv. Tol. %</th>
+					<td><input type="text" id="addnlPaymentTerms" name="addnlPaymentTerms" size="75" value="<%=addnlPaymentTerms%>" ></td>	
+				</tr>
+				<tr>
+					<th>Underdeliv. Tol. %</th>
+					<!--<td><input type="text" id="addnlPaymentTerms" name="addnlPaymentTerms" size="75" value="" ></td>-->
+					<td><input type="text" id="addnlPaymentTerms2" name="addnlPaymentTerms2" size="75" value="<%=addnlPaymentTerms2%>" ></td>
+				</tr>				
+				
+			</table>
+	</div>
+<%
+	}
+	if(isService && "2".equals(userType)) 
+	{
+				String srvWarranty=dtlXML.getFieldValueString(0,"ERH_SER_WARRANTY");
+				if(srvWarranty==null || "null".equals(srvWarranty))srvWarranty="";
+				String manPower=dtlXML.getFieldValueString(0,"ERH_SER_MANPOWER");
+				if(manPower==null || "null".equals(manPower))manPower="";
+				String esic=dtlXML.getFieldValueString(0,"ERH_SER_ESIC");
+				if(esic==null || "null".equals(esic))esic="";
+				String commDays=dtlXML.getFieldValueString(0,"ERH_SER_COMM_DAYS");
+				if(commDays==null || "null".equals(commDays))commDays="";
+%>	
+	<div>
+		      		<table class="table table-bordered  table-responsive">	
+		      		<tr>
+					<th colspan="4" style="text-align:left;">Commercial Terms(Service)</th>
+				</tr>
+				<tr>
+					<th>Warranty</th>
+					<td><input type="text" id="srvWarranty" name="srvWarranty" size="75" value="<%=srvWarranty%>" ></td>	
+				</tr>
+				<tr>
+					<th>Man Power Transportation and Accomodation</th>
+					<td  colspan="3"><input type="text" id="manPower" name="manPower" size="75" value="<%=manPower%>" ></td>	
+				</tr>				
+				
+				<tr>
+					<th>PF&ESIC</th>
+					<td><input type="text" id="esic" name="esic" size="75" value="<%=esic%>" ></td>		
+				</tr>	
+
+				<tr>
+					<th>Installation & comissioning no of days</th>
+					<td><input type="text" id="commDays" name="commDays" size="75" value="<%=commDays%>" ></td>	
+				</tr>
+				
+			</table>
+	</div>
+<%
+	}
+%>	
+	<div>
+  	<!-- Table row -->
+        <div class="row">
+	<div class="col-xs-12">
+	<div class="box box-primary">
+	<div class="box-body">
+	<div class="zui-wrapper">
+	<div class="zui-scroller">	
+	<table class="table table-bordered  table-responsive">	
+	<thead>
+		<tr>
+			<th>Line</th>
+			<th>Material</th>
+			<th>Description</th>
+			<th>Plant</th>
+			<th>Item Text</th>
+			<th>PO Text</th>
+			<!--<th>Query</th>-->
+			<th>UOM</th>
+			<th>Qty</th>
+			<th>Delivery Date</th>
+			<th>Lead<br>Time(days)</th>
+			<th>Currency</th>
+			<th>Basic Price &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+			<th>Discount</th>
+			<th>HSN/SAC</th>
+			<th>GST(%)</th>
+			<th>Total</th>
+			<!--<th>Total</th>
+			<th>Discount Type</th>
+			<th>Discount</th>
+			<th>Discount Value</th>
+			<th>Pkg & Fwd Type</th>
+			<th>Pkg & Fwd Chrgs</th>
+			<th>Pkg & Fwd Value</th>
+			<th>Freight Type</th>
+			<th>Freight</th>
+			<th>Freight Value</th>
+			<th>Supply Price</th> 
+			<th>GST(%)</th>
+			<th>GST Value</th>
+			<th>Gross Value</th>
+			<th>Conditions</th>-->
+			
+<%
+		if("2".equals(userType) || "3".equals(userType) )
+		{
+%>			
+			<th style="background-color:coral">History</th>
+<%
+		}
+%>			
+		</tr>	
+	</thead>
+        <tbody>
+    	
+ 	<%
+ 	double tt1,tt2;
+ 	java.math.BigDecimal finalQty=null;
+ 	//out.println(rfqLinesRet.toEzcString());
+ 	
+	String totvalueLines="0";
+      	for(int i=0;i<rfqLinesRetCnt;i++)
+      	{
+		/*String curr = dtlXML.getFieldValueString(i,"AMOUNT");
+		String net  = dtlXML.getFieldValueString(i,"NET_VALUE");  
+		
+		String amt = curr;
+		
+		Double ddde=new Double(Double.parseDouble(curr));
+		tt2=ddde.doubleValue()*100.0;
+		
+		amt = tt2+"";
+		
+		try
+		{
+			amt  = new java.math.BigDecimal(amt).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}catch(Exception e){}*/
+      		
+      		String myQty = rfqLinesRet.getFieldValueString(i,"QTY");
+		
+		try
+		{
+			myQty = (Double.parseDouble(myQty))+"";
+			myQty  = new java.math.BigDecimal(myQty).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}catch(Exception e){}
+		
+      		String quotPrice = rfqLinesRet.getFieldValueString(i,"PRICE");
+		
+		try
+		{
+			quotPrice  = new java.math.BigDecimal(quotPrice).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}catch(Exception e){}	
+		String condDiscLine=rfqLinesRet.getFieldValueString(i,"DISCVAL");
+		double totValItem = 0.0;
+		totValItem=Double.parseDouble(myQty)*Double.parseDouble(quotPrice);
+		double discValDB=0.0;
+		String totItemVal="";
+		try{
+		if("P".equals(discType))
+		discValDB= totValItem * Double.parseDouble(condDiscLine)/100;
+		else if("Q".equals(discType))
+		discValDB= (Double.parseDouble(myQty)* Double.parseDouble(condDiscLine))/100;
+		else if("V".equals(discType))
+		discValDB= Double.parseDouble(condDiscLine);
+		
+		totItemVal=new java.math.BigDecimal(totValItem-discValDB).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		totvalueLines=new java.math.BigDecimal(Double.parseDouble(totvalueLines)+(totValItem-discValDB)).setScale(2,java.math.BigDecimal.ROUND_HALF_UP).toString();
+		}
+		catch(Exception e){out.println("exceptionin cal"+e);}
+     		String quotCurr ="";
+     		if("IMP".equals(vendCat)) 
+      			quotCurr = "USD";
+     		 else if("DOM".equals(vendCat)) 
+      			quotCurr = "INR";
+		
+		java.util.Date delDate = (java.util.Date)rfqLinesRet.getFieldValue(i,"DELDATE");  
+		String prLineItem="";
+		try
+		{
+			prLineItem = Long.parseLong(rfqLinesRet.getFieldValueString(i,"PRITEM"))+"";
+		}
+		catch(Exception e)
+		{
+			prLineItem = rfqLinesRet.getFieldValueString(i,"PRITEM");
+		}
+		String accCat	= dtlXML.getFieldValueString(i,"ERD_ACC_CAT");
+		String itemCat	= dtlXML.getFieldValueString(i,"ERD_ITEM_CAT");
+		
+		String  serBgColor ="";
+		if("D".equals(itemCat))
+			serBgColor="background-color:#e4ff00";
+		String rfqItemPos = i+"";	
+%>		
+      		<tr style="<%=serBgColor%>">
+		<input type=hidden name="rfqItem" value="<%=i%>"> 
+		<input type="hidden" name="itemCat<%=i%>" value="<%=itemCat%>">
+		<td align="center"><input type=hidden name="ItemNo" value="<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>"><input type=hidden name="rfItemNo<%=i%>" value="<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>"><%=rfqLinesRet.getFieldValueString(i,"LINENO")%></td>  
+      		<td align="center"><input type=hidden name="matNo<%=i%>" value="<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>">        	
+	  	<%try{
+			out.println(Long.parseLong(rfqLinesRet.getFieldValueString(i,"MATERIAL")));
+		}catch(Exception e){
+			out.println(rfqLinesRet.getFieldValueString(i,"MATERIAL"));
+		}%>
+		</td>
+		
+			<td align="center"><input type=hidden name="matDesc<%=i%>" value="<%=rfqLinesRet.getFieldValueString(i,"MATDESC")%>"><%=rfqLinesRet.getFieldValueString(i,"MATDESC")%></td>
+			<td align="center"><input type=hidden name="plant<%=i%>" value="<%=rfqLinesRet.getFieldValueString(i,"PLANT")%>"><%=rfqLinesRet.getFieldValueString(i,"PLANT")%></td>
+			<input  type="hidden" name="pr<%=i%>"  value="<%=rfqLinesRet.getFieldValueString(i,"REFPR")%>"> 
+			<input  type="hidden" name="prItem<%=i%>"  value="<%=prLineItem%>"> 
+			<td><a href="javascript:openLongItem('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"ITEMTEXT"))%>','I')"> <span class="glyphicon glyphicon-new-window"></span> </a></td> 
+			<td><a href="javascript:openLongItem('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"POTEXT"))%>','P')"> <span class="glyphicon glyphicon-new-window"></span> </a></td> 
+			<!--<td><a href="javascript:openLongItem('<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"POTEXT"))%>','P')"> <span class="glyphicon glyphicon-new-window"></span> </a></td> -->
+			<td align="center"><input type="hidden" name="uom<%=i%>" value="<%=rfqLinesRet.getFieldValueString(i,"UOM")%>"><%=rfqLinesRet.getFieldValueString(i,"UOM")%></td>
+			<td align="center"><%=myQty%><input type="hidden" name="rfqQty<%=i%>" value="<%=myQty%>"></td>
+			<td align="center"><input type="hidden" name="delDate<%=i%>" value="<%=formatter2.format(delDate)%>"><%=formatter2.format(delDate)%></td>
+			<%if("3".equals(userType) && "Req".equals(reqFrom)){%>			
+			<td align="center"><input type="number" style="width:60px;" size=9  class="form-control" value="<%=rfqLinesRet.getFieldValueString(i,"ITEMLEADDAYS")%>" min="1"  name="leaddays<%=i%>" /></td>
+			<%}else{%>
+			<td align="center"><input type="number" style="width:60px;" size=9  class="form-control" value="<%=rfqLinesRet.getFieldValueString(i,"ITEMLEADDAYS")%>" min="1"  name="leaddays<%=i%>" readonly/></td>
+			<%}%>
+			<td align="center">
+			<%if("3".equals(userType) && "Req".equals(reqFrom)){%>
+			
+			<select name="Curr" class="form-control select2" style="width:100% !important">
+			
+			<%
+			curr=quotCurr;
+			for(int j=0;j<currLength;j++)
+			{
+				if(retcur.getFieldValueString(j,"EC_CURR_KEY").trim().equals(curr))
+					out.println("<option value="+retcur.getFieldValueString(j,"EC_CURR_KEY").trim()+" selected>"+retcur.getFieldValueString(j,"ECD_LONG_DESC")+"</option>");
+				else
+					out.println("<option value="+retcur.getFieldValueString(j,"EC_CURR_KEY").trim()+">"+retcur.getFieldValueString(j,"ECD_LONG_DESC")+"</option>");
+			}
+			%>
+			</select>
+			
+			<%}else{%>
+			<%=quotCurr%><input type="hidden" name="Curr<%=i%>" value="<%=quotCurr%>">
+			<%}%>
+			</td>
+			<td align="center" nowrap>
+			<%
+				if("3".equals(userType) && "Req".equals(reqFrom))
+				{
+					if("D".equals(itemCat))
+					{
+			%>			
+						<div class="input-group">
+							<input type="number" name="itemPrice<%=i%>" style="width:100px; !important" size=9 min="0"  class="form-control" value="<%=quotPrice%>" readonly>&nbsp;&nbsp;
+							<a href="javascript:viewService('<%=poNum%>','<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>','<%=rfqItemPos%>')"><img src="services4.PNG" style="VERTICAL-ALIGN: -webkit-baseline-middle;"></a>					
+							<input type="hidden" name="serLine<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" value="">
+							<input type="hidden" name="serSAC<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" value="">
+							<input type="hidden" name="serGST<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" value="">
+							<input type="hidden" name="serPrice<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" value="">
+							<input type="hidden" name="serQty<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>" value="">
+						</div>
+						
+			<%
+					}
+					else
+					{
+			%>
+						<input type=number name="itemPrice<%=i%>"  style="width:100px;" size=9 min="0"  class="form-control" value="<%=quotPrice%>" onchange="checkNum(this,'<%=i%>')" >
+			<%
+					}
+				}
+				else
+				{
+					if("D".equals(itemCat))
+					{
+				
+			%>
+						
+						<%=quotPrice%><input type="hidden" name="itemPrice<%=i%>" value="<%=quotPrice%>">
+						<a href="javascript:viewService('<%=poNum%>','<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>','<%=rfqItemPos%>')"><img src="services4.PNG" style="VERTICAL-ALIGN: -webkit-baseline-middle;"></a>
+			<%
+					}
+					else
+					{
+			%>
+						
+						<%=quotPrice%><input type="hidden" name="itemPrice<%=i%>" value="<%=quotPrice%>">
+			<%
+					}
+				}
+			%>
+			</td>
+			
+			<td align="center" nowrap>
+			<%if("3".equals(userType) && "Req".equals(reqFrom)){%>
+			<input  type="hidden" name="condDISCCode<%=i%>"  value="DISC"> 
+			<input type=number name="condDisc<%=i%>"  size=9  class="form-control" min="0" onchange="funCheckDis(this,'<%=i%>')" value="<%=rfqLinesRet.getFieldValueString(i,"DISCVAL")%>" >
+			
+			<%}else{%>
+			<%=rfqLinesRet.getFieldValueString(i,"DISCVAL")%><input type="hidden" name="condDisc<%=i%>" value="<%=rfqLinesRet.getFieldValueString(i,"DISCVAL")%>">
+			<%}%>
+			</td>
+			<td align="center" nowrap>
+			<%
+				if("3".equals(userType) && "Req".equals(reqFrom))
+				{
+					if("D".equals(itemCat))
+						readOnlySer="readOnly";
+
+			%>			
+			<input type=text name="vendHSNGST<%=i%>" id="vendHSNGST<%=i%>"  style="width:100px;"   class="form-control" value="<%=rfqLinesRet.getFieldValueString(i,"VENDHSN")%>" onkeypress='return event.charCode == 46 || (event.charCode >= 48 && event.charCode <= 57)' onchange="funGetGST('<%=i%>','<%=rfqLinesRet.getFieldValueString(i,"VENDHSN")%>','<%=rfqLinesRet.getFieldValueString(i,"GSTVAL")%>')" <%=readOnlySer%>></td>
+			
+			<%}else{%>
+			<%=rfqLinesRet.getFieldValueString(i,"VENDHSN")%></a>
+			
+			<%}%>
+			</td>
+			<td align="center" >
+			<%if("3".equals(userType) && "Req".equals(reqFrom)){%>
+			<div class="input-group">
+			<input type=number name="vendGST<%=i%>"  id="vendGST<%=i%>" style="width:60px;"  size="2" min="0" class="form-control" value="<%=Math.round(Double.parseDouble(rfqLinesRet.getFieldValueString(i,"GSTVAL")))%>" onchange="funAddGST(this,'<%=i%>')" >
+			<a href="javascript:openItemDet('<%=rfqLinesRet.getFieldValueString(i,"SAPGST")%>','<%=rfqLinesRet.getFieldValueString(i,"SAPHSN")%>','<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"ITEMTEXT"))%>')"> <span class="glyphicon glyphicon-new-window" style="VERTICAL-ALIGN: -webkit-baseline-middle;"></span> </a>
+			</div>
+			<%}else if("2".equals(userType) && "D".equals(itemCat)){%>
+				<%=Math.round(Double.parseDouble(rfqLinesRet.getFieldValueString(i,"GSTVAL")))%>
+				<input type=hidden name="vendGST<%=i%>" id="vendGST<%=i%>"  style="width:100px;"  size=9 min="0" class="form-control" value="<%=rfqLinesRet.getFieldValueString(i,"GSTVAL")%>" >	
+			<%}else{%>
+			<%=Math.round(Double.parseDouble(rfqLinesRet.getFieldValueString(i,"GSTVAL")))%>
+			<a href="javascript:openItemDet('<%=rfqLinesRet.getFieldValueString(i,"SAPGST")%>','<%=rfqLinesRet.getFieldValueString(i,"SAPHSN")%>','<%=rfqLinesRet.getFieldValueString(i,"MATERIAL")%>','<%=checkNull(rfqLinesRet.getFieldValueString(i,"ITEMTEXT"))%>')"> <span class="glyphicon glyphicon-new-window"></span> </a>
+			<input type=hidden name="vendGST<%=i%>" id="vendGST<%=i%>"  style="width:100px;"  size=9 min="0" class="form-control" value="<%=rfqLinesRet.getFieldValueString(i,"GSTVAL")%>"  >
+			<%}%>
+			</td>			
+			<td>
+			<input type=hidden name="condDISCVal<%=i%>"  style="width:100px;" size=9  class="form-control" value="<%=discValDB%>" >
+			<input type=number name="itemValue<%=i%>" style="width:100px;" size=9 class="form-control"    value="<%=totItemVal%>" readonly>
+			</td>
+			
+			<!--<td align="center"><a href="javascript:showConditions('<%=rfqNumber%>','<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>','<%=i%>');"><img src="../../../Vendor2/Images/Common/cond1.PNG"></a></td>	-->	
+			<%if("2".equals(userType) && "D".equals(itemCat)){%>
+			<td align="center"><a href="javascript:viewService('<%=poNum%>','<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>')"><i class="fa fa-history" aria-hidden="true"></i></a>
+			<%}else if("2".equals(userType) && !"D".equals(itemCat) || "3".equals(userType)){%>
+			<td align="center"><a href="javascript:showHis('<%=rfqNumber%>','<%=rfqLinesRet.getFieldValueString(i,"LINENO")%>');"><i class="fa fa-history" aria-hidden="true"></i></a></td>
+			<%}%></td>		
+
+      		</tr>
+	<%}%>
+	<tr>
+	<th colspan="15">Total Value</th>
+		<%if("2".equals(userType)){%>
+		<td> <input type=number name="itemTotalVal" style="width:100px;" size=9 class="form-control"    value="<%=totvalueLines%>" readonly></td>
+		<td style="background-color:yellow"><a id="qcf"  href="../RFQ/ezPreDomesticQCF.jsp?qcfNo=<%=rfqLinesRet.getFieldValueString(0,"QCF")%>&type=FromQuote" target="_blank"><i class="fa fa-newspaper-o"></i></td>
+		<%}else{%>
+		<td> <input type=number name="itemTotalVal" style="width:100px;" size=9 class="form-control"    value="<%=totvalueLines%>" readonly></td>
+		<%}%>
+	</tr>
+	</tbody>
+	</table>
+	</div>
+	</div>
+ 	</div>
+ 	</div>
+ 	</div>
+ 	</div>
+ 	</div>
+	 <div class="row">
+		<div class="col-xs-12">
+		<div class="box box-primary">
+		<div class="box-body">
+		<div class="zui-wrapper">
+		<div class="zui-scroller">	
+		<table class="table table-bordered table-responsive"> 
+		
+		<tr>
+			<th width="40%" >Pkg & Fwd</th>
+			<td style="background-color:#d5dcef" align="center" width="40%">
+			<input type="hidden" name="valTypePKFWHid" value="<%=PKFWType%>"/>
+<%
+				String readYes="readonly",disabledYes="disabled",incoDom="";
+				
+			
+			if("3".equals(userType) && "Req".equals(reqFrom))
+			{
+				readYes="";disabledYes="";
+				if("DOM".equals(vendCat)) 
+				{
+					if("DAP".equals(dtlXML.getFieldValueString(0,"ERH_INCO_TERMS1"))) disabledYes="disabled";
+				}	
+			}
+%>
+				<select name="valTypePKFW" id="valTypePKFW" class="form-control input-sm select2" onChange="chkSel(this,'0','PKFW')" style="width:100% !important" <%=disabledYes%>>
+					<option value="">-- Select--</option>
+<%
+				if("DOM".equals(vendCat))
+				{
+%>					
+					<option value="P" <%if("P".equals(PKFWType))out.println("selected");%>>Pkg&Fwd chrgs(%)</option>
+					<option value="Q" <%if("Q".equals(PKFWType))out.println("selected");%>>Pkg&Fwd/Qty</option>
+					<option value="V" <%if("V".equals(PKFWType))out.println("selected");%>>Pkg&Fwd chrg-value</option>
+<%	
+				}
+				else if("IMP".equals(vendCat))
+				{
+%>	
+					<option value="P" <%if("P".equals(PKFWType))out.println("selected");%>>Pkg&Fwd chrgs(%)</option>
+					<option value="V" <%if("V".equals(PKFWType))out.println("selected");%>>Pkg&Fwd chrg-value</option>					
+<%
+				}
+%>				
+				</select>
+			
+			
+			</td> 
+<%
+			if("IMP".equals(vendCat))
+			{
+%>			
+				<td style="background-color:#d5dcef" align="center" nowrap>
+				<select>
+					<option>USD</option>
+					<option>INR</option>
+				</select>
+				</td>
+<%
+			}
+%>			
+			
+			<td width="20%" style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemPKFW" id="itemPKFW" style="width:100px;"   size=9 min="0"  class="form-control" value="<%=condPKFW%>" onchange="funCal(this,'PKFW')" <%=disabledYes%>></td>
+
+			<td style="background-color:#d5dcef" align="center" nowrap>
+
+				<input  type="hidden" name="itemPKFWCode"  value="PKFW"> 
+				<input type=number name="itemPKFWVal" id="itemPKFWVal" style="width:100px;"  size=9  class="form-control" value="<%=PKFWValStr%>" readonly>
+			</td>
+		</tr>
+		<tr>
+		<%if("DOM".equals(vendCat)){%>			
+			<th width="40%">Freight</th>
+			<td style="background-color:#d5dcef" align="center" width="40%">
+			<input type="hidden" name="valTypeFRTHid" value="<%=FRTType%>"/>
+				<select name="valTypeFRT" id="valTypeFRT" class="form-control input-sm select2"  onChange="chkSel(this,'0','FRT')" style="width:100% !important" <%=disabledYes%>>
+					<option value="">-- Select--</option>	
+					<option value="P" <%if("P".equals(FRTType))out.println("selected");%>>Freight(%)</option>
+					<option value="Q" <%if("Q".equals(FRTType))out.println("selected");%>>Freight/Qty</option>
+					<option value="V" <%if("V".equals(FRTType))out.println("selected");%>>Freight(Value)</option>					
+		<%}else if("IMP".equals(vendCat)){
+		disabledYes="";%>
+			<th width="40%">Ocean Freight</th>
+			<td style="background-color:#d5dcef" align="center" width="40%">
+			<input type="hidden" name="valTypeFRTHid" value="<%=FRTType%>"/>
+				<select name="valTypeFRT" class="form-control input-sm select2"  onChange="chkSel(this,'0','FRT')" style="width:100% !important" <%=disabledYes%>>
+					<option value="">-- Select--</option>
+					<option value="P" <%if("P".equals(FRTType))out.println("selected");%>>Ocean Freight(%)</option>
+					<option value="V" <%if("V".equals(FRTType))out.println("selected");%>>Ocean Freight(Value)</option>
+					<option value="Q" <%if("Q".equals(FRTType))out.println("selected");%>>Ocean Freight/Qty</option>
+		<%}%>				
+				</select>
+			</td>
+<%			
+		if("IMP".equals(vendCat))			
+		{
+%>		
+			<td style="background-color:#d5dcef" align="center" nowrap>
+			<select>
+				<option>USD</option>
+				<option>INR</option>
+			</select>
+			</td>
+<%
+		}
+%>		
+			<td style="background-color:#d5dcef" align="center" nowrap width="20%">
+			<input type=number name="itemFRT" id="itemFRT"  style="width:100px;"  size=9  min="0" class="form-control" value="<%=condFRT%>" onchange="funCal(this,'FRT')" <%=disabledYes%>></td>
+			
+			<td style="background-color:#d5dcef" align="center" nowrap>
+
+				<input  type="hidden" name="itemFRTCode"  value="FRT">      		
+				<input type=number name="itemFRTVal" id="itemFRTVal" size=9  class="form-control" value="<%=FRTValStr%>" readonly>
+			</td>
+		</tr> 
+		
+			
+		
+<%
+		if("DOM".equals(vendCat))
+		{
+%>			
+			<tr>
+				<th width="40%">Tax</th>
+				<td style="background-color:#d5dcef" align="center" width="40%">
+					<select name="valTypeTAX" class="form-control input-sm select2"  onChange="chkSel(this,'0','TAX')" style="width:100% !important" disabled>
+						
+						<option value="P" selected>GST</option>
+					</select>
+				</td>			
+				<td style="background-color:#d5dcef" align="center" nowrap>
+					<input  type="hidden" name="itemTAXCode"  value="TAX"> 
+					<input type=hidden name="itemTAX"  style="width:100px;"   size=9  class="form-control" value="<%=condGST%>" onchange="funCal(this,'TAX')" readonly>
+				</td>			
+						<td style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemTAXVal" style="width:100px;" size=9  class="form-control" value="<%=GSTValStr%>" readonly></td>
+			</tr>	
+				<tr style="background-color:#00c0ef">
+					<td style="width:100px;text-align:center">&nbsp;</td>
+					<td colspan=2 style="width:100px;text-align:center"><b>Gross Value</b>&nbsp;</td>
+					<td align="center" nowrap><input type=number name="itemGrossVal"  style="width:100px;" size=9  class="form-control" value='<%=grossValStr%>' readonly></td>
+				</tr>			
+<%
+		}
+%>		
+
+
+				<%if("Act".equals(reqFrom) && "IMP".equals(vendCat) || "Apr".equals(reqFrom) && "IMP".equals(vendCat)){
+				String disabledStr="";
+				if("Apr".equals(reqFrom))disabledStr="disabled";%>
+				
+				<tr style="background-color:#00c0ef">
+					<td style="width:100px;text-align:center">&nbsp;</td>
+					<td colspan=2 style="width:100px;text-align:center"><b>Supply Price</b></td>
+					<td align="center" nowrap><div class="dollar"><input type=number name="itemGrossVal"  style="width:100px;" size=9  class="form-control" value='<%=grossValStr%>' readonly></div></td>
+					<td align="center" nowrap><div class="rupee"><input type=number name="itemGrossVal"  style="width:100px;" size=9  class="form-control" value='<%=grossValInrStr%>' readonly></div></td>
+					
+				</tr>				
+
+			<tr>
+				<th width="40%">Basic Custom Duty</th>
+				<td style="background-color:#d5dcef" align="center" width="40%">
+					<select name="valTypeCUST" class="form-control input-sm select2"  onChange="chkSel(this,'0','CUST')" style="width:100% !important" <%=disabledYes%>>
+						<option value="">-- Select--</option>
+						<option value="P" selected>Custom(%)</option>
+					</select>
+				</td>	
+			<td style="background-color:#d5dcef" align="center" nowrap>
+			<select>
+				<option>USD</option>
+				<option>INR</option>
+			</select>
+			</td>				
+				<td style="background-color:#d5dcef" align="center" nowrap>
+					<input  type="hidden" name="itemCustCode"  value="BCD"> 
+					<input type=number name="itemCUST"  style="width:100px;"   size=9  min="0" class="form-control" value="<%=condBCD%>" onchange="funCal(this,'CUST')" <%=disabledStr%>>
+				</td>			
+				<td style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemCUSTVal" style="width:100px;" size=9  class="form-control" value="<%=BCDValStr%>" readonly ></td>
+			</tr>
+			<tr>
+				<th width="40%">Social Welfare Cess</th>
+				<td style="background-color:#d5dcef" align="center" width="40%">
+					<select name="valTypeCESS" class="form-control input-sm select2"  onChange="chkSel(this,'0','CESS')" style="width:100% !important" <%=disabledYes%>>
+						<option value="">-- Select--</option>
+						<option value="P" selected>Cess(%)</option>
+					</select>
+				</td>	
+				<td style="background-color:#d5dcef" align="center" nowrap>
+				<select>
+					<option>USD</option>
+					<option>INR</option>
+				</select>
+				</td>					
+				<td style="background-color:#d5dcef" align="center" nowrap>
+					<input  type="hidden" name="itemCessCode"  value="SWC"> 
+					<input type=number name="itemCESS"  style="width:100px;"   size=9  min="0" class="form-control" value="<%=condSWC%>" onchange="funCal(this,'CESS')" <%=disabledStr%>>
+				</td>			
+				<td style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemCESSVal" style="width:100px;" size=9  class="form-control" value="<%=SWCValStr%>" readonly></td>
+			</tr>
+			
+			<tr>
+				<th width="40%">CHA Charges</th>
+				<td style="background-color:#d5dcef" align="center" width="40%">
+					<select name="valTypeCHA" class="form-control input-sm select2"  onChange="chkSel(this,'0','CHA')" style="width:100% !important" <%=disabledStr%>>
+						<option value="">-- Select--</option>
+						<!--<option value="P" >Charges(%)</option>
+						<option value="Q">Charges/Qty</option> -->
+						<option value="V" selected>Charges(Value)</option>											
+					</select>
+				</td>
+				<td style="background-color:#d5dcef" align="center" nowrap>
+				<select>
+					<option>INR</option>
+				</select>
+				</td>					
+				<td style="background-color:#d5dcef" align="center" nowrap>
+					<input  type="hidden" name="itemCHACode"  value="CHA"> 
+					<input type=number name="itemCHA"  style="width:100px;"   size=9  min="0" class="form-control" value="<%=condCHA%>" onchange="funCal(this,'CHA')" <%=disabledStr%>>
+				</td>			
+				<td style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemCHAVal" style="width:100px;" size=9  class="form-control" value="<%=CHAValStr%>" readonly></td>
+			</tr>
+			<tr>
+			<th width="40%">Freight</th>
+				<td style="background-color:#d5dcef" align="center" width="40%">
+					<input type="hidden" name="valTypeIFRTHid" value="<%=IFRTType%>"/>
+					<select name="valTypeIFRT" class="form-control input-sm select2"  onChange="chkSel(this,'0','IFRT')" style="width:100% !important" <%=disabledStr%>>
+					<option value="">-- Select--</option>	
+					<option value="P" <%if("P".equals(IFRTType))out.println("selected");%>>Freight(%)</option>
+					<option value="Q" <%if("Q".equals(IFRTType))out.println("selected");%>>Freight/Qty</option>
+					<option value="V" <%if("V".equals(IFRTType))out.println("selected");%>>Freight(Value)</option>					
+				</select>
+				</td>	
+				<td style="background-color:#d5dcef" align="center" nowrap>
+				<select>
+					<option>USD</option>
+					<option>INR</option>
+				</select>
+				</td>					
+				
+				<td style="background-color:#d5dcef" align="center" nowrap>
+					<input  type="hidden" name="itemIFRTCode"  value="IFRT"> 
+					<input type=number name="itemIFRT"  style="width:100px;"   size=9  min="0" class="form-control" value="<%=condIFRT%>" onchange="funCal(this,'IFRT')" <%=disabledStr%> >
+				</td>	
+				<td style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemIFRTVal" style="width:100px;" size=9  class="form-control" value="<%=IFRTValStr%>" readonly></td>
+			</tr>
+			<tr>
+				<th width="40%">Add:IGST</th>
+				<td style="background-color:#d5dcef" align="center" width="40%">
+					<select name="valTypeTAX" class="form-control input-sm select2"  onChange="chkSel(this,'0','TAX')" style="width:100% !important" <%=disabledYes%>>
+						<option value="">-- Select--</option>
+						<option value="P" selected>IGST(%)</option>
+					</select>
+				</td>
+				<td style="background-color:#d5dcef" align="center" nowrap>
+				<select>
+					<option>USD</option>
+					<option>INR</option>
+				</select>
+				</td>					
+				
+				<td style="background-color:#d5dcef" align="center" nowrap>
+					<input  type="hidden" name="itemTAXCode"  value="TAX"> 
+					<input type=text name="itemTAX"  style="width:100px;"   size=9  class="form-control" value="<%=condGST%>" onchange="funCal(this,'TAX')" readonly>
+				</td>			
+						<td style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemTAXVal" style="width:100px;" size=9  class="form-control" value="<%=GSTValStr%>" readonly></td>
+			</tr>	
+			<tr style="background-color:#00c0ef">
+				<td style="width:100px;text-align:center">&nbsp;</td>
+				<td colspan=3 style="width:100px;text-align:center"><b>Total Cost</b>&nbsp;</td>
+				<td align="center" nowrap><div class="rupee"><input type=number name="itemTotalCost"  style="width:100px;" size=9  class="form-control" value='<%=totalCostStr%>' readonly></td></div>
+			</tr>							
+			<tr>
+			<th width="40%">Less Duty</th>
+				<td style="background-color:#d5dcef" align="center" width="40%">
+					<input type="hidden" name="valTypeDUTYHid" value=""/>
+					<select name="valTypeDUTY" class="form-control input-sm select2"  onChange="funCal(this,'DUTY')" style="width:100% !important" <%=disabledStr%>>
+					<option value="">-- Select--</option>	
+					<option value="E" selected>EPCG</option>
+					<option value="D">Duty</option>
+										
+				</select>
+				</td>
+				<td style="background-color:#d5dcef" align="center" nowrap>
+				<select>
+					<option>USD</option>
+					<option>INR</option>
+				</select>
+				</td>					
+				
+				<td style="background-color:#d5dcef" align="center" nowrap>
+					<input  type="hidden" name="itemDUTYCode"  value="DUTY"> 
+					<!--<input type=number name="itemDUTY"  style="width:100px;"   size=9  min="0" class="form-control" value="0" onchange="funCal(this,'DUTY')" readonly >-->
+				</td>			
+				<td style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemDUTYVal" style="width:100px;" size=9  class="form-control" value="<%=DUTYValStr%>" readonly></td>
+			</tr>
+			<tr>
+				<th width="40%">Less: IGST</th>
+				<td style="background-color:#d5dcef" align="center" width="40%">
+					<select name="valTypeLTAX" class="form-control input-sm select2"  " style="width:100% !important" <%=disabledYes%>>
+						<option value="">-- Select--</option>
+						<option value="P" selected>IGST(%)</option>
+					</select>
+				</td>
+				<td style="background-color:#d5dcef" align="center" nowrap>
+				<select>
+					<option>USD</option>
+					<option>INR</option>
+				</select>
+				</td>					
+				<td style="background-color:#d5dcef" align="center" nowrap>
+					<input  type="hidden" name="itemLTAXCode"  value="LTAX"> 
+					<input type=text name="itemLTAX"  style="width:100px;"   size=9  class="form-control" value="<%=condGST%>" onchange="funCal(this,'LTAX')" <%=disabledStr%>>
+				</td>			
+						<td style="background-color:#d5dcef" align="center" nowrap><input type=number name="itemLTAXVal" style="width:100px;" size=9  class="form-control" value="<%=GSTValStr%>" readonly></td>
+			</tr>			
+			
+
+<%
+	}	
+	if("Apr".equals(reqFrom) || "Act".equals(reqFrom)){
+%>
+				<tr style="background-color:#00c0ef">
+					<td style="width:100px;text-align:center">&nbsp;</td>
+<%					
+					if("DOM".equals(vendCat)){
+%>
+					<td colspan=2 style="width:100px;text-align:center"><b>Landed Cost Value(Including Payment Term Criteria)</b>&nbsp;</td>
+					<td align="center" nowrap><input type=number name="landCostVal"  style="width:100px;" size=9  class="form-control" value='<%=landCostValueStr%>' readonly></td>
+<%
+					}else{
+%>	
+					<td colspan=3 style="width:100px;text-align:center"><b>Landed Cost Value</b>&nbsp;</td>
+					<td align="center" nowrap><div class="rupee"><input type=number name="landCostVal"  style="width:100px;" size=9  class="form-control" value='<%=landCostValueImpStr%>' readonly></td></div>
+					
+<%
+					}
+%>					
+					
+				</tr>
+<%
+	if("IMP".equals(vendCat)){
+%>
+				<tr style="background-color:#00c0ef">
+					<td style="width:100px;text-align:center">&nbsp;</td>	
+						<td colspan=3 style="width:100px;text-align:center"><b>Landed Cost Value(Including Payment Term Criteria)</b>&nbsp;</td>
+						<td align="center" nowrap><div class="rupee"><input type=number name="landCostValImp"  style="width:100px;" size=9  class="form-control" value='<%=landCostValueStr%>' readonly></td></div>
+<%
+		}
+			
+	}
+%>
+			</table>
+			</div>
+			</div>
+		</div>
+		</div>
+		</div>
+		</div>
+
+
+<%	}
+	else
+	{
+%>
+		
+	<div class="alert alert-danger">
+	  Quotation has not been submitted for RFQ No : <strong><%=poNum%></strong>.
+	</div>
+<%
+	}
+	
+	ReturnObjFromRetrieve retCom = getDocComments(Session,poNum,"RFQ");
+	int retComCnt = retCom.getRowCount();
+	if(retComCnt>0)
+	{
+%>
+        <div class="row">
+	<div class="col-md-12 col-xs-12">
+	<div class="box box-primary">
+	<div class="box-body">
+	<table class="table table-bordered" id="example">
+	<thead>           
+			<th>Name</th>
+			<th>Comments Date</th>
+			<th>Comments</th>
+							        
+	</thead>
+	<tbody>
+<%
+			for(int s=0;s<retCom.getRowCount();s++)
+			{
+				String userid = checkNull(retCom.getFieldValueString(s,"EU_FIRST_NAME").toUpperCase());
+				String commentedOn = checkNull(retCom.getFieldValueString(s,"EDC_DATE"));
+				String comments = checkNull(retCom.getFieldValueString(s,"EDC_COMMENTS"));
+				
+				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				Date date = formatter.parse(commentedOn);
+				formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+				String commentedOnDate = formatter.format(date);				
+	
+%>	
+			<tr>
+				<td align="center"><%=userid%></td>
+				<td align="center"><%=commentedOnDate%></td>
+				<td align="center"><%=comments%></td>
+			</tr>
+
+<%
+			}
+%>
+			
+	</tbody>
+	</table>
+	</div>
+	</div>
+<%
+	}
+	
+%>
+<%
+	if(("2".equals(userType) && "Act".equals(reqFrom))   || ("3".equals(userType) && "Req".equals(reqFrom)))
+	{
+	
+%>
+	<h4>
+		 Comments
+	</h4>	
+	<div class="row">
+	<div class="col-md-12 col-xs-12"> 
+	<div class="box box-primary">
+	<div class="box-body">
+		<table class="table table-bordered">
+			<td colspan=3><textarea class="form-control" name="Comments" placeholder="Enter Comments" rows="2"></textarea></td>
+		</table>
+	</div>
+	</div>
+	</div>
+	</div>	
+<%
+	}
+	ReturnObjFromRetrieve retUploadList = getUploadList(Session,poNum,"RFQ"); 
+	int retUploadListCnt = 0; 
+	if(retUploadList != null)
+		retUploadListCnt = retUploadList.getRowCount();
+%>
+		<h4>
+			Uploads
+		</h4>
+		<div class="row">
+		  <div class="col-md-12 col-xs-12">
+			<!-- general form elements -->
+			<div class="box box-default">
+				<div class="box-body table-responsive no-padding">
+					<div class="box-body">
+					       <table id="uploadTable" class="table  table-bordered dt-responsive nowrap" >
+							<tr>
+								<th>File Name</th>
+								<th></th>
+							</tr>
+	<%
+		if(retUploadListCnt == 0)
+		{
+	%>
+			<tr id="noDataStatUpload">
+				<td>No files attached</td>
+			</tr>
+	<%
+		}
+		for(int r=0;r<retUploadListCnt;r++)
+		{
+	%>
+			<tr>
+				<td align="left" width="95%"><input type="hidden" name="fileItem" value="<%=retUploadList.getFieldValueString(r,"EUF_CLIENT_FILE_NAME")%>"><a href="javascript:downloadFile('<%=retUploadList.getFieldValueString(r,"EUF_UPLOAD_NO")%>','<%=retUploadList.getFieldValueString(r,"EUF_CLIENT_FILE_NAME").replaceAll("'","`")%>')"><%=retUploadList.getFieldValueString(r,"EUF_CLIENT_FILE_NAME")%></a></td>
+				<td width="5%"><span onclick="javascript:deleteFile(this,'<%=retUploadList.getFieldValueString(r,"EUF_UPLOAD_NO")%>','<%=retUploadList.getFieldValueString(r,"EUF_CLIENT_FILE_NAME")%>')" class="fa fa-trash fa-lg" style="margin-left: 25%;"></span></td>
+			</tr>
+	<%
+		}
+	%>
+			</table>
+	
+		</div>
+	      </div>
+	     </div>
+	    <!-- Your Page Content Here -->
+	  </div>
+	</div><!--row-->
+ 	<div class="row no-print">
+	<div class="col-xs-12">
+	<button type="button" class="btn btn-primary pull-right" onclick="goBack()" style="margin-right: 5px;"><i class="fa fa-arrow-left"></i> Go Back</button>
+<%
+	if("2".equals(userType) && "Act".equals(reqFrom) && !"JEEVANJ".equals(Session.getUserId()))  
+	{
+	
+%>
+		<button type="button" class="btn btn-primary pull-right" onclick="reQuote()" style="margin-right: 5px;"><i class="fa fa-check"></i> Requote</button>
+		<button type="button" class="btn btn-primary pull-right" onclick="rejectQuote()" style="margin-right: 5px;"><i class="fa fa-remove"></i> Reject</button>
+		<button type="button" class="btn btn-primary pull-right" onclick="approveQuote()" style="margin-right: 5px;"><i class="fa fa-check"></i> Approve</button>		
+		
+		
+		
+<%
+	}
+%>	
+
+<%
+	if("3".equals(userType) && "Req".equals(reqFrom))  
+	{
+		
+%>
+			
+		
+	<button type="button" class="btn btn-primary pull-right" onclick="SubmitQuote()" style="margin-right: 5px;"><i class="fa fa-check"></i> Submit</button>
+	<button type="button" id="uploadDialogBtn" class="btn btn-primary pull-right" ><i class="fa fa-upload"></i>&nbsp; Upload Attachments</button>	
+<%
+	}
+%>	
+		
+	</div>
+	</div>
+	
+</form>
+</section>
+<!-- /.content -->
+</div><!-- /.content-wrapper --> 
+
+<div id="woModal" class="modal fade" tabindex="-1" role="dialog" >
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <iframe id="frame" src="" width="100%" height="300" frameborder="0" allowtransparency="true"></iframe>
+         </div>
+      </div>
+   </div>
+</div>
+<div id="woModal1" class="modal fade" tabindex="-1" role="dialog" >
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <iframe id="frame" src="" width="100%" height="220" frameborder="0" allowtransparency="true"></iframe>
+         </div>
+      </div>
+   </div>
+</div>
+<div id="woModalSer" class="modal fade" tabindex="-1" role="dialog">
+   <div class="modal-dialog modal-lg">
+      <div class="modal-content" style="width: 180%;">
+         <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <iframe src="" width="100%" height="500" frameborder="0" allowtransparency="true"></iframe>
+         </div>
+      </div>
+   </div>
+</div>	      
+
+<div id="uploadMod" class="modal fade" tabindex="-1" role="dialog">
+   <div class="modal-dialog">
+      <form id="uploadForm" action="../Inbox/ezUploadFileTemp.jsp" method="post" enctype="multipart/form-data">
+      <div class="modal-content">
+      <div class="modal-header">
+	      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		<span aria-hidden="true">×</span></button>
+	      <h4 class="modal-title">Attachments</h4>
+	</div>
+	 <div class="modal-body">	    
+	         <fieldset>
+			<input type="hidden" id="upDocType" name="upDocType" value="">
+			<input type="hidden" id="upDocId" name="upDocId" value="">
+			<input type="hidden" id="upItemNo" name="upItemNo" value="">
+			<input type="file" id="file" name="file"/>
+				<!--<input type="submit" id="uploadbutton" value="upload" />-->
+			<div id="loadingInd" style="display:none;margin-left: 25%;">
+				<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+				<span class="sr-only">Loading...</span>
+			</div>
+	         </fieldset>
+   		
+	 </div>
+	 <div class="modal-footer">
+	 	<button type="submit" id="uploadbutton" class="btn btn-primary">Upload</button> 
+	 </div>
+      </div>
+     </form>
+   </div>  
+</div>
+<%@ include file="../Misc/ezVendFooter.jsp"%>
+<link rel="stylesheet" type="text/css" href="../../Library/jquery/jquery-ui-1.12.1.custom/jquery-ui.css">
+<link rel="stylesheet" href="../Misc/library/fancybox2/jquery.fancybox.css" type="text/css" media="screen" />
+<script type="text/javascript" src="../Misc/library/fancybox2/jquery.fancybox.js"></script>
+<script type="text/javascript" src="../Misc/library/fancybox2/jquery.fancybox.pack.js"></script>
+	<script>
+	$( function() {
+
+	$(".sidebar-toggle").trigger("click");
+	});	
+	function funOpen()
+	{
+		window.open("../Misc/ezViewAllConditions.htm","AllConditions","menubar=no,statusbars=no,toolbar=no,width=700,height=500,left=10,top=10");
+	}
+	function goBack(){
+		document.myForm.action = "ezViewRFQDetails.jsp?type=<%=request.getParameter("type")%>&rfqtype=<%=request.getParameter("rfqType")%>"
+		document.myForm.submit();
+	}
+	function approveQuote(){
+		var creditDays=document.myForm.creditDays.value;
+		var leadTime=document.myForm.leadTime.value;
+		var leadTimePercent=document.myForm.leadTimePercent.value;
+		//alert(creditDays+"creditDays"+document.myForm.selPayCal.value);
+		if(document.myForm.docType.value=="")
+		{
+			alert("Please select PO Document Type");
+			document.myForm.docType.focus();
+			return false;
+		}		
+		if(document.myForm.selPayCal.value=='')
+		{
+			alert("Please select Payment Term Category ");
+			document.myForm.selPayCal.focus();
+			return false;
+		
+		}
+		else
+		{
+			if(document.myForm.selPayCal.value=='CRD')
+			{
+				if(creditDays=='')
+				{
+					alert("Please Provide No of Credit days");
+					return;
+				}	
+
+			}
+			if(document.myForm.selPayCal.value=='ADV')
+			{
+				if(leadTime=='')
+				{
+					alert("Please provide Delivery Lead Time");
+					return;
+				}
+				
+				if(leadTimePercent=='')
+				{
+					alert("Please Provide Percentage");
+					return;
+				}
+				
+			}
+		}
+		if(document.myForm.Comments.value=="")
+		{
+			alert("Please Enter Comments");
+			document.myForm.Comments.focus();
+			return false;
+		}	
+		if(confirm("Are you sure you want to Approve the Quote?"))
+		{	
+			document.myForm.action = "ezApproveQuote.jsp";
+			document.myForm.submit();
+		}	
+	}	
+	function reQuote(){
+		if(document.myForm.Comments.value=="")
+		{
+			alert("Please Enter Comments");
+			document.myForm.Comments.focus();
+			return false;
+		}		
+		if(confirm("Are you sure you want to Submit for Requote?"))
+		{
+			document.myForm.action = "ezReQuote.jsp";
+			document.myForm.submit();
+		}	
+
+	}
+	function rejectQuote(){
+		if(document.myForm.Comments.value=="")
+		{
+			alert("Please Enter Comments");
+			document.myForm.Comments.focus();
+			return false;
+		}	
+		if(confirm("Are you sure you want to Reject the Quote?"))
+		{	
+			document.myForm.action = "ezRejectQuote.jsp";
+			document.myForm.submit();
+		}	
+	}	
+	
+	function displayList(){
+		document.myForm.action = "ezListRFQs.jsp?type=List"
+		document.myForm.submit();
+	}
+	function showField(fieldObj)
+	{
+		var fieldVal = fieldObj.value;	
+		if(fieldVal=="ADV")
+		{
+		document.getElementById("AdvCal").style.display="";
+		document.getElementById("creditCal").style.display="none";
+		document.getElementById("creditCalVal").style.display="none";
+		document.getElementById("interest").style.display="";
+		document.getElementById("intVal").style.display="";
+		}
+		else
+		{
+		document.getElementById("AdvCal").style.display="none";
+		document.getElementById("creditCal").style.display="";
+		document.getElementById("creditCalVal").style.display="";
+		document.getElementById("interest").style.display="";
+		document.getElementById("intVal").style.display="";		
+		}
+		
+	}
+	function chkSel(fieldObj,itemPos,type)
+	{
+
+		var fieldVal = fieldObj.value;	
+		//alert(fieldVal);
+		var itemFRTValObj = eval("document.myForm.itemFRTVal");
+		var itemPKFWValObj = eval("document.myForm.itemPKFWVal");
+		var itemTAXValObj = eval("document.myForm.itemTAXVal");
+		var itemIFRTValObj = eval("document.myForm.itemIFRTVal");
+		
+
+		if(fieldVal=="")
+		{
+			if(type=="DISC")
+			{
+				alert("Please select the Discount Type");
+				var itemDISCObj = eval("document.myForm.condDisc");
+				var itemDISCValObj = eval("document.myForm.condDISCVal");
+				itemDISCObj.value="0";
+				itemDISCValObj.value="0";
+				itemDISCObj.focus();			
+				//funCal(itemDISCObj,'DISC');
+			}
+			if(type=="PKFW")
+			{
+				//alert("Please select the Pkg & Fwd Type");
+				//fieldObj.focus();
+				itemPKFWValObj.value='0';
+				var itemPKFWObj = eval("document.myForm.itemPKFW");
+				itemPKFWObj.value='0';
+				funCal(itemPKFWObj,'PKFW');
+			}
+			if(type=="FRT")
+			{
+				alert("Please select the Freight Type");
+				//fieldObj.focus();
+				itemFRTValObj.value='0';
+				var itemFRTObj = eval("document.myForm.itemFRT");
+				itemFRTObj.value='0';
+				funCal(itemFRTObj,'FRT');
+			}
+			if(type=="TAX")
+			{
+				alert("Please select the Tax");
+				//fieldObj.focus();
+				itemTAXValObj.value='0';
+				var itemTAXObj = eval("document.myForm.itemTAX");
+				itemTAXObj.value='0';
+				funCal(itemTAXObj,'TAX');
+			}
+			if(type=="IFRT")
+			{
+				alert("Please select the Freight Type");
+				//fieldObj.focus();
+				itemIFRTValObj.value='0';
+				var itemIFRTObj = eval("document.myForm.itemIFRT");
+				itemIFRTObj.value='0';
+				funCal(itemIFRTObj,'IFRT');
+			}		
+			if(type=="CHA")
+			{
+				alert("Please select CHA Charges");
+				//fieldObj.focus();
+				itemCHAValObj.value='0';
+				var itemCHAObj = eval("document.myForm.itemCHA");
+				itemCHAObj.value='0';
+				funCal(itemCHAObj,'CHA');
+			}					
+			
+		}
+
+		if(type=="DISC")
+		{
+			var Count='<%=rfqLinesRet.getRowCount()%>';
+			for(var k=0;k<Count;k++)
+			{
+			var itemDISCObj = eval("document.myForm.condDisc"+k);
+			//alert("k"+k+"itemDISCObj"+itemDISCObj);
+			checkNum(itemDISCObj,k);
+
+			}
+			funCal(itemDISCObj,'DISC');
+
+		}
+		if(type=="PKFW")
+		{
+			var itemPKFWObj = eval("document.myForm.itemPKFW");
+
+			funCal(itemPKFWObj,'PKFW');
+
+		}
+
+
+		if(type=="FRT")
+		{
+			var itemFRTObj = eval("document.myForm.itemFRT");
+			funCal(itemFRTObj,'FRT');
+
+		}
+		if(type=="TAX")
+		{
+			var itemTAXObj = eval("document.myForm.itemTAX");
+			funCal(itemTAXObj,'TAX');
+
+		}
+		if(type=="IFRT")
+		{
+			var itemIFRTObj = eval("document.myForm.itemIFRT");
+			funCal(itemIFRTObj,'IFRT');
+		}		
+		if(type=="CHA")
+		{
+			var itemCHAObj = eval("document.myForm.itemCHA");
+			funCal(itemCHAObj,'CHA');
+		}
+		if(type=="LTAX")
+		{
+			var itemLTAXObj = eval("document.myForm.itemLTAX");
+			funCal(itemTAXObj,'TAX');
+		}		
+		
+		
+	}
+	function funAddGST(fieldObj,itemPos)
+	{
+		var fieldVal = fieldObj.value;	
+		//alert("fieldVal>>"+fieldVal);
+		var Count='<%=rfqLinesRet.getRowCount()%>';
+		var totalGSTVal=0;
+		for(var c=0;c<Count;c++)
+		{
+			var lineItemGSTObjAdd = eval("document.myForm.vendGST"+c);
+			totalGSTVal=parseFloat(lineItemGSTObjAdd.value)+parseFloat(totalGSTVal);
+			
+		}
+		document.myForm.itemTAX.value=totalGSTVal;
+		checkNum(fieldObj,itemPos);
+		
+	}
+	
+	function funLineValid()
+	{
+		var rfqItemObj  = document.myForm.rfqItem;
+		var len = rfqItemObj.length;
+
+		//len=document.myForm.itemPrice.length;
+		if(isNaN(len))
+		{
+			rfqItemNo = document.myForm.rfqItem.value;
+
+			if(("document.myForm.Price"+rfqItemNo).value=="")
+			{
+				alert("Please Enter Price of the Material");
+				return false;
+			}
+			else
+				return true;
+		}
+		else
+		{
+			var bool="false"
+			for(var i=0;i<len;i++)
+			{
+				rfqItemNo = document.myForm.rfqItem[i].value;
+				if(("document.myForm.Price"+rfqItemNo).value!="")
+				{
+					var bool="true"
+					return true;
+				}
+			}
+			if(bool=="false")
+			{
+				alert("Please Enter the price for atleast one material");
+				return false;
+			}
+		}
+	}
+	function SubmitQuote()
+	{
+	
+		var rfqItemObj  = document.myForm.rfqItem;
+		var len = rfqItemObj.length;
+		//alert("len>>>"+len);
+		
+		if(isNaN(len))
+		{
+			var rfqItemNo = document.myForm.rfqItem.value;
+			
+			
+			
+			if(eval("document.myForm.itemPrice"+rfqItemNo).value=="0")
+			{
+				alert("Please Enter Price of the Material for the line item:"+((rfqItemNo+1)*10));
+				eval("document.myForm.itemPrice"+rfqItemNo).focus();
+				return false;
+			}
+			if(eval("document.myForm.itemPrice"+rfqItemNo).value<="0")
+			{
+				alert("Please Enter Positive Number for the line item:"+((rfqItemNo+1)*10));
+				eval("document.myForm.itemPrice"+rfqItemNo).focus();
+				return false;
+			}	
+			if(eval("document.myForm.leaddays"+rfqItemNo).value=="")
+			{
+				alert("Please Enter Lead Time for the line item:"+((rfqItemNo+1)*10));
+				eval("document.myForm.leaddays"+rfqItemNo).focus();
+				return false;
+			}			
+			
+		}
+		else
+		{
+			//alert("len>>>>"+len);
+			for(var i=0;i<len;i++)
+			{
+				var rfqItemNo = document.myForm.rfqItem[i].value;
+				//alert("rfqItemNo>>>"+rfqItemNo)
+				if(eval("document.myForm.itemPrice"+rfqItemNo).value=="0")
+				{
+					alert("Please Enter Price of the Material for the line item:"+((i+1)*10));
+					eval("document.myForm.itemPrice"+rfqItemNo).focus();
+					return false;
+				}
+				
+				if(eval("document.myForm.itemPrice"+rfqItemNo).value<="0")
+				{
+					alert("Please Enter Positive Number for the line item:"+((i+1)*10));
+					eval("document.myForm.itemPrice"+rfqItemNo).focus();
+					return false;
+				}
+				if(eval("document.myForm.leaddays"+rfqItemNo).value=="")
+				{
+					alert("Please Enter Lead Time for the line item:"+((i+1)*10));
+					eval("document.myForm.leaddays"+rfqItemNo).focus();
+					return false;
+				}				
+
+			}	
+
+		}
+				
+		if (document.myForm.PaymentTerms.value==""){
+			alert("Please Select Payment terms from the List."); 
+			document.myForm.PaymentTerms.focus()
+			return false;
+		}else if (document.myForm.IncoTerms.value==""){
+			alert("Please Select Inco Terms from the List.");
+			document.myForm.IncoTerms.focus()
+			return false;
+		}else if(document.myForm.Comments.value==""){
+			alert("Please Enter Comments");
+			document.myForm.Comments.focus()
+			return false;			
+		}else if (!funLineValid()){
+			return false
+		}
+		else
+		{
+			if(confirm("Are you sure you want to Submit the Re-Quote?"))
+			{		
+				buttonhide();
+				document.myForm.action="ezQuotationUpdate.jsp";
+				document.myForm.submit();
+			}	
+		}
+	}
+	function buttonhide()
+	{
+		buttonsSpan	  = document.getElementById("EzButtonsSpan");
+		buttonsMsgSpan	  = document.getElementById("EzButtonsMsgSpan");
+		if(buttonsSpan!=null)
+		{
+			buttonsSpan.style.display	= "none"
+			buttonsMsgSpan.style.display	= "block"
+		}
+	}
+	function showConditions(rfqNo,lineNo,itemPos)
+	{
+		var itemQty   = eval("document.myForm.rfqQty"+itemPos).value;
+		var itemPrice = eval("document.myForm.itemPrice"+itemPos).value;
+		//alert("itemPrice>>"+itemPrice);
+		
+		var vendCat= "<%=vendCat%>";
+		//alert("vendCat>>>"+vendCat);
+		var reqFrom="<%=reqFrom%>";
+		var userType="<%=userType%>";
+		
+		var url="ezGetConditions.jsp?rfqNo="+rfqNo+"&lineNo="+lineNo+"&itemPos="+itemPos+"&itemQty="+itemQty+"&itemPrice="+itemPrice+"&vendCat="+vendCat+"&reqFrom="+reqFrom+"&userType="+userType;
+		$('iframe').attr("src",url);
+		$('#woModal').modal({show:true});
+		
+	
+	}	
+	function showHis(rfqNo,lineNO)
+	{
+		
+		var url="ezGetQuoteHistory.jsp?rfqNo="+rfqNo+"&lineNO="+lineNO;
+		
+		$('iframe').attr("src",url);
+		
+
+		$('#woModal').modal({show:true});
+		$('.modal-dialog').draggable({
+				    handle: ".modal-body"
+  		});
+	
+	}
+	
+	function downloadFile(upItemNo,fileName)
+  	{
+  		//alert("fileName>>>"+fileName);
+  		var fileName = fileName.replace('+','¥');   
+  		fileName = fileName.replace(/ /g,"£");
+  		fileName = fileName.replace('#',"¢");
+  		fileName = fileName.replace('&',"µ");
+  		fileName = fileName.replace('?',"Š");
+  		//alert("fileName>>>"+fileName);
+  		
+		var upDocId 	= upItemNo;
+		var upDocType 	= "RFQ";
+		window.open("../Inbox/ezFileDownloadPost.jsp?upDocId="+upDocId+"&upDocType="+upDocType+"&upItemNo="+upItemNo+"&fileName="+fileName);
+	}
+	function downloadFilePreView(upItemNo,fileName)
+  	{
+		var upDocId 	= upItemNo;
+		var upDocType 	= "RFQ";
+		window.open("../Inbox/ezFileDownloadEnter.jsp?upDocId="+upDocId+"&upDocType="+upDocType+"&upItemNo="+upItemNo+"&fileName="+fileName);
+	}
+	 function valUploadForm()
+	 {
+	 	var upItemNo = $('#upItemNo').val();
+	 	var fileName = $('#file').val().replace(/C:\\fakepath\\/i, '');
+	 	var isValid = true;
+	 	if(fileName == "")
+		{
+			alert("Please upload file");
+			isValid = false;
+			return false;
+		}
+	 	$('input[name="fileItem'+upItemNo+'"]').each(function(){
+		  if($(this).val() == fileName)
+		  {
+		  	alert("File already uploaded");
+		  	isValid = false;
+			return false;
+		  }	  
+		});
+		if(isValid)
+		{
+			$('#uploadbutton').hide(); 	
+	       		$('#loadingInd').show();
+		}
+		return isValid;
+ 	}	
+	$( function() {
+	     $( "#uploadDialogBtn" ).button().on( "click", function() {
+	        $("#upItemNo").val($(this).val());
+	        $("#file").val("");
+	       $('#uploadMod').modal('show');
+	       	return false;
+	     });
+	     $('#uploadForm').ajaxForm({
+	     	  beforeSubmit: valUploadForm,	
+		  success: function(msg) {
+		      $('#uploadbutton').show(); 	
+	       	      $('#loadingInd').hide();
+		      msg=$.trim(msg);
+		      //alert(msg);
+		      if(msg.split("##")[0] === 'true')
+		      {
+		    	  $('#noDataStatUpload').hide();
+		      	  var upItemNo = $('#upItemNo').val();
+		      	  var fileNameTemp = msg.split("##")[1];
+		      	   $('#uploadTable'+upItemNo).append('<tr><td align="left" width="95%"><input type="hidden" name="fileItem" value="'+fileNameTemp+'"><a href="javascript:downloadFilePreView(\''+upItemNo+'\',\''+fileNameTemp+'\')">'+fileNameTemp+'</a></td><td width="5%"><span onclick="javascript:deleteFile(this,\''+upItemNo+'\',\''+fileNameTemp+'\')" class="fa fa-trash fa-lg" style="margin-left: 25%;"></span></td></tr>')
+		      }
+		      //alert("File has been uploaded successfully");
+		      $('#uploadMod').modal('hide');
+		  },
+		  error: function(msg) {
+		     $('#uploadbutton').show(); 	
+	       	     $('#loadingInd').hide();	
+		     alert("Couldn't upload file");
+		  }
+	     });
+	
+  	 } );	
+	function funCheckDis(fieldObj,itemPos)
+	{
+		var fieldVal = fieldObj.value;	
+		var itemDISCObj = eval("document.myForm.condDISCVal"+itemPos);
+		var itemPriceObj = eval("document.myForm.itemPrice"+itemPos);
+		
+		if(document.myForm.valTypeDISC.value=="")
+		{
+			alert("Please select the Discount Type");
+			itemDISCObj.value='';
+			return;
+			
+		}
+		else
+		{
+			
+			if(itemPriceObj.value=='')
+			{
+				alert("Please provide Price");
+				return;
+			}
+			else
+				checkNum(fieldObj,itemPos);
+		}
+		  
+	}
+	function checkNum(fieldObj,itemPos)
+	{
+		//alert("fieldObj"+fieldObj);
+		var fieldVal = fieldObj.value;
+		var itemFRTValObj = eval("document.myForm.itemFRTVal");
+		var itemPKFWValObj = eval("document.myForm.itemPKFWVal");
+		var itemTAXValObj = eval("document.myForm.itemTAXVal");
+		var Count='<%=rfqLinesRet.getRowCount()%>';
+		if(isNaN(fieldVal) || fieldVal=='')
+		{
+			alert("Please enter valid numeric value");
+			fieldObj.value="0";
+			fieldObj.focus();
+			return;
+		}
+		else 
+		{
+			var itemQtyObj = eval("document.myForm.rfqQty"+itemPos);
+			var itemPriceObj = eval("document.myForm.itemPrice"+itemPos);
+			var itemDISCObj = eval("document.myForm.condDisc"+itemPos);
+			var itemValObj = eval("document.myForm.itemValue"+itemPos);
+			var itemDISCValObj = eval("document.myForm.condDISCVal"+itemPos);
+			var valTypeDISCObj = eval("document.myForm.valTypeDISC");
+			var itemTotalValObj = eval("document.myForm.itemTotalVal");
+			//alert("itemDISCValObj"+itemDISCValObj);
+			itemValObj.value = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 
+			if(itemDISCObj.value!='')
+			{
+				if(valTypeDISCObj.value == "P")
+					itemDISCValObj.value = ((itemValObj.value * itemDISCObj.value)/100).toFixed(2);
+				else if(valTypeDISCObj.value=="V")
+					itemDISCValObj.value = parseFloat(itemDISCObj.value).toFixed(2);
+				else if(valTypeDISCObj.value=="Q")	
+					itemDISCValObj.value = itemDISCObj.value * parseFloat(itemQtyObj.value);
+				
+				
+				itemValObj.value=(parseFloat(itemValObj.value) - parseFloat(itemDISCValObj.value)).toFixed(2);
+			}
+			//alert(itemDISCValObj.value);
+			var totalVal=0;
+			var totBasePrice=0;
+			for(var c=0;c<Count;c++)
+			{
+				var itemValObjAdd = eval("document.myForm.itemValue"+c);
+				totalVal=parseFloat(itemValObjAdd.value)+parseFloat(totalVal);
+				var itemPriceObj = eval("document.myForm.itemPrice"+c);
+				var totBasePriceVal= (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 	
+				totBasePrice=parseFloat(totBasePrice)+parseFloat(totBasePriceVal);
+			}
+			itemTotalValObj.value=totalVal.toFixed(2);
+			
+			var itemPKFWObj = eval("document.myForm.itemPKFW");
+			var valTypePKFWObj = eval("document.myForm.valTypePKFW");
+
+
+			if(valTypePKFWObj.value == "P")
+				itemPKFWValObj.value = (((itemTotalValObj.value) * itemPKFWObj.value)/100).toFixed(2);
+			else if(valTypePKFWObj.value=="V")
+				itemPKFWValObj.value = parseFloat(itemPKFWObj.value).toFixed(2);
+			else if(valTypePKFWObj.value=="Q")	
+				itemPKFWValObj.value = (itemPKFWObj.value * parseFloat(totalQtyVal)).toFixed(2);			
+				
+			var itemFRTObj = eval("document.myForm.itemFRT");
+			var valTypeFRTObj = eval("document.myForm.valTypeFRT");
+			
+			
+			if(valTypeFRTObj.value == "P")
+				//itemFRTValObj.value = ((totBasePrice * itemFRTObj.value)/100).toFixed(2);
+				itemFRTValObj.value = (((itemTotalValObj.value) * itemFRTObj.value)/100).toFixed(2);
+			else if(valTypeFRTObj.value=="V")
+				itemFRTValObj.value = parseFloat(itemFRTObj.value).toFixed(2);
+			else if(valTypeFRTObj.value=="Q")	
+				itemFRTValObj.value = (itemFRTObj.value * parseFloat(totalQtyVal)).toFixed(2);			
+			
+			var itemSupplyPrice = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value) + parseFloat(itemFRTValObj.value);
+			itemSupplyPrice= parseFloat(itemSupplyPrice).toFixed(2);	
+
+			var itemTAXObj=eval("document.myForm.itemTAX");
+				itemTAXObj.value = (itemTAXObj.value/Count).toFixed(2);
+				itemTAXValObj.value = ((itemSupplyPrice * itemTAXObj.value)/100).toFixed(2);
+				//itemTAXObj.value = (itemTAXObj.value/Count).toFixed(2);
+			
+			//alert("valTypeDISCObj>>"+valTypeDISCObj.value)
+			
+			document.myForm.itemGrossVal.value = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value)+parseFloat(itemFRTValObj.value)+parseFloat(itemTAXValObj.value);	
+			//alert(document.myForm.itemGrossVal.value);
+		}	
+	}	
+	function funCal(fieldObj,type)
+	{
+		//alert(type+"type");
+		var vendCat= "<%=vendCat%>";
+		var fieldVal = fieldObj.value;	
+		var totalQtyVal=0;
+		var Count='<%=rfqLinesRet.getRowCount()%>';
+		var itemFRTValObj = eval("document.myForm.itemFRTVal");
+		var itemPKFWValObj = eval("document.myForm.itemPKFWVal");
+		var itemTAXValObj = eval("document.myForm.itemTAXVal");
+		var itemLTAXValObj = eval("document.myForm.itemLTAXVal");
+		var itemCUSTValObj = eval("document.myForm.itemCUSTVal");
+		var itemCESSValObj = eval("document.myForm.itemCESSVal");
+		var itemCHAValObj = eval("document.myForm.itemCHAVal");
+		var itemIFRTValObj = eval("document.myForm.itemIFRTVal");
+		//alert("itemIFRTValObj>>>"+itemIFRTValObj.value)
+		var itemTotalValObj = eval("document.myForm.itemTotalVal");
+		var valTypeDUTYObj = eval("document.myForm.valTypeDUTY");
+		
+		
+		
+		for(var c=0;c<Count;c++)
+		{
+			var itemQtyObj = eval("document.myForm.rfqQty"+c);
+			totalQtyVal=parseFloat(itemQtyObj.value)+parseFloat(totalQtyVal);
+		}
+		if(type=="PKFW")
+		{
+			if(document.myForm.valTypePKFW.value=="")
+			{
+				alert("Please select the Pkg & Fwd");
+				document.myForm.itemPKFW.value='0';
+				
+						
+			}
+			else
+			{
+				var itemPKFWObj = eval("document.myForm.itemPKFW");
+				var valTypePKFWObj = eval("document.myForm.valTypePKFW");
+
+				if(valTypePKFWObj.value == "P")
+					itemPKFWValObj.value = (((itemTotalValObj.value) * itemPKFWObj.value)/100).toFixed(2);
+				else if(valTypePKFWObj.value=="V")
+					itemPKFWValObj.value = parseFloat(itemPKFWObj.value).toFixed(2);
+				else if(valTypePKFWObj.value=="Q")	
+					itemPKFWValObj.value = (itemPKFWObj.value * parseFloat(totalQtyVal)).toFixed(2) ;
+			}
+		//document.myForm.itemGrossVal.value = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value);	
+		}
+		
+		if(type=="FRT")
+		{
+			if(document.myForm.valTypeFRT.value=="")
+			{
+				alert("Please select the Freight");
+				document.myForm.itemFRT.value='';
+				
+
+			}
+			else
+			{
+				var itemFRTObj = eval("document.myForm.itemFRT");
+				var valTypeFRTObj = eval("document.myForm.valTypeFRT");
+				
+								
+				if(valTypeFRTObj.value == "P")
+					itemFRTValObj.value = ((itemTotalValObj.value * itemFRTObj.value)/100).toFixed(2);
+				else if(valTypeFRTObj.value=="V")
+					itemFRTValObj.value = parseFloat(itemFRTObj.value).toFixed(2);
+				else if(valTypeFRTObj.value=="Q")	
+					itemFRTValObj.value = (itemFRTObj.value * parseFloat(totalQtyVal)).toFixed(2);	
+
+			}
+		
+		}
+		var itemSupplyPrice = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value) + parseFloat(itemFRTValObj.value);
+		itemSupplyPrice= parseFloat(itemSupplyPrice).toFixed(2);		
+
+		if(type=="CUST")
+		{
+			if(document.myForm.valTypeCUST.value=="")
+			{
+				alert("Please select the Custom Duty");
+				document.myForm.itemCUST.value='';
+				
+
+			}
+			else
+			{
+				var itemCUSTObj=eval("document.myForm.itemCUST");
+				itemCUSTValObj.value = ((itemSupplyPrice * itemCUSTObj.value)/100).toFixed(2);
+				var itemTAXObj=eval("document.myForm.itemTAX");
+				itemTAXValObj.value = (((parseFloat(itemSupplyPrice) +parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value)) * itemTAXObj.value)/100).toFixed(2);
+				document.myForm.itemLTAXVal.value = (parseFloat(itemTAXValObj.value)).toFixed(2);
+				if(valTypeDUTYObj.value == "E")
+					document.myForm.itemDUTYVal.value = parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value);
+				else if(valTypeDUTYObj.value == "D")
+					document.myForm.itemDUTYVal.value = parseFloat("0");				
+								
+			}
+		
+		}
+		if(type=="CESS")
+		{
+			if(document.myForm.valTypeCESS.value=="")
+			{
+				alert("Please select the Social Welfare Cess");
+				document.myForm.itemCESS.value='';
+
+			}
+			else
+			{
+				var itemCESSObj=eval("document.myForm.itemCESS");
+				itemCESSValObj.value = ((itemCUSTValObj.value) * (itemCESSObj.value)/100).toFixed(2);
+				var itemTAXObj=eval("document.myForm.itemTAX");
+				itemTAXValObj.value = (((parseFloat(itemSupplyPrice) +parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value)) * itemTAXObj.value)/100).toFixed(2);								
+				document.myForm.itemLTAXVal.value = (parseFloat(itemTAXValObj.value)).toFixed(2);
+				if(valTypeDUTYObj.value == "E")
+					document.myForm.itemDUTYVal.value = parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value);
+				else if(valTypeDUTYObj.value == "D")
+					document.myForm.itemDUTYVal.value = parseFloat("0");								
+			}
+		
+		}
+		if(type=="CHA")
+		{
+			if(document.myForm.valTypeCHA.value=="")
+			{
+				alert("Please select the CHA charges");
+				document.myForm.itemCHA.value='';
+				
+
+			}
+			else
+			{
+				var itemCHAObj=eval("document.myForm.itemCHA");
+				var valTypeCHAObj = eval("document.myForm.valTypeCHA");
+				
+				if(valTypeCHAObj.value=="V")
+					itemCHAValObj.value = parseFloat(itemCHAObj.value).toFixed(2);				
+				
+				/*if(valTypeCHAObj.value == "P")
+					itemCHAValObj.value = ((itemSupplyPrice * itemCHAObj.value)/100).toFixed(2);
+				else if(valTypeCHAObj.value=="V")
+					itemCHAValObj.value = itemCHAObj.value;
+				else if(valTypeCHAObj.value=="Q")	
+					itemCHAValObj.value = itemCHAObj.value * parseFloat(itemSupplyPrice);	*/
+				
+			}
+		
+		}
+		if(type=="IFRT")
+		{
+			if(document.myForm.valTypeIFRT.value=="")
+			{
+				alert("Please select the Freight");
+				document.myForm.itemIFRT.value='';
+				
+
+			}
+			else
+			{
+				var itemIFRTObj = eval("document.myForm.itemIFRT");
+				//alert("itemIFRTObj>>>"+itemIFRTObj.value)
+				var valTypeIFRTObj = eval("document.myForm.valTypeIFRT");
+				//alert("valTypeIFRTObj>>>"+valTypeIFRTObj.value)
+				
+				if(valTypeIFRTObj.value == "P")
+					itemIFRTValObj.value = ((itemSupplyPrice * itemIFRTObj.value)/100).toFixed(2);
+				else if(valTypeIFRTObj.value=="V")
+					itemIFRTValObj.value = parseFloat(itemIFRTObj.value).toFixed(2);
+				else if(valTypeIFRTObj.value=="Q")	
+					itemIFRTValObj.value = itemIFRTObj.value * parseFloat(itemSupplyPrice);	
+
+			}
+		
+		}	
+		if(type=="TAX")
+		{
+			if(document.myForm.valTypeTAX.value=="")
+			{
+				alert("Please select the Tax");
+				document.myForm.itemTAX.value='';
+				
+
+			}
+			else if(vendCat === "DOM")
+			{
+				//alert("in DOM");
+				var itemTAXObj=eval("document.myForm.itemTAX")/Count;
+				itemTAXValObj.value = ((itemSupplyPrice * itemTAXObj.value)/100).toFixed(2);
+			}
+			else if(vendCat === "IMP")
+			{
+				//alert("in IMP");
+				var itemTAXObj=eval("document.myForm.itemTAX");
+				//alert("itemTAXObj>>>>"+itemTAXObj.value)
+				//alert("itemCUSTValObj>>>>"+itemCUSTValObj.value)
+				//alert("itemCESSValObj>>>>"+itemCESSValObj.value)
+				itemTAXValObj.value = (((parseFloat(itemSupplyPrice) +parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value)) * itemTAXObj.value)/100).toFixed(2);
+				//alert("itemCESSValObj>>>>"+itemTAXValObj.value)
+				
+				
+				if(valTypeDUTYObj.value == "E")
+					document.myForm.itemDUTYVal.value = parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value);
+				else if(valTypeDUTYObj.value == "D")
+					document.myForm.itemDUTYVal.value = parseFloat("0");
+				
+				document.myForm.itemLTAX.value = parseFloat(itemTAXObj.value);				
+				document.myForm.itemLTAXVal.value = (parseFloat(itemTAXValObj.value)).toFixed(2);
+				
+				
+				
+				
+			}			
+			
+		
+		}	
+		if(type=="LTAX")
+		{
+			if(document.myForm.valTypeLTAX.value=="")
+			{
+				alert("Please select the Tax");
+				document.myForm.itemTAX.value='';
+				
+
+			}
+
+			else if(vendCat === "IMP")
+			{
+				//alert("in IMP");
+				var itemLTAXObj=eval("document.myForm.itemLTAX");
+
+				itemLTAXValObj.value = (((parseFloat(itemSupplyPrice) +parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value)) * itemLTAXObj.value)/100).toFixed(2);
+				//alert("itemCESSValObj>>>>"+itemTAXValObj.value)
+				
+				
+				if(valTypeDUTYObj.value == "E")
+					document.myForm.itemDUTYVal.value = parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value);
+				else if(valTypeDUTYObj.value == "D")
+					document.myForm.itemDUTYVal.value = parseFloat("0");
+				
+				document.myForm.itemLTAXVal.value = (parseFloat(itemLTAXValObj.value)).toFixed(2);
+				
+				
+				
+				
+			}			
+			
+		
+		}				
+		if(type=="DUTY")
+		{
+			if(document.myForm.valTypeDUTY.value=="")
+			{
+				alert("Please select the Tax");
+				document.myForm.itemTAX.value='';
+				
+
+			}
+			else if(vendCat === "IMP")
+			{
+				//alert("in IMP");
+				var itemTAXObj=eval("document.myForm.itemTAX");
+				var valTypeDUTYObj = eval("document.myForm.valTypeDUTY");
+				if(valTypeDUTYObj.value == "E")
+					document.myForm.itemDUTYVal.value = parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value);
+				else if(valTypeDUTYObj.value == "D")
+					document.myForm.itemDUTYVal.value = parseFloat("0");
+				
+				
+				
+				
+			}			
+			
+		
+		}				
+		if(vendCat === "DOM")
+			document.myForm.itemGrossVal.value = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value)+parseFloat(itemFRTValObj.value)+parseFloat(itemTAXValObj.value);	
+		if(vendCat === "IMP")
+		{
+			document.myForm.itemGrossVal.value = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value)+parseFloat(itemFRTValObj.value);				
+			document.myForm.itemTotalCost.value =parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value) + parseFloat(itemFRTValObj.value)+parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value)+parseFloat(itemCHAValObj.value)+parseFloat(itemIFRTValObj.value)+parseFloat(itemTAXValObj.value);
+			document.myForm.landCostVal.value=parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value) + parseFloat(itemFRTValObj.value)+parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value)+parseFloat(itemCHAValObj.value)+parseFloat(itemIFRTValObj.value)+parseFloat(itemTAXValObj.value)-parseFloat(eval(document.myForm.itemDUTYVal.value))-parseFloat(eval(document.myForm.itemLTAXVal.value));
+			
+			//document.myForm.itemTotalCost.value = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value)+parseFloat(itemIFRTValObj.value)+parseFloat(itemCUSTValObj.value)+parseFloat(itemCESSValObj.value)+parseFloat(itemCHAValObj.value)+parseFloat(itemFRTValObj.value)+parseFloat(itemTAXValObj.value);				
+		}	
+		
+	}
+	function funCalLandCost(type)
+	{
+	
+		var Count='<%=rfqLinesRet.getRowCount()%>';
+		var vendCat= "<%=vendCat%>";
+		
+		var creditDays=document.myForm.creditDays.value;
+		var leadTime=document.myForm.leadTime.value;
+		var leadTimePercent=document.myForm.leadTimePercent.value;
+		var itemTotalValObj = eval("document.myForm.itemTotalVal");
+		var itemPKFWValObj = eval("document.myForm.itemPKFWVal");
+		var itemFRTValObj = eval("document.myForm.itemFRTVal");
+		var itemGrossValObj = eval("document.myForm.itemGrossVal");
+		var totPriceVal=0;
+		if(type=='C')
+		{
+			document.myForm.calType.value='Credit';
+			if(vendCat === "DOM")
+			{		
+				
+				for(var k=0;k<Count;k++)
+				{
+				var itemQtyObj = eval("document.myForm.rfqQty"+k);
+				var itemPriceObj = eval("document.myForm.itemPrice"+k);
+				itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 	
+				//alert("itemValObj"+itemValObj);
+				totPriceVal=(parseFloat(totPriceVal)+parseFloat(itemValObj)).toFixed(2); 	
+
+				}
+				var landCostObj = eval("document.myForm.landCostVal");
+				var itemSupplyPrice = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value) + parseFloat(itemFRTValObj.value);
+				//alert("itemSupplyPrice>>"+itemSupplyPrice);
+				var calVal=((itemSupplyPrice)*(8/100)*(1/365)*parseFloat(creditDays)).toFixed(2);
+				//alert(calVal);
+				landCostObj.value=(parseFloat(itemSupplyPrice)-parseFloat(calVal)).toFixed(2);
+			}	
+			if(vendCat === "IMP")
+			{
+				var landCostImpObj = eval("document.myForm.landCostValImp");
+				var calVal=((itemGrossValObj.value)*(8/100)*(1/365)*parseFloat(creditDays)).toFixed(2);
+				//alert(calVal);
+				landCostImpObj.value=(parseFloat(itemGrossValObj.value)-parseFloat(calVal)).toFixed(2);				
+			}
+			
+		}
+		if(type=='A')
+		{
+			document.myForm.calType.value='Advance';
+			
+			if(vendCat === "DOM")
+			{
+			
+				for(var k=0;k<Count;k++)
+				{
+				var itemQtyObj = eval("document.myForm.rfqQty"+k);
+				var itemPriceObj = eval("document.myForm.itemPrice"+k);
+				itemValObj = (parseFloat(itemQtyObj.value)*parseFloat(itemPriceObj.value)).toFixed(2); 	
+				//alert("itemValObj"+itemValObj);
+				totPriceVal=(parseFloat(totPriceVal)+parseFloat(itemValObj)).toFixed(2); 	
+
+				}
+				var landCostObj = eval("document.myForm.landCostVal");
+				var itemSupplyPrice = parseFloat(itemTotalValObj.value)+ parseFloat(itemPKFWValObj.value) + parseFloat(itemFRTValObj.value);
+				var calVal=parseFloat(itemSupplyPrice)*(8/100)*(1/365)*(1/leadTimePercent)*parseFloat(leadTime);
+				landCostObj.value=(parseFloat(itemSupplyPrice)+parseFloat(calVal)).toFixed(2);
+			}
+			if(vendCat === "IMP")
+			{
+				var landCostImpObj = eval("document.myForm.landCostValImp");
+				var calVal=(itemGrossValObj.value)*(8/100)*(1/365)*(1/leadTimePercent)*parseFloat(leadTime);
+				alert(calVal);
+				landCostImpObj.value=(parseFloat(itemGrossValObj.value)+parseFloat(calVal)).toFixed(2);				
+			}			
+		
+		}
+		document.myForm.landCostVal.value=landCostObj.value;
+	}
+	function openItemDet(sapGst,sapHSN,mat,text)
+      { 
+      	var url="ezSAPDetPopup.jsp?sapGst="+sapGst+"&sapHSN="+sapHSN+"&mat="+mat+"&text="+text;     
+      	/*$.fancybox.open({
+      		href : url, 
+      		type : 'iframe',
+      		
+      		width:'60%',
+      		height:'38%',
+      		autoSize : false,
+      		closeBtn : false,
+      		keys : {
+      		    close  : true,
+      		},			
+      		helpers     : {  
+      			overlay : {closeClick: false}
+      			}
+      		});*/
+      		
+		$('iframe').attr("src",url);
+		
+
+		$('#woModal').modal({show:true});
+		$('.modal-dialog').draggable({
+				    handle: ".modal-body"
+  		});   		      		
+      
+      }
+   	
+      function openLongItem(mat,text,type)
+      { 
+	var url="ezItemTextPopup.jsp?mat="+mat+"&text="+text+"&type="+type;     
+	/*$.fancybox.open({
+		href : url, 
+		type : 'iframe',
+
+		width:'60%',
+		height:'38%',
+		autoSize : false,
+		closeBtn : false,
+		keys : {
+		    close  : true,
+		},			
+		helpers     : {  
+			overlay : {closeClick: false}
+			}
+		});*/
+		
+		$('iframe').attr("src",url);
+		
+
+		$('#woModal1').modal({show:true});
+		$('.modal-dialog').draggable({
+				    handle: ".modal-body"
+  		});   				
+
+      }
+      function funSetItemDisc(disc)
+	{
+		var Count='<%=rfqLinesRet.getRowCount()%>';
+		if(document.myForm.valTypeDISC.value=="")
+		{
+			alert("Please select the Discount Type");
+			itemDISCObj.value='';
+			disc.value=0;
+			return;
+
+		}
+		for(var c=0;c<Count;c++)
+		{
+			var discObj = eval("document.myForm.condDisc"+c);
+			discObj.value=disc.value;
+			funCheckDis(discObj,c)
+
+		}
+
+
+
+	}
+	function funSetItemLead(lead)
+	{
+		var Count='<%=Count%>';
+
+		for(var c=0;c<Count;c++)
+		{
+			var leadObj = eval("document.myForm.leaddays"+c);
+			leadObj.value=lead.value;
+
+		}
+	
+	
+	}
+      function funGetGST(item,prevHSN,prevGST)
+      {
+      	
+	var hsnCode 	= $('#vendHSNGST'+item).val();
+	var size = hsnCode.length;
+	if(size != 10)
+	{
+		
+		alert("Enter Valid HSN at line item:"+((parseInt(item)+1)*10));
+		$('#vendHSNGST'+item).val(prevHSN);
+		$('#vendGST'+item).val(prevGST);
+		return false;
+	}
+	else
+	{
+		var hsnArr= hsnCode.split(".");
+		if(hsnArr[0].length != 4)
+		{
+			alert("Enter Valid HSN at line item:"+((parseInt(item)+1)*10));
+			$('#vendGST'+item).val("0");
+			return false;
+		}	
+		if(hsnArr[1].length != 2)
+		{
+			alert("Enter Valid HSN at line item:"+((parseInt(item)+1)*10));
+			$('#vendGST'+item).val("0");
+			return false;
+		}	
+		if(hsnArr[2].length != 2)
+		{
+			alert("Enter Valid HSN at line item:"+((parseInt(item)+1)*10));						
+			$('#vendGST'+item).val("0");
+			return false;
+		}	
+		
+	}
+      	
+        $.ajax({
+      			    url: '../RFQ/ezGetGST.jsp', 
+      			    data: { hsn : hsnCode},
+      			    dataType: "json",
+      			    type: 'POST',
+      			    success: function(result) {
+      			      result=$.trim(result);
+      			      $('#vendGST'+item).val(result);
+      			      var vendGSTObj = eval("document.myForm.vendGST"+item);
+      			      checkNum(vendGSTObj,item);
+      			      
+      			    }
+			});
+	}
+	function funIncoDom(fieldObj)
+	{
+		
+		var vendCat= "<%=vendCat%>"; 
+		var Count='<%=Count%>';
+		//alert(Count);
+		var fieldVal = fieldObj.value;	
+		//alert(fieldVal);
+		if(vendCat === "DOM")
+		{		
+		
+			if(fieldVal =="DAP")
+			{
+				document.getElementById("itemPKFW").value = "0";
+				document.getElementById("itemPKFWVal").value = "0";
+				document.getElementById("itemFRT").value = "0";
+				document.getElementById("itemFRTVal").value = "0";
+				
+				var itemPKFWObj = eval("document.myForm.itemPKFW");
+				funCal(itemPKFWObj,'PKFW');
+				var itemFRTObj = eval("document.myForm.itemFRT");
+				funCal(itemFRTObj,'FRT');
+				var itemTAXObj = eval("document.myForm.itemTAX");
+				//alert("itemTAXObj"+itemTAXObj.value/Count);
+				
+				var itemTotalValObj = eval("document.myForm.itemTotalVal");
+				//alert(itemTotalValObj.value);
+				
+				document.myForm.itemTAXVal.value = (parseFloat(itemTotalValObj.value)* (itemTAXObj.value/Count)/100).toFixed(2);
+				document.myForm.itemGrossVal.value = ((parseFloat(itemTotalValObj.value) + (parseFloat(itemTotalValObj.value)* (itemTAXObj.value/Count)/100))).toFixed(2);
+				//funCal(itemTAXObj,'TAX');	
+				//chkSel(fieldObj,0,"TAX")
+				
+				
+				
+				document.getElementById("valTypePKFW").disabled = true;
+				document.getElementById("itemPKFW").disabled = true;
+				document.getElementById("valTypeFRT").disabled = true;
+				document.getElementById("itemFRT").disabled = true;
+			}
+			else
+			{
+				document.getElementById("valTypePKFW").removeAttribute('disabled');
+				document.getElementById("itemPKFW").removeAttribute('disabled');
+				document.getElementById("valTypeFRT").removeAttribute('disabled');
+				document.getElementById("itemFRT").removeAttribute('disabled');
+				
+				var itemTAXObj = eval("document.myForm.itemTAX");
+				funCal(itemTAXObj,'TAX');				
+			}
+		}		
+		
+	}
+	function showRetention(fieldObj,type)
+	{
+		//alert("type>>>"+type);
+		var fieldVal = fieldObj.value;
+		if(type=="S")
+		{
+			if(fieldVal=="H")
+			{
+				document.getElementById("retDisp").style.display="none";		
+				document.getElementById("retPerDisp").style.display="";		
+				document.getElementById("retPerVal").style.display="";	
+			}
+			else
+			{
+
+				document.getElementById("retPerDisp").style.display="none";		
+				document.getElementById("retPerVal").style.display="none";	
+			}
+		}
+		else if(type=="D")
+		{
+			if(fieldVal=="H")
+			{
+				document.getElementById("retDispSer").style.display="none";		
+				document.getElementById("retPerDispSer").style.display="";		
+				document.getElementById("retPerValSer").style.display="";	
+			}
+			else
+			{
+
+				document.getElementById("retPerDispSer").style.display="none";		
+				document.getElementById("retPerValSer").style.display="none";	
+			}
+		}		
+		
+	}	
+	function showDP(fieldObj,type)
+	{
+		var fieldVal = fieldObj.value;
+		if(type=="S")
+		{		
+			if(fieldVal=="M" || fieldVal=="V" )
+			{
+				document.getElementById("dpDisp").style.display="none";		
+				document.getElementById("dpPerDisp").style.display="";		
+				document.getElementById("dpPerVal").style.display="";	
+				document.getElementById("trDp").style.display="";	
+			}
+			else
+			{
+
+				document.getElementById("dpPerDisp").style.display="none";		
+				document.getElementById("dpPerVal").style.display="none";
+				document.getElementById("dpPerVal").style.display="none";
+				document.getElementById("trDp").style.display="none";	
+			}
+		}
+		else if(type=="D")
+		{		
+			if(fieldVal=="M" || fieldVal=="V" )
+			{
+				document.getElementById("dpDispSer").style.display="none";		
+				document.getElementById("dpPerDispSer").style.display="";		
+				document.getElementById("dpPerValSer").style.display="";	
+				document.getElementById("trDpSer").style.display="";	
+			}
+			else
+			{
+
+				document.getElementById("dpPerDispSer").style.display="none";		
+				document.getElementById("dpPerValSer").style.display="none";
+				document.getElementById("dpPerValSer").style.display="none";
+				document.getElementById("trDpSer").style.display="none";	
+			}
+		}		
+		
+	}		
+	function calcDPAmt(fieldObj,type)
+	{
+			var fieldVal = fieldObj.value;
+			//alert("fieldVal>>>"+fieldVal);
+			var itemGrossValObj = eval("document.myForm.itemGrossVal");
+			//alert("itemGrossValObj>>>"+itemGrossValObj.value);
+			if(type=="S")
+				document.myForm.dpAmt.value =(((itemGrossValObj.value) * fieldVal)/100).toFixed(2);
+			else if(type=="D")
+				document.myForm.dpAmtSer.value =(((itemGrossValObj.value) * fieldVal)/100).toFixed(2);							
+				
+	}
+	function viewService(rfqNo,rfqItem,itemPos)
+	{ 
+		var vendCat= "<%=vendCat%>";
+		//alert("vendCat>>>"+vendCat);	
+		var reqFrom="<%=reqFrom%>";
+		var userType="<%=userType%>";
+		
+		var url="ezViewServices.jsp?rfqNo="+rfqNo+"&rfqItem="+rfqItem+"&itemPos="+itemPos+"&vendCat="+vendCat+"&reqFrom="+reqFrom+"&userType="+userType;
+		$('iframe').attr("src",url);
+		$('#woModalSer').modal({show:true});
+		$('.modal-dialog').draggable({
+			   handle: ".modal-body"
+		});   		
+	}  		
+   	
+	
+</script>
+</script>
+	<script type="text/javascript"> 
+        function preventBack() { 
+            window.history.forward();  
+        } 
+          
+        setTimeout("preventBack()", 0); 
+          
+        window.onunload = function () { null }; 
+</script> 

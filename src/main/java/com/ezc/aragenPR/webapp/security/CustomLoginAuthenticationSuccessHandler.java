@@ -1,6 +1,8 @@
 package com.ezc.aragenPR.webapp.security;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -69,7 +71,11 @@ public class CustomLoginAuthenticationSuccessHandler implements AuthenticationSu
 	}
 	
 	private Cookie getWelcomeCookie(final String user) {
-		Cookie welcomeCookie = new Cookie("welcome", user);
+		// URL-encode: RFC 6265 cookie values reject raw spaces/special chars, and real
+		// first names (e.g. "Anitha A") routinely contain spaces - unencoded, this 500s
+		// on every login for such a user (Rfc6265CookieProcessor throws IllegalArgumentException).
+		String safeValue = URLEncoder.encode(user == null ? "" : user, StandardCharsets.UTF_8);
+		Cookie welcomeCookie = new Cookie("welcome", safeValue);
 		welcomeCookie.setMaxAge(60 * 60 * 24 * 30); // 30 days
 		return welcomeCookie;
 	}

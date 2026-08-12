@@ -49,12 +49,12 @@
                 <div class="small-box bg-warning">
                     <div class="inner">
                         <h3>&nbsp;</h3>
-                        <p>Complete Vendor Registration</p>
+                        <p th:text="${regStatusLabel}">Complete Registration</p>
                     </div>
                     <div class="icon">
                         <i class="fa fa-file-text-o"></i>
                     </div>
-                    <a href="/vendorReg/new" class="small-box-footer">Click Here <i
+                    <a th:href="@{'/vendorReg/register/' + ${docId}}" class="small-box-footer">Click Here <i
                             class="fas fa-arrow-circle-right"></i></a>
                 </div>
             </div>

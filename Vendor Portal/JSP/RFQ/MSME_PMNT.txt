@@ -1,0 +1,336 @@
+0001	Within 10 days Due net
+0004	Payable immediately Due net
+0005	Payable immediately Due net
+BT01	30 DAYS FROM DATE OF BT AGREEMENT
+C01	IMMDTLY FROM DATE OF MATL RECPT, SUB TO APPROVAL
+C02	7 DAYS FROM DATE OF MATL RECEIPT , SUB TO APPROVAL
+C03	15 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL
+C04	30 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL
+C11	7 DAYS FROM DATE OF INVOICE , SUB TO APPROVAL
+C12	15 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL
+C13	30 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL
+C30	30 DAYS FROM AWB DATE
+DA02	DA 30 DAYS FROM INVOICE DATE
+J0	Payable immediately Due net
+MX01	100% on COD Basis
+MX02	100% on Completion of work
+MX03	10%ABG+70%supply+10%ins+10%PBG
+MX04	100% CAD Basis               
+MX05	100% Cheque agt. delivery      
+MX20	25% ADVANCE & 75% AGT DESP DOC
+MX21	25%ADVANCE 75%AGAINST DESP.DOC
+MX22	90%-15day MRN & 10% on Comm-PB
+MX23	50% Adv. & Bal 50% after 15 day
+MX24	95% Against work completion, 5% Performance BG
+MX28	30% ADV AGST. ABG, 60% AGST.PI & 10% AFTER SUPPLY
+MX29	10% ADV AGST. ABG, 90% AGST SUPPLY OF MAT
+MX30	30% ADV AGST. PO, 70% AGST SUPPLY OF MAT
+MX31	90% RA Bill & 10% After Completion of Job
+MX32	25% Adv agst ABG, 65% Agst MAT 10% Agst.Comm.& PBG
+MX33	20% AGST ABG+75% AGST MAT+5% AGST COMP & PBG (1y)
+MX35	30% ADV AGST. PO, 70% AGST SUPPLY OF SERVICE
+MX39	50% adv with PO & bal 50% against Performa invoice
+MX40	50% advance & 50% on completion of work
+MX44	80% Delivry of matl with in 15D & 20% aftr instltn
+MX45	30% Adv & 70% Against P.I
+TT01	TT ADVANCE
+TT02	TT 7 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL
+TT03	TT15 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL
+TT04	TT30 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL
+Y001	Immediate payment without any discount
+Y010	Net due within 10 days without any discount
+Y015	Net due within 15 days without any discount
+Y020	Net due in 20 days with 1% discount in 10 days
+Y030	Net due in 30 days with 1% discount in 10 days
+Y050	50% due immediately and 50% due net 30 days
+Y075	75% due immediately and 25% due net 30 days
+Y120	Net Due within 20 days without any discount
+Y135	Net Due within 35 days without any discount
+Y330	Net Due within 30 days without any discount
+Y410	Net Due within 30 days with 4% discount in 10 days
+Y420	Net Due within 30 days with 4% discount in 20 days
+Y531	Pay upon receipt
+Y532	Net 7 days
+Y533	Net 15 days
+Y534	Net 25 days
+Y537	Net 30 days
+Y539	3% 10 days,net 30
+Y544	Net 31 days
+Y548	Due First of Month
+YEE0	Immediate payment without any discount
+YINS	Immediate payment without any discount
+YNT0	Immediate payment without any discount
+YNT1	Net Due within 10 days without any discount
+YNT5	Net Due within 5 days without any discount
+YQRD	Immediate payment without any discount
+YTAX	Immediat Tax payment without any discount
+Z015	Net due within 15 days without any discount
+Z025	Pay prior to shipment
+Z065	Payable immediately Due net
+
+SELECT * from EZC_MASTER_KEY_VALUES where EMKV_MASTER_TYPE='PMNT_TERM' and emkv_key in ('0001','0004','0005','BT01','C01','C02','C03','C04','C11','C12','C13','C30','DA02','J0','MX01','MX02','MX03','MX04','MX05','MX20','MX21','MX22','MX23','MX24','MX28','MX29','MX30','MX31','MX32','MX33','MX35','MX39','MX40','MX44','MX45','TT01','TT02','TT03','TT04','Y001','Y010','Y015','Y020','Y030','Y050','Y075','Y120','Y135','Y330','Y410','Y420','Y531','Y532','Y533','Y534','Y537','Y539','Y544','Y548','YEE0','YINS','YNT0','YNT1','YNT5','YQRD','YTAX','Z015','Z025','Z065')
+
+--update EZC_MASTER_KEY_VALUES set emkv_value1='M' where EMKV_MASTER_TYPE='PMNT_TERM' and emkv_key in ('0001','0004','0005','BT01','C01','C02','C03','C04','C11','C12','C13','C30','DA02','J0','MX01','MX02','MX03','MX04','MX05','MX20','MX21','MX22','MX23','MX24','MX28','MX29','MX30','MX31','MX32','MX33','MX35','MX39','MX40','MX44','MX45','TT01','TT02','TT03','TT04','Y001','Y010','Y015','Y020','Y030','Y050','Y075','Y120','Y135','Y330','Y410','Y420','Y531','Y532','Y533','Y534','Y537','Y539','Y544','Y548','YEE0','YINS','YNT0','YNT1','YNT5','YQRD','YTAX','Z015','Z025','Z065')
+
+
+INSERT INTO EZC_MASTER_KEY_VALUES (`EMKV_MASTER_TYPE`,`EMKV_KEY`,`EMKV_VALUE`,`EMKV_VALUE1`,`EMKV_VALUE2`,`EMKV_VALUE3`) VALUES ('PMNT_TERM','MX01','100% on COD Basis',NULL,NULL,NULL);
+INSERT INTO EZC_MASTER_KEY_VALUES (`EMKV_MASTER_TYPE`,`EMKV_KEY`,`EMKV_VALUE`,`EMKV_VALUE1`,`EMKV_VALUE2`,`EMKV_VALUE3`) VALUES ('PMNT_TERM','MX45','30% Adv & 70% Against P.I',NULL,NULL,NULL);
+
+
+===============
+
+RFQ(s) added under QCF: 3120000009
+
+1.RFQ:7000000566 created sucessfully against the vendor: GAUPAD INDUSTRY[100594]
+
+2.RFQ:7000000567 created sucessfully against the vendor: TLC PHARMA TECH[801542]
+
+===========================
+---------------------------------------------------------
+|PayT|Own explanation                                   |
+---------------------------------------------------------
+|LC17|LC 60 DAYS FROM BL/AWB DATE                       |
+|LC18|LC 90 DAYS FROM BL/AWB DATE                       |
+|Y175|Net Due within 75 days without any discount       |
+|LC19|LC 75 DAYS FROM BL/AWB DATE                       |
+|ZPV1|Early Payment-PV                                  |
+|MX35|30% ADV AGST. PO, 70% AGST SUPPLY OF SERVICE      |
+|MX39|50% adv with PO & bal 50% against Performa invoice|
+|MX48|40% Adv,50% Befre disp aftr FAT&10% Aftr Trail Run|
+|A01 |CASH AGAINST DOCUMENTS                            |
+|A02 |100% Advance Against Proforma                     |
+|A03 |100% Advance with Order                           |
+|A04 |100% Against Despatch Document                    |
+|BT01|30 DAYS FROM DATE OF BT AGREEMENT                 |
+|BT02|60 DAYS FROM DATE OF BT AGREEMENT                 |
+|BT03|90 DAYS FROM DATE OF BT AGREEMENT                 |
+|BT04|120 DAYS FROM DATE OF BT AGREEMENT                |
+|BT05|150 DAYS FROM DATE OF BT AGREEMENT                |
+|BT06|180 DAYS FROM DATE OF BT AGREEMENT                |
+|C01 |IMMDTLY FROM DATE OF MATL RECPT, SUB TO APPROVAL  |
+|C02 |7 DAYS FROM DATE OF MATL RECEIPT , SUB TO APPROVAL|
+|C03 |15 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL  |
+|C04 |30 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL  |
+|C05 |45 DAYS FROM DATE OF MATL RECEPT , SUB TO APPROVAL|
+|C06 |60 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL  |
+|C07 |90 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL  |
+|C08 |120 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL |
+|C09 |150 DAYS FROM DATE OF MATL RECEPT, SUB TO APPROVAL|
+|C10 |180 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL |
+|C11 |7 DAYS FROM DATE OF INVOICE , SUB TO APPROVAL     |
+|C12 |15 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL     |
+|C13 |30 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL     |
+|C14 |45 DAYS FROM DATE OF INVOICE , SUB TO APPROVAL    |
+|C15 |60 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL     |
+|C16 |90 DAYS FROM DATE OF INVOICE SUB TO APPROVAL      |
+|C17 |120 DAYSFROM DATE OF INVOICE, SUB TO APPROVAL     |
+|C18 |150 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL    |
+|C19 |180 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL    |
+|DA01|DA/DP SIGHT                                       |
+|DA02|DA 30 DAYS FROM INVOICE DATE                      |
+|DA03|DA 45 DAYS FROM INVOICE DATE                      |
+|DA04|DA 60 DAYS FROM INVOICE DATE                      |
+|DA05|DA 90 DAYS FROM INVOICE DATE                      |
+|DA06|DA 120 DAYS FROM INVOICE DATE                     |
+|DA07|DA 150 DAYS FROM INVOICE DATE                     |
+|DA08|DA 180 DAYS FROM INVOICE DATE                     |
+|LC01|LC SIGHT                                          |
+|LC02|LC 30 DAYS FROM INVOICE DATE                      |
+|LC03|LC 45 DAYS FROM INVOICE DATE                      |
+|LC04|LC 60 DAYS FROM INVOICE DATE                      |
+|LC05|LC 90 DAYS FROM INVOICE DATE                      |
+|LC06|LC 120 DAYS FROM INVOICE DATE                     |
+|LC07|LC 150 DAYS FROM INVOICE DATE                     |
+|LC08|LC 180 DAYS FROM INVOICE DATE                     |
+|LC09|LC SIGHT BT Date                                  |
+|LC10|LC 30 DAYS FROM BT DATE                           |
+|LC11|LC 45 DAYS FROM BT DATE                           |
+|LC12|LC 60 DAYS FROM BT DATE                           |
+|LC13|LC 90 DAYS FROM BT DATE                           |
+|LC14|LC 120 DAYS FROM BT DATE                          |
+|LC15|LC 150 DAYS FROM BT DATE                          |
+|LC16|LC 180 DAYS FROM BT DATE                          |
+|MX01|100% on COD Basis                                 |
+|MX02|100% on Completion of work                        |
+|MX03|10%ABG+70%supply+10%ins+10%PBG                    |
+|MX04|100% CAD Basis                                    |
+|MX05|100% Cheque agt. delivery                         |
+|MX06|15% agst BG,75% 30 days matl recpt,10% agst PBG   |
+|MX07|20% agst BG,70% 30 days matl recpt,10% agst PBG   |
+|MX08|20%ABG/70%-Lc60daysUsance/10%P                    |
+|MX09|20%Adv.Ag.ABG,80+Tx-15dyFm Rp                     |
+|MX10|25% agst BG,65% 30 days matl recpt,10% agst PBG   |
+|MX11|70%30days+15%+tax Insat+15%PBG                    |
+|MX12|80%runing Bill+10%Test+10%Hand                    |
+|MX13|85%within 30days from dely,15%agst PBG for 3years |
+|MX14|90% within 30days from delivery, 10% against PBG  |
+|MX15|90% within15 days from MRN dt & 10% against PBG   |
+|MX16|90%order+100%tx-30day/10%PBG                      |
+|MX17|10% against BG, 80% against Prof Inv, 10% PBG     |
+|MX18|10%ABG/80%-30day del/10%ComPBG                    |
+|MX19|10% aginst ABG, 85% after work completion, 5% PBG |
+|MX20|25% ADVANCE & 75% AGT DESP DOC                    |
+|MX21|25%ADVANCE 75%AGAINST DESP.DOC                    |
+|MX22|90%-15day MRN & 10% on Comm-PB                    |
+|MX23|50% Adv. & Bal 50% after 15 day                   |
+|MX24|95% Against work completion, 5% Performance BG    |
+|TT01|TT ADVANCE                                        |
+|TT02|TT 7 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL|
+|TT03|TT15 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL|
+|TT04|TT30 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL|
+|TT05|TT45 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL|
+|TT06|TT60 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL|
+|TT07|TT90 DAYS FROM DATE OF MATL RECPT SUB. TO APPROVAL|
+|TT08|TT120 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL|
+|TT09|TT150 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL|
+|TT10|TT180 DAYS FROM DATE OF MATL RECPT SUB.TO APPROVAL|
+|A05 |100% Against BG/PBG                               |
+|DA09|DA 15 DAYS FROM INVOICE DATE                      |
+|ZA01|90 days from AWB date                             |
+|Z034|Payable in 5 partial amounts                      |
+|    |1 installment: 15.000 % with payment term 0001    |
+|    |2 installment: 15.000 % with payment term 0001    |
+|    |3 installment: 30.000 % with payment term 0001    |
+|    |4 installment: 30.000 % with payment term 0001    |
+|    |5 installment: 10.000 % with payment term 0001    |
+|Z035|90% advance & 10% after 45 days of invoice        |
+|MX29|10% ADV AGST. ABG, 90% AGST SUPPLY OF MAT         |
+|MX30|30% ADV AGST. PO, 70% AGST SUPPLY OF MAT          |
+|MX31|90% RA Bill & 10% After Completion of Job         |
+|MX32|25% Adv agst ABG, 65% Agst MAT 10% Agst.Comm.& PBG|
+|MX33|20% AGST ABG+75% AGST MAT+5% AGST COMP & PBG (1y) |
+|MX34|50% Agst. Erection+40% Agst fixing sheet+10% Comp.|
+|LC20|LC 120 DAYS FROM BL/AWB DATE                      |
+|Y075|75% due immediately and 25% due net 30 days       |
+|Y050|50% due immediately and 50% due net 30 days       |
+|ZA02|60 days from AWB date                             |
+|C35 |MSME-35 DAYS FROM DATE OF INVOICE                 |
+|Y601|60 days from B/L date                             |
+|Y602|90 days from B/L date                             |
+|Y541|2% 20 Days, Net 45                                |
+|Y542|Net 50 days                                       |
+|Y543|1% 10 Net 30                                      |
+|Y544|Net 31 days                                       |
+|Y545|2% 64 Days, Net 65                                |
+|Y546|2% 20, Net 30                                     |
+|Y547|0.5% 33 Net 34                                    |
+|Y548|Due First of Month                                |
+|J050|LC 60 DAYS FROM INVOICE DATE                      |
+|J0  |Payable immediately Due net                       |
+|MX41|20%Ad.ABG,60%dlivry&10% instltn,10% PBG 1Yr       |
+|LC24|LC 100 DAYS FROM BL/AWB DATE                      |
+|MX45| 30% Adv & 70% Against P.I                        |
+|MX46|30 Adv.Agst ABG,60%Agst Del witin15D &10% Agst PBG|
+|MX47|10%Ag Agr,30%AgDR-19in,30%AgDR-19 in&30%AgDR-20   |
+|MX52|100% Against Completion of work within 15 Days    |
+|MX53|30%adhocpay-agstsub of bill&70%Agstbillcerti-30day|
+|MX54|20% Adv & 80% Agst Delivery within 15 Days        |
+|MX25|20%ABG/70%+Tx-15day del/10%Com                    |
+|MX26|20%ABG/70%+Tx-agt Recpt/10%PBG                    |
+|MX27|90%agtPI/100%Tx-15days/10%PBG                     |
+|MX28|30% ADV AGST. ABG, 60% AGST.PI & 10% AFTER SUPPLY |
+|MX38|90% LC at sight,10% against PBG for 1 year        |
+|DA11|DA 100 DAYS FROM DATE OF BL/AWB DATE              |
+|C21 |75 DAYS FROM DATE OF MATL RECPT, SUB TO APPROVAL  |
+|MX49|20%Aglo,30%hvac,15%Agele,15%aguti,10%agf&s&10%Agdr|
+|MX50|30% Adv,35% Ast Pre-Ad-Rep&35% Ast Final Ad-Report|
+|MX51|20%Adv,40%Agt tenpack & 40% Agt Com-work asbui Drg|
+|C20 |75 DAYS FROM DATE OF INVOICE, SUB TO APPROVAL     |
+|C30 |30 DAYS FROM AWB DATE                             |
+|Y540|80% Advance & 20% with in 45 Days                 |
+|Z065|Payable immediately Due net                       |
+|Z066|Free of Cost                                      |
+|J047|DA 60 DAYS FROM AWB/BL DATE                       |
+|MX36|20% AGST ABG+70% AGST PI+10% AGST COMP & PBG (1y) |
+|MX40|50% advance & 50% on completion of work           |
+|MX42|50% on receipt, 35% after installation, 15% PBG   |
+|MX37|20% Adv agst ABG, 70% Agst MAT 10% Agst.Comm.& HAN|
+|MX43|50% after 45 days on Material receipt             |
+|MX44|80% Delivry of matl with in 15D & 20% aftr instltn|
+|Y538|Net 60 days                                       |
+|Y016|Net due within 40 days without any discount       |
+|Y521|Before 15 next month,2%                           |
+|Y522|within 14 days,2%                                 |
+|Y523|Payable in 3 installments                         |
+|Y524|1% 15 days,net 30                                 |
+|Y525|1% 20 days,net 30                                 |
+|Y526|1.5% 15 days,net 30                               |
+|Y527|2% 10 days,net 30                                 |
+|Y528|2% 15 days, net 30                                |
+|Y529|2% 30 days, net 120                               |
+|Y530|3% 20 days,net 25                                 |
+|Y531|Pay upon receipt                                  |
+|Y532|Net 7 days                                        |
+|Y533|Net 15 days                                       |
+|Y534|Net 25 days                                       |
+|Y535|Net 45 days                                       |
+|Y536|Net 90 Days                                       |
+|Y537|Net 30 days                                       |
+|Z025|Pay prior to shipment                             |
+|Y539|3% 10 days,net 30                                 |
+|0001|Within 10 days Due net                            |
+|0002|Within 14 days 2 % cash discount                  |
+|    |Within 30 days Due net                            |
+|0003|Within 14 days 3 % cash discount                  |
+|    |Within 20 days 2 % cash discount                  |
+|    |Within 30 days Due net                            |
+|0004|Payable immediately Due net                       |
+|    |Baseline date on End of the month                 |
+|0005|Payable immediately Due net                       |
+|    |Baseline date on 10 of next month                 |
+|0006|Before End of the month 4 % cash discount         |
+|    |Before 15 of the next month ;; 2 % cash discount  |
+|    |Before 15 in 2 months Due net                     |
+|0007|For incoming invoices until 15 of the month       |
+|    |  Before 15 of the next month ;; 2 % cash discount|
+|    |  Before End of the next month ;; Due net         |
+|    |For incoming invoices until End  of the month     |
+|    |  Before End of the next month ;; 2 % cash discoun|
+|    |  Before 15 in 2 months Due net                   |
+|0008|For incoming invoices until 15 of the month       |
+|    |  Within 14 days 2 % cash discount                |
+|    |  Within 30 days 1.5 % cash discount              |
+|    |  Within 45 days Due net                          |
+|    |  Baseline date on 30 of the month                |
+|    |For incoming invoices until End  of the month     |
+|    |  Within 14 days 2 % cash discount                |
+|    |  Within 30 days 1.5 % cash discount              |
+|    |  Within 45 days Due net                          |
+|    |  Baseline date on 15 of next month               |
+|0009|Payable in 3 partial amounts                      |
+|    |1 installment: 30.000 % with payment term 0001    |
+|    |2 installment: 40.000 % with payment term 0001    |
+|    |3 installment: 30.000 % with payment term 0001    |
+|Z029|2% 15 days, net 16 from date of invoice           |
+|Y445|Net Due within 45 days without any discount       |
+|Y001|Immediate payment without any discount            |
+|Y010|Net due within 10 days without any discount       |
+|Y015|Net due within 15 days without any discount       |
+|Y020|Net due in 20 days with 1% discount in 10 days    |
+|Y030|Net due in 30 days with 1% discount in 10 days    |
+|Y045|Net Due within 45 days with 4% discount on Immedia|
+|Y120|Net Due within 20 days without any discount       |
+|Y130|Net Due  in 30 days with 2% discount in 15 days   |
+|Y135|Net Due within 35 days without any discount       |
+|Y220|Net Due in 20 days with 2% disount in 10 days     |
+|Y230|Net Due in 30 days with 2% disount in 10 days     |
+|Y250|Net Due within 50 days with 5% Discount on Immedia|
+|Y260|Net Due within 60 days without any discount       |
+|Y330|Net Due within 30 days without any discount       |
+|Y410|Net Due within 30 days with 4% discount in 10 days|
+|Y420|Net Due within 30 days with 4% discount in 20 days|
+|Y505|Net Due within 30 days with 5% discount in 5 days |
+|Y510|Net Due within 30 days with 5% discount in 10 days|
+|Y520|Net Due within 30 days with 5% discount in 20 days|
+|YEE0|Immediate payment without any discount            |
+|YEOM|Net Due at the end of the month without any discou|
+|YINS|Immediate payment without any discount            |
+|YNT0|Immediate payment without any discount            |
+|YNT1|Net Due within 10 days without any discount       |
+|YNT5|Net Due within 5 days without any discount        |
+|YQRD|Immediate payment without any discount            |
+|YRFD|Immediate refund without any discount             |
+|YTAX|Immediat Tax payment without any discount         |
+|Z015|Net due within 15 days without any discount       |
+|Z031|2% 97 days, Net 98 days from date of invoice      |
+---------------------------------------------------------
