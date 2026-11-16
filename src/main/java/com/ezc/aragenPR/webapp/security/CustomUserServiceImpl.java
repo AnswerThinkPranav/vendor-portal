@@ -117,6 +117,15 @@ public class CustomUserServiceImpl implements UserDetailsService  {
 					case VENDOR_TEMP -> roleAndPermissions.add("ROLE_VEND_TEMP");
 				}
 			}
+			// Fine-grained buyer role (EZC_USER_DEFAULTS, key=USERROLE - e.g. PP/BY/VAR/VIW/HOD/LB/FIH/SCA/MDM),
+			// used by ezHeader.jsp/ezBuyerWelcome.jsp to decide which sidebar sections a buyer sees.
+			// Exposed as its own authority (ROLE_<code>) so the sidebar can gate on it the same way.
+			if (user.getUserDefaults() != null) {
+				user.getUserDefaults().stream()
+						.filter(ud -> "USERROLE".equals(ud.getKey()) && ud.getValue() != null && !ud.getValue().isBlank())
+						.findFirst()
+						.ifPresent(ud -> roleAndPermissions.add("ROLE_" + ud.getValue().trim().toUpperCase()));
+			}
 			String[] roleNames = new String[roleAndPermissions.size()];
 			Collection<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(roleAndPermissions.toArray(roleNames));
 			return authorities;

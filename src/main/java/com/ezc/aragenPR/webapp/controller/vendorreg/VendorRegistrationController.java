@@ -1,5 +1,6 @@
 package com.ezc.aragenPR.webapp.controller.vendorreg;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -140,10 +141,16 @@ public class VendorRegistrationController {
      * Reject, Forward, Query, Approval Hierarchy, Audit Trail, Submit to Workflow, SAP posting).
      */
     @GetMapping("/vendorReg/register/{docId}")
-    public String showRegistrationForm(@PathVariable String docId, Model model) {
+    public String showRegistrationForm(@PathVariable String docId, Model model) throws AccessDeniedException {
         boolean isOwner = docId.equals(currentUser().getUserId());
 
         VendorRegistrationDetails details = vendorRegistrationService.getVendorRegistrationDetails(docId);
+        // INITIATED means the vendor hasn't submitted yet (or it was just Sent Back to them, which
+        // resets it to this same state - see actOnVendorRegistration's SEND_BACK case) - a buyer has
+        // nothing to review yet, so it's not even visible to open, only the owning vendor can.
+        if (!isOwner && "INITIATED".equals(details.getStatus())) {
+            throw new AccessDeniedException("This vendor registration has not been submitted yet.");
+        }
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("hasUnansweredQuery", vendorRegistrationService.hasUnansweredQuery(docId));
         model.addAttribute("queries", vendorRegistrationService.getQueries(docId));
@@ -208,8 +215,8 @@ public class VendorRegistrationController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> submit(@PathVariable String docId) {
         try {
-            vendorRegistrationService.submitVendorRegistration(docId, currentUser().getUserId());
-            return ResponseEntity.ok(Map.of("status", "OK", "message", "Registration submitted. Doc Id: " + docId));
+            String message = vendorRegistrationService.submitVendorRegistration(docId, currentUser().getUserId());
+            return ResponseEntity.ok(Map.of("status", "OK", "message", message));
         } catch (Exception e) {
             log.warn("submitVendorRegistration failed for {}: {}", docId, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
@@ -238,8 +245,8 @@ public class VendorRegistrationController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> actOnRegistration(@PathVariable String docId, @RequestBody WorkflowActionRequest request) {
         try {
-            vendorRegistrationService.actOnVendorRegistration(docId, currentUser().getUserId(), request);
-            return ResponseEntity.ok(Map.of("status", "OK", "message", "Action recorded"));
+            String message = vendorRegistrationService.actOnVendorRegistration(docId, currentUser().getUserId(), request);
+            return ResponseEntity.ok(Map.of("status", "OK", "message", message));
         } catch (Exception e) {
             log.warn("actOnVendorRegistration failed for {}: {}", docId, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
@@ -251,8 +258,8 @@ public class VendorRegistrationController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> submitToWorkflow(@PathVariable String docId) {
         try {
-            vendorRegistrationService.submitToWorkflow(docId, currentUser().getUserId());
-            return ResponseEntity.ok(Map.of("status", "OK", "message", "Registration submitted into the approval workflow"));
+            String message = vendorRegistrationService.submitToWorkflow(docId, currentUser().getUserId());
+            return ResponseEntity.ok(Map.of("status", "OK", "message", message));
         } catch (Exception e) {
             log.warn("submitToWorkflow failed for {}: {}", docId, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));

@@ -42,13 +42,18 @@ build/
 
 app.log
 app.log.*.gz
+app.log.*.tmp
 app-restart.log
+app-restart-*.log
 err.log
 
 # Server-only config — never commit
 application-prod.properties
 *.env
 .env
+
+# Raw DB export with real vendor PII/contact data and credential-like hashes — never commit
+users.sql
 
 /app.log.2025-01-09.0.gz
 t

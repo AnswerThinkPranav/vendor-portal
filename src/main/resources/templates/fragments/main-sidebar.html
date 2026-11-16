@@ -1,7 +1,17 @@
-<!-- Brand Logo -->
-<a href="../dashboard/index.html" class="brand-link"> <img
-        id="sidebar-logo"
-        th:src="@{/resources/images/ArageDashboardLogo.png}" alt="">
+<!-- Animated background - same treatment as the login page (blobs/grid/rings/particle network/
+     sweep), scaled down for this narrow fixed column, in the sidebar's own deep-slate palette
+     (distinct from the login page's blue) so the two never read as the same screen. -->
+<div class="sidebar-bg" aria-hidden="true">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+    <div class="grid"></div>
+    <div class="ring r1"></div><div class="ring r2"></div>
+    <canvas id="sidebarNet"></canvas>
+    <div class="sweep"></div>
+</div>
+
+<!-- Brand - text wordmark, same as the login page (no logo image / brand name). -->
+<a href="../dashboard/index.html" class="brand-link" id="sidebar-brand">
+    <div class="sidebar-wordmark">VENDOR<small>PORTAL</small></div>
 </a>
 
 
@@ -129,7 +139,10 @@
             </li>
 
             <!-- Vendor Registration - legacy ezHeader.jsp v_UserType==2 branch (invite/manage vendors).
-                 Buyer-only: vendors don't register other vendors. Links point at routes not built yet. -->
+                 Buyer-only: vendors don't register other vendors. "Invite Vendor"/"New" (my invited
+                 vendors) are PP/BY-only per legacy's `if("PP".equals(userRole) || "BY".equals(userRole))`;
+                 "List" is visible to every buyer role; "To Post" (approved, awaiting SAP posting) is
+                 VAR-only per legacy's `if("VAR".equals(userRole))`. -->
             <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')">
                 <a href="#" class="nav-link">
                     <i class="nav-icon fas fa-user-plus"></i>
@@ -138,11 +151,11 @@
                     </p>
                 </a>
                 <ul class="nav nav-treeview">
-                    <li class="nav-item"><a th:href="@{/vendorReg/invite}"
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_PP','ROLE_BY')"><a th:href="@{/vendorReg/invite}"
                                             class="nav-link"> <i class="far fas fa-plus nav-icon"></i>
                         <p>Invite Vendor</p>
                     </a></li>
-                    <li class="nav-item"><a th:href="@{/vendorReg/new}"
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_PP','ROLE_BY')"><a th:href="@{/vendorReg/new}"
                                             class="nav-link"> <i class="far fa-circle nav-icon"></i>
                         <p>New</p>
                     </a></li>
@@ -150,11 +163,37 @@
                                             class="nav-link"> <i class="fas fa-list nav-icon"></i>
                         <p>List</p>
                     </a></li>
+                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_VAR')"><a th:href="@{/vendorReg/list(type='Apr')}"
+                                            class="nav-link"> <i class="fas fa-check-circle nav-icon"></i>
+                        <p>To Post</p>
+                    </a></li>
                 </ul>
             </li>
 
-            <!-- RFQ - legacy ezHeader.jsp rfqs_L block. Buyer creates/manages; vendor responds via
-                 the shared List link (controller branches by role once built). -->
+            <!-- Budget Price - legacy ezHeader.jsp budgPrice_L block, PP/BY-only. Not built yet -
+                 placeholder routes so the sidebar structure is complete ahead of the module. -->
+            <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_PP','ROLE_BY')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-tags"></i>
+                    <p>
+                        Budget Price <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item"><a th:href="@{/budgetPrice/list}"
+                                            class="nav-link"> <i class="fas fa-list nav-icon"></i>
+                        <p>List</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/budgetPrice/upload}"
+                                            class="nav-link"> <i class="fas fa-upload nav-icon"></i>
+                        <p>Upload</p>
+                    </a></li>
+                </ul>
+            </li>
+
+            <!-- RFQ - legacy ezHeader.jsp rfqs_L block. Creation is PP/BY-only per
+                 `if("PP".equals(userRole) || "BY".equals(userRole))`; every buyer role and every
+                 vendor still sees the list (their own RFQs, or all RFQs for a buyer's scope). -->
             <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_BUYER','ROLE_VEND_SAP','ROLE_VEND_TEMP')">
                 <a href="#" class="nav-link">
                     <i class="nav-icon fas fa-file-alt"></i>
@@ -163,12 +202,12 @@
                     </p>
                 </a>
                 <ul class="nav nav-treeview">
-                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_PP','ROLE_BY')"><a
                             th:href="@{/rfq/createFromPr}" class="nav-link"> <i
                             class="far fas fa-plus nav-icon"></i>
                         <p>Create From PR</p>
                     </a></li>
-                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_PP','ROLE_BY')"><a
                             th:href="@{/rfq/createFromMaterial}" class="nav-link"> <i
                             class="far fas fa-plus nav-icon"></i>
                         <p>Create From Material</p>
@@ -180,7 +219,9 @@
                 </ul>
             </li>
 
-            <!-- QCF - legacy ezHeader.jsp qcfs_L block. Buyer reviews/reports; vendor submits. -->
+            <!-- QCF - legacy ezHeader.jsp qcfs_L block: `if(!"VAR".equals(userRole))` hides the whole
+                 create/act/report set from VAR (finance only posts, via Vendor Registration's own
+                 "To Post"), and within that, QCS List/To Act/PR-PO Report are further PP/BY-only. -->
             <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_BUYER','ROLE_VEND_SAP','ROLE_VEND_TEMP')">
                 <a href="#" class="nav-link">
                     <i class="nav-icon fas fa-file-invoice-dollar"></i>
@@ -193,7 +234,7 @@
                                             class="nav-link"> <i class="fas fa-list nav-icon"></i>
                         <p>QCF List</p>
                     </a></li>
-                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a th:href="@{/qcf/qcsList}"
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_PP','ROLE_BY')"><a th:href="@{/qcf/qcsList}"
                                             class="nav-link"> <i class="fas fa-clipboard-check nav-icon"></i>
                         <p>QCS List</p>
                     </a></li>
@@ -202,15 +243,194 @@
                             class="far fas fa-plus nav-icon"></i>
                         <p>Submit QCF</p>
                     </a></li>
-                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_PP','ROLE_BY')"><a
                             th:href="@{/qcf/toAct}" class="nav-link"> <i
                             class="fas fa-tasks nav-icon"></i>
                         <p>To Act</p>
                     </a></li>
-                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')"><a
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_PP','ROLE_BY')"><a
                             th:href="@{/qcf/prPoReport}" class="nav-link"> <i
                             class="fas fa-chart-bar nav-icon"></i>
                         <p>PR/PO Report</p>
+                    </a></li>
+                </ul>
+            </li>
+
+            <!-- Auction - legacy ezHeader.jsp auc_L block, hidden entirely from VAR
+                 (`if(!"VAR".equals(userRole))`). Not built yet - placeholder routes. -->
+            <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_BUYER') and !hasAuthority('ROLE_VAR')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-gavel"></i>
+                    <p>
+                        Auction <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item"><a th:href="@{/auction/create}"
+                                            class="nav-link"> <i class="far fas fa-plus nav-icon"></i>
+                        <p>Create</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/createFromQcf}"
+                                            class="nav-link"> <i class="far fas fa-plus nav-icon"></i>
+                        <p>Create From QCF</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/list}"
+                                            class="nav-link"> <i class="fas fa-list nav-icon"></i>
+                        <p>List</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/current}"
+                                            class="nav-link"> <i class="fas fa-bolt nav-icon"></i>
+                        <p>Current Auctions</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/completed}"
+                                            class="nav-link"> <i class="fas fa-flag-checkered nav-icon"></i>
+                        <p>Completed Auctions</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/submitted}"
+                                            class="nav-link"> <i class="fas fa-check nav-icon"></i>
+                        <p>Submitted Auctions</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/createPo}"
+                                            class="nav-link"> <i class="far fas fa-plus nav-icon"></i>
+                        <p>Create PO</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/destinations}"
+                                            class="nav-link"> <i class="fas fa-map-marker-alt nav-icon"></i>
+                        <p>Add Destination</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/logs}"
+                                            class="nav-link"> <i class="fas fa-history nav-icon"></i>
+                        <p>Logs</p>
+                    </a></li>
+                </ul>
+            </li>
+
+            <!-- Reports - legacy ezHeader.jsp reports_L block, also hidden entirely from VAR.
+                 "Vendor Registration Reports" has a VIW-specific variant (ezVendRegReport.jsp)
+                 vs. everyone else's (ezVNRList.jsp?type=Apr, already wired to /vendorReg/list). -->
+            <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_BUYER') and !hasAuthority('ROLE_VAR')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-chart-bar"></i>
+                    <p>
+                        Reports <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item"><a th:href="@{/rfq/report}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>RFQ Report</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/qcf/prPoReport}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>PR/PO Report</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/rfq/tatReport}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>TAT Report</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/poReport}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Auction PO Report</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/rfq/priceTrends}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Price Trends</p>
+                    </a></li>
+                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_VIW')"><a th:href="@{/vendorReg/report}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Vendor Registration Reports</p>
+                    </a></li>
+                    <li class="nav-item" sec:authorize="!hasAuthority('ROLE_VIW')"><a th:href="@{/vendorReg/list(type='Apr')}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Vendor Registration Reports</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/auction/vendorIpReport}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Auction Vendor IP Report</p>
+                    </a></li>
+                </ul>
+            </li>
+
+            <!-- Purchase Order - legacy ezHeader.jsp purcOrder_L block. Unlike QCF/Auction/Reports
+                 above, this one is NOT wrapped in `if(!"VAR".equals(userRole))` in ezHeader.jsp, so
+                 every buyer role (including VAR) sees it. Not built yet - placeholder routes. -->
+            <li class="nav-item" sec:authorize="hasAuthority('ROLE_BUYER')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-file-invoice"></i>
+                    <p>
+                        Purchase Order <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item"><a th:href="@{/po/amend}"
+                                            class="nav-link"> <i class="fas fa-edit nav-icon"></i>
+                        <p>Amend PO</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/po/submitted}"
+                                            class="nav-link"> <i class="fas fa-list nav-icon"></i>
+                        <p>Submitted POs</p>
+                    </a></li>
+                </ul>
+            </li>
+
+            <!-- Video Manuals - legacy ezHeader.jsp userVideoManu_L block, shown to every logged-in
+                 buyer/vendor (v_UserType 2/3/4). Not built yet - placeholder routes. -->
+            <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_BUYER','ROLE_VEND_SAP','ROLE_VEND_TEMP')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-video"></i>
+                    <p>
+                        Video Manuals <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item"><a th:href="@{/videoManuals/overview}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Overview</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/videoManuals/userManuals}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>User Manuals</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/videoManuals/vendorReg}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Vendor Registration</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/videoManuals/prPoProcess}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>PR/PO Process</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/videoManuals/auction}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Auction</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/videoManuals/poAmendment}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>PO Amendment</p>
+                    </a></li>
+                </ul>
+            </li>
+
+            <!-- Master Data - legacy ezHeader.jsp bottom block, PP-only (workflow/template admin,
+                 distinct from the ADMIN-role "User Creation" section above). Not built yet - placeholders. -->
+            <li class="nav-item" sec:authorize="hasAuthority('ROLE_PP')">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-database"></i>
+                    <p>
+                        Master Data <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item"><a th:href="@{/masterData/workflowTemplates}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Update Workflow</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/masterData/templates}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Update Template</p>
+                    </a></li>
+                    <li class="nav-item"><a th:href="@{/masterData/usersList}"
+                                            class="nav-link"> <i class="far fa-circle nav-icon"></i>
+                        <p>Users List</p>
                     </a></li>
                 </ul>
             </li>
@@ -355,6 +575,23 @@
             <!--						</a></li>-->
 
             <!--					</ul></li>-->
+
+            <!-- Change Password / Logout - legacy ezHeader.jsp bottom block, shown to every
+                 logged-in buyer/vendor (v_UserType 2/3/4). Logout reuses the same hidden
+                 CSRF-protected POST form (fragments/header.html) and logOut() JS helper
+                 (fragments/scripts.html) as the navbar's own logout link. -->
+            <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_BUYER','ROLE_VEND_SAP','ROLE_VEND_TEMP')">
+                <a th:href="@{/account/changePassword}" class="nav-link"> <i
+                        class="nav-icon fas fa-key"></i>
+                    <p>Change Password</p>
+                </a>
+            </li>
+            <li class="nav-item" sec:authorize="isAuthenticated()">
+                <a href="javascript:logOut()" class="nav-link"> <i
+                        class="nav-icon fas fa-sign-out-alt"></i>
+                    <p>Logout</p>
+                </a>
+            </li>
         </ul>
     </nav>
     <!-- /.sidebar-menu -->
@@ -362,38 +599,86 @@
             style="display: flex; justify-content: space-between; align-items: flex-end; bottom: 0;">
     </div>
 
-    <script th:inline="javascript">
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const logoImg = document.getElementById('sidebar-logo');
+            const wordmark = document.querySelector('#sidebar-brand .sidebar-wordmark');
             const body = document.querySelector('body');
 
-            // Function to update logo based on sidebar state
-            function updateLogo() {
-                if (body.classList.contains('sidebar-collapse')) {
-                    // Sidebar is collapsed - show small logo
-                    logoImg.setAttribute('src', /*[[@{/resources/images/AragenSmall.png}]]*/ '/resources/images/AragenSmall.png');
-                    logoImg.style.width = '50px';
-                } else {
-                    // Sidebar is expanded - show full logo
-                    logoImg.setAttribute('src', /*[[@{/resources/images/ArageDashboardLogo.png}]]*/ '/resources/images/ArageDashboardLogo.png');
-                    logoImg.style.width = 'auto';
+            // Collapsed sidebar is icon-width only - shrink the wordmark to initials instead
+            // of trying to cram "VENDOR PORTAL" into it.
+            function updateBrand() {
+                wordmark.textContent = body.classList.contains('sidebar-collapse') ? 'VP' : '';
+                if (!body.classList.contains('sidebar-collapse')) {
+                    wordmark.innerHTML = 'VENDOR<small>PORTAL</small>';
                 }
             }
 
-            // Initial check
-            updateLogo();
+            updateBrand();
 
-            // Watch for sidebar state changes
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.attributeName === 'class') {
-                        updateLogo();
+                        updateBrand();
                     }
                 });
             });
 
             observer.observe(body, { attributes: true });
         });
+    </script>
+
+    <!-- Animated particle network behind the sidebar nav - same effect as the login page's
+         background, re-homed to this narrow column. Re-sizes on sidebar collapse/expand (both
+         change the aside's actual width) via the same MutationObserver used for the logo swap. -->
+    <script>
+        (function () {
+            var cv = document.getElementById('sidebarNet');
+            if (!cv) { return; }
+            var host = document.querySelector('aside.main-sidebar');
+            var ctx = cv.getContext('2d');
+            var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var W = 0, H = 0, dpr = 1, pts = [];
+
+            function size() {
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                W = host.clientWidth; H = host.clientHeight;
+                cv.width = W * dpr; cv.height = H * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                var n = Math.round(Math.min(55, (W * H) / 9000));
+                pts = Array.from({ length: n }, function () {
+                    return { x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3, r: Math.random() * 1.4 + .5 };
+                });
+            }
+
+            function frame() {
+                ctx.clearRect(0, 0, W, H);
+                for (var i = 0; i < pts.length; i++) {
+                    var p = pts[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                }
+                for (var a = 0; a < pts.length; a++) {
+                    for (var b = a + 1; b < pts.length; b++) {
+                        var dx = pts[a].x - pts[b].x, dy = pts[a].y - pts[b].y, d = dx * dx + dy * dy;
+                        if (d < 9000) {
+                            ctx.strokeStyle = 'rgba(170,190,215,' + ((1 - d / 9000) * .18) + ')';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke();
+                        }
+                    }
+                    ctx.fillStyle = 'rgba(210,222,235,.65)';
+                    ctx.beginPath(); ctx.arc(pts[a].x, pts[a].y, pts[a].r, 0, 7); ctx.fill();
+                }
+                requestAnimationFrame(frame);
+            }
+
+            size();
+            window.addEventListener('resize', size);
+            // Sidebar collapse/expand changes host width without a window resize event.
+            new MutationObserver(size).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+            if (!reduce) { requestAnimationFrame(frame); }
+        })();
     </script>
 </div>
 

@@ -54,4 +54,15 @@ public interface IRfqService {
 
     /** Persists a submitted quote: header/detail updates, EZC_RFQ_ITEM_CONDITIONS and EZC_RFQ_QUOTE_HISTORY rows - see ezQuotationSave.jsp. */
     void submitQuote(String rfqNo, SubmitQuoteRequest request, Users currentUser);
+
+    // --- Buyer decision on a vendor's quote - see ezViewQuoteDetails.jsp (approveQuote/reQuote/rejectQuote) ---
+
+    /** Buyer accepts this vendor's quote (status -> "Y") - makes it eligible for QCF selection. */
+    void approveQuote(String rfqNo, Users buyer, String comments);
+
+    /** Buyer rejects this vendor's quote (status -> "X") - terminal, comments required. */
+    void rejectQuote(String rfqNo, Users buyer, String comments);
+
+    /** Buyer sends this vendor's quote back for requoting (status -> "R") - vendor can resubmit via submitQuote. */
+    void requoteQuote(String rfqNo, Users buyer, String comments);
 }

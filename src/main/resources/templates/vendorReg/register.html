@@ -12,24 +12,25 @@
     <meta name="_status" th:content="${details.status}" />
     <meta name="_isOwner" th:content="${isOwner}" />
     <meta name="_hasUnansweredQuery" th:content="${hasUnansweredQuery}" />
+    <meta name="_canReplyToQuery" th:content="${workflow.canReplyToQuery}" />
 
     <style>
         .vr-breadcrumb { font-size: 13px; color: #6c7a91; margin-bottom: 18px; letter-spacing: .2px; }
         .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
 
         .vr-card { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08); overflow: hidden; width: 100%; margin: 0 0 24px 0; }
-        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #3b4a5e 100%); color: #fff; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
         .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; }
         .vr-card-header p { margin: 2px 0 0 0; opacity: .85; font-size: 13px; }
         .vr-id-badge { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 6px 16px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .vr-status-pill { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
-        .vr-status-INITIATED { background: #eaf1fd; color: #2054a6; }
+        .vr-status-INITIATED { background: #e8eaed; color: #3b4a5e; }
         .vr-status-SUBMITTED { background: #fff2e0; color: #b5690a; }
         .vr-status-APPROVED { background: #e7f7ee; color: #1c7c4d; }
         .vr-status-POSTED { background: #e7f7ee; color: #1c7c4d; }
         .vr-status-REJECTED { background: #fdecea; color: #c0392b; }
         .vr-status-RESUBMITTED { background: #f1ecfd; color: #5b34a6; }
-        .vr-locked-banner { display: none; margin: 0 28px 18px 28px; padding: 12px 18px; border-radius: 12px; background: #eef4ff; border: 1px solid #cfe0fb; color: #2054a6; font-size: 13.5px; align-items: center; gap: 10px; }
+        .vr-locked-banner { display: none; margin: 0 28px 18px 28px; padding: 12px 18px; border-radius: 12px; background: #eef4ff; border: 1px solid #cfe0fb; color: #3b4a5e; font-size: 13.5px; align-items: center; gap: 10px; }
         fieldset[disabled] .vr-upload-btn, .vr-form-locked .vr-upload-btn { pointer-events: none; opacity: .5; }
 
         .vr-tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid #eef1f6; background: #fbfcfe; padding: 0 20px; }
@@ -47,7 +48,7 @@
         .vr-grid-row.vr-cols-2 { grid-template-columns: 200px 1fr 200px 1fr; }
         .vr-grid-row.vr-cols-3 { grid-template-columns: 160px 1fr 130px 1fr 170px 1fr; }
         .vr-grid-row:first-child { border-top: none; }
-        .vr-grid-label { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 600; font-size: 13px; padding: 11px 16px; display: flex; align-items: center; }
+        .vr-grid-label { background: linear-gradient(120deg, var(--blue-color) 0%, #3b4a5e 100%); color: #fff; font-weight: 600; font-size: 13px; padding: 11px 16px; display: flex; align-items: center; }
         .vr-grid-label .req { color: #ffd28a; margin-left: 3px; }
         .vr-grid-value { padding: 9px 14px; display: flex; align-items: center; gap: 8px; background: #fff; flex-wrap: wrap; }
         .vr-grid-value .form-control, .vr-grid-value .select2-container .select2-selection { border-radius: 8px; border: 1px solid #dde3ec; box-shadow: none; height: 36px; font-size: 13px; }
@@ -56,7 +57,7 @@
 
         .vr-tab-nav { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 16px; }
         .vr-tab-nav-btn { border: none; border-radius: 8px; padding: 8px 16px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-        .vr-tab-nav-btn.next { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-tab-nav-btn.next { background: linear-gradient(120deg, var(--blue-color), #3b4a5e); color: #fff; }
         .vr-tab-nav-btn.prev { background: #eef1f6; color: #4b5876; }
         .vr-tab-nav-btn.finish { background: linear-gradient(120deg, #1c7c4d, #159457); color: #fff; }
 
@@ -93,15 +94,11 @@
         .vr-remove-row-btn { border: none; background: none; color: #c0392b; cursor: pointer; font-size: 15px; }
 
         .vr-card-footer { padding: 16px 28px 22px 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #eef1f6; }
-        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #0a4fae); border: none; border-radius: 9px; padding: 9px 24px; font-weight: 600; color: #fff; font-size: 13.5px; }
+        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #3b4a5e); border: none; border-radius: 9px; padding: 9px 24px; font-weight: 600; color: #fff; font-size: 13.5px; }
         .vr-btn-primary:hover { color: #fff; }
         .vr-btn-primary:disabled { opacity: .6; }
         .vr-btn-submit { background: linear-gradient(120deg, #1c7c4d, #159457); border: none; border-radius: 9px; padding: 9px 24px; font-weight: 600; color: #fff; font-size: 13.5px; }
         .vr-btn-submit:hover { color: #fff; }
-
-        .vr-alert { display: none; border-radius: 12px; padding: 12px 18px; font-size: 13.5px; margin: 0 28px 0 28px; align-items: center; gap: 10px; }
-        .vr-alert.success { background: #e7f7ee; color: #1c7c4d; border: 1px solid #b9ecce; }
-        .vr-alert.error { background: #fdecea; color: #c0392b; border: 1px solid #f7c9c2; }
 
         .vr-invalid-row .vr-grid-label { background: linear-gradient(120deg, #c0392b, #a52f22) !important; }
         .vr-invalid-row .vr-grid-value { background: #fff5f5; }
@@ -124,18 +121,18 @@
         .vr-comments-box textarea { width: 100%; min-height: 90px; border: 1px solid #dde3ec; border-radius: 9px; padding: 10px 12px; font-size: 13.5px; font-family: inherit; resize: vertical; }
         .vr-comments-box textarea:focus { outline: none; border-color: var(--blue-color); box-shadow: 0 0 0 3px rgba(3, 56, 130, 0.12); }
 
-        .vr-wf-banner { margin: 0 28px 18px 28px; padding: 14px 18px; border-radius: 12px; background: #eef4ff; border: 1px solid #cfe0fb; color: #2054a6; font-size: 13.5px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+        .vr-wf-banner { margin: 0 28px 18px 28px; padding: 14px 18px; border-radius: 12px; background: #eef4ff; border: 1px solid #cfe0fb; color: #3b4a5e; font-size: 13.5px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
         .vr-wf-banner b { color: #0a3d8f; }
         .vr-wf-banner.readonly { background: #f5f7fb; border-color: #e3e8f1; color: #56617a; }
         .vr-body { padding: 24px 28px; }
 
         .vr-btn { border: none; border-radius: 9px; padding: 9px 22px; font-weight: 600; font-size: 13.5px; cursor: pointer; }
         .vr-btn:disabled { opacity: .55; cursor: not-allowed; }
-        .vr-btn-forward { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-btn-forward { background: linear-gradient(120deg, var(--blue-color), #3b4a5e); color: #fff; }
         .vr-btn-forward:hover { color: #fff; }
         .vr-btn-post { background: linear-gradient(120deg, #1c7c4d, #159457); color: #fff; }
         .vr-btn-post:hover { color: #fff; }
-        .vr-btn-validate { background: #eef1f6; color: #2054a6; }
+        .vr-btn-validate { background: #eef1f6; color: #3b4a5e; }
         .vr-btn-reject { background: #fdecea; color: #c0392b; }
         .vr-btn-sendback { background: #fff2e0; color: #b5690a; }
         .vr-btn-back { background: #eef1f6; color: #4b5876; margin-right: auto; text-decoration: none; display: inline-block; }
@@ -180,9 +177,6 @@
             <div class="vr-query-banner" th:if="${hasUnansweredQuery}">
                 * Query has not been replied to this Vendor Registration. You cannot submit/approve Vendor Registration now.
             </div>
-
-            <div class="vr-alert success" id="successAlert"><i class="fas fa-check-circle"></i> <span></span></div>
-            <div class="vr-alert error" id="errorAlert"><i class="fas fa-exclamation-circle"></i> <span></span></div>
 
             <div class="vr-tabs">
                 <button type="button" class="vr-tab-btn active" data-tab="tab1">1. Vendor Information</button>
@@ -572,68 +566,73 @@
                         <i class="fas fa-paper-plane"></i>&nbsp; Submit for Approval
                     </button>
                 </div>
-            </div>
 
-            <!-- ============ SHARED PANEL: Comments history + Attachments + Query history + Finance
-                 Review + Comments - always visible below the tabs (not tab-specific), for both the
-                 vendor's reply and the buyer's review/action flow. See ezVendReg.jsp's read-only
-                 User/Date/Comments table, Attachment(s) table, and Query / Finance / action buttons. -->
-            <div class="vr-body" style="border-top: 1px solid #eef1f6;">
-                <th:block th:if="${!#lists.isEmpty(comments)}">
-                    <table class="vr-modal-table" style="margin-bottom:18px;">
-                        <thead><tr><th style="width:20%;">User</th><th style="width:20%;">Date</th><th>Comments</th></tr></thead>
-                        <tbody>
-                        <tr th:each="c : ${comments}">
-                            <td th:text="${c.userId()} + '[' + ${c.userName()} + ']'"></td>
-                            <td th:text="${#temporals.format(c.date(), 'dd/MM/yyyy HH:mm:ss')}"></td>
-                            <td th:text="${c.comments()}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </th:block>
+                <!-- ============ SHARED PANEL: Comments history + Attachments + Query history + Finance
+                     Review + Comments - nested inside tab5 (Bank Details) so it, and the action-button
+                     footer below it, only ever show on the last tab, not on every tab. See ezVendReg.jsp's
+                     read-only User/Date/Comments table, Attachment(s) table, and Query / Finance / action
+                     buttons - all of which sit at the bottom of its single-page form. -->
+                <div class="vr-body" style="border-top: 1px solid #eef1f6;">
+                    <th:block th:if="${!#lists.isEmpty(comments)}">
+                        <table class="vr-modal-table" style="margin-bottom:18px;">
+                            <thead><tr><th style="width:20%;">User</th><th style="width:20%;">Date</th><th>Comments</th></tr></thead>
+                            <tbody>
+                            <tr th:each="c : ${comments}">
+                                <td th:text="${c.userId()} + '[' + ${c.userName()} + ']'"></td>
+                                <td th:text="${#temporals.format(c.date(), 'dd/MM/yyyy HH:mm:ss')}"></td>
+                                <td th:text="${c.comments()}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </th:block>
 
-                <th:block th:if="${!isOwner}">
-                    <div class="vr-section-title">Attachment(s)</div>
-                    <table class="vr-modal-table" style="margin-bottom:18px;">
-                        <thead><tr><th>File Name</th></tr></thead>
-                        <tbody id="attachmentRows">
-                        <tr th:if="${#lists.isEmpty(headerAttachments)}" id="noAttachmentsRow"><td style="color:#a7b0c0;">No files attached</td></tr>
-                        <tr th:each="f : ${headerAttachments}">
-                            <td><a th:href="@{'/view/' + ${f} + '/' + ${details.docId} + '/VNR/VNRH'}" th:text="${f}" target="_blank"></a></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </th:block>
+                    <th:block th:if="${!isOwner}">
+                        <div class="vr-section-title">Attachment(s)</div>
+                        <table class="vr-modal-table" style="margin-bottom:18px;">
+                            <thead><tr><th>File Name</th></tr></thead>
+                            <tbody id="attachmentRows">
+                            <tr th:if="${#lists.isEmpty(headerAttachments)}" id="noAttachmentsRow"><td style="color:#a7b0c0;">No files attached</td></tr>
+                            <tr th:each="f : ${headerAttachments}">
+                                <td><a th:href="@{'/view/' + ${f} + '/' + ${details.docId} + '/VNR/VNRH'}" th:text="${f}" target="_blank"></a></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </th:block>
 
-                <div class="vr-section-title">Query</div>
-                <div class="vr-query-list" id="queryList">
-                    <div th:if="${#lists.isEmpty(queries)}" style="color:#a7b0c0; font-style:italic; font-size:12.5px;">No queries raised on this registration.</div>
-                    <div class="vr-query-item" th:each="q : ${queries}">
-                        <div class="q-meta">Raised by <b th:text="${q.raisedBy()}"></b> on <span th:text="${#temporals.format(q.raisedOn(), 'dd/MM/yyyy HH:mm')}"></span></div>
-                        <div class="q-text" th:text="${q.queryText()}"></div>
-                        <div th:if="${q.repliedOn() != null}">
-                            <div class="r-text" th:text="${q.replyText()}"></div>
-                            <div class="r-meta">Replied by <b th:text="${q.repliedBy()}"></b> on <span th:text="${#temporals.format(q.repliedOn(), 'dd/MM/yyyy HH:mm')}"></span></div>
+                    <!-- Query is buyer-internal from here on: a level-2+ approver questions PP (the
+                         level-1 buyer), PP answers - the vendor is never involved once it's past PP,
+                         so this whole section is hidden from the vendor's own view entirely. -->
+                    <th:block th:if="${!isOwner}">
+                        <div class="vr-section-title">Query</div>
+                        <div class="vr-query-list" id="queryList">
+                            <div th:if="${#lists.isEmpty(queries)}" style="color:#a7b0c0; font-style:italic; font-size:12.5px;">No queries raised on this registration.</div>
+                            <div class="vr-query-item" th:each="q : ${queries}">
+                                <div class="q-meta">Raised by <b th:text="${q.raisedBy()}"></b> on <span th:text="${#temporals.format(q.raisedOn(), 'dd/MM/yyyy HH:mm')}"></span></div>
+                                <div class="q-text" th:text="${q.queryText()}"></div>
+                                <div th:if="${q.repliedOn() != null}">
+                                    <div class="r-text" th:text="${q.replyText()}"></div>
+                                    <div class="r-meta">Replied by <b th:text="${q.repliedBy()}"></b> on <span th:text="${#temporals.format(q.repliedOn(), 'dd/MM/yyyy HH:mm')}"></span></div>
+                                </div>
+                                <div th:if="${q.repliedOn() == null}" class="vr-query-open">Awaiting reply...</div>
+                            </div>
                         </div>
-                        <div th:if="${q.repliedOn() == null}" class="vr-query-open">Awaiting reply...</div>
-                    </div>
-                </div>
-                <div class="vr-comments-box" id="queryReplyBox" style="display:none;">
-                    <label for="queryReplyText">Your reply to the buyer's query</label>
-                    <textarea id="queryReplyText" placeholder="Type your reply to the buyer's query"></textarea>
-                    <div style="text-align:right; margin-top:8px;">
-                        <button type="button" class="vr-btn-primary" onclick="sendQueryReply()">Send Reply</button>
-                    </div>
-                </div>
-                <div class="vr-comments-box" id="queryRaiseBox" style="display:none;">
-                    <label for="queryText">Query for the vendor</label>
-                    <textarea id="queryText" placeholder="Enter your query for the vendor"></textarea>
-                    <div style="text-align:right; margin-top:8px;">
-                        <button type="button" class="vr-btn vr-btn-query" onclick="sendQuery()">Send Query</button>
-                    </div>
-                </div>
+                        <div class="vr-comments-box" id="queryReplyBox" style="display:none;">
+                            <label for="queryReplyText">Your reply to the approver's query</label>
+                            <textarea id="queryReplyText" placeholder="Type your reply to the approver's query"></textarea>
+                            <div style="text-align:right; margin-top:8px;">
+                                <button type="button" class="vr-btn-primary" onclick="sendQueryReply()">Send Reply</button>
+                            </div>
+                        </div>
+                        <div class="vr-comments-box" id="queryRaiseBox" style="display:none;">
+                            <label for="queryText">Query for the buyer</label>
+                            <textarea id="queryText" placeholder="Enter your query for the buyer"></textarea>
+                            <div style="text-align:right; margin-top:8px;">
+                                <button type="button" class="vr-btn vr-btn-query" onclick="sendQuery()">Send Query</button>
+                            </div>
+                        </div>
+                    </th:block>
 
-                <th:block th:if="${!isOwner and workflow.financeFieldsVisible}">
+                    <th:block th:if="${!isOwner and workflow.financeFieldsVisible}">
                     <div class="vr-section-title">Finance Review <span th:unless="${workflow.financeFieldsEditable}" style="color:#8b96ab; font-weight:500; text-transform:none; letter-spacing:0;">(read only - editable by Finance approvers only)</span></div>
                     <div class="vr-grid">
                         <div class="vr-grid-row vr-cols-2">
@@ -683,19 +682,23 @@
                     <button type="button" class="vr-btn vr-btn-forward" id="submitToWorkflowBtn" onclick="submitToWorkflow()"><i class="fas fa-paper-plane"></i> Submit to Workflow</button>
                 </div>
 
-                <div th:if="${workflow.canSendBack}" style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div th:if="${workflow.canQuery}" style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button type="button" class="vr-btn vr-btn-query" id="queryToggleBtn" onclick="toggleQueryBox()"><i class="fa fa-question-circle"></i> Query</button>
+                </div>
+
+                <div th:if="${workflow.canSendBack}" style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button type="button" class="vr-btn vr-btn-sendback" id="sendBackBtn" onclick="act('SEND_BACK')">Send Back to Vendor</button>
                 </div>
 
                 <div th:if="${workflow.canAct}" style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button type="button" class="vr-btn vr-btn-reject" id="rejectBtn" onclick="act('REJECT')">Reject</button>
-                    <button type="button" th:unless="${workflow.isFinalLevel}" class="vr-btn vr-btn-forward" id="forwardBtn" onclick="act('FORWARD')">Forward to Next Level</button>
+                    <button type="button" th:if="${workflow.canReject}" class="vr-btn vr-btn-reject" id="rejectBtn" onclick="act('REJECT')">Reject</button>
+                    <button type="button" th:unless="${workflow.isFinalLevel}" class="vr-btn vr-btn-forward" id="forwardBtn" onclick="act('FORWARD')">Submit</button>
                     <button type="button" th:if="${workflow.isFinalLevel}" class="vr-btn vr-btn-validate" id="validateBtn" onclick="validateSap()">Validate with SAP</button>
                     <button type="button" th:if="${workflow.isFinalLevel}" class="vr-btn vr-btn-post" id="postBtn" onclick="postToSap()" disabled>Post to SAP</button>
                 </div>
             </div>
             <ul class="vr-sap-messages" id="sapMessages" style="display:none; padding-left: 46px;"></ul>
+            </div>
         </div>
     </div>
 
@@ -735,6 +738,7 @@
 </div>
 
 <div layout:fragment="scriptContent">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         const docId = /*[[${details.docId}]]*/ '';
@@ -746,6 +750,7 @@
 
         const isOwner = document.querySelector('meta[name="_isOwner"]').content === 'true';
         const hasUnansweredQuery = document.querySelector('meta[name="_hasUnansweredQuery"]').content === 'true';
+        const canReplyToQuery = document.querySelector('meta[name="_canReplyToQuery"]').content === 'true';
 
         $(function () {
             $('.select2').select2({ theme: 'bootstrap4' });
@@ -760,7 +765,7 @@
             prefillForm();
             applyLock();
 
-            if (isOwner && hasUnansweredQuery) {
+            if (canReplyToQuery && hasUnansweredQuery) {
                 document.getElementById('queryReplyBox').style.display = 'block';
             }
             if (!isOwner && hasUnansweredQuery) {
@@ -810,16 +815,21 @@
             }
             document.getElementById('lockedBannerText').textContent = text;
             document.getElementById('lockedBanner').style.display = 'flex';
+            /* The buyer's own review UI (.vr-body: comments/query/finance-review fields, and
+               .vr-review-footer: Back to List / Show Approval Hierarchy / Audit Trail / Submit to
+               Workflow / Query / Send Back / Reject / Forward) now lives inside #tab5 too (so it
+               only shows on the last tab - see the SHARED PANEL comment above), so both lockdown
+               queries below explicitly skip anything inside those two containers - only the
+               vendor's own editable form fields and their own "Submit for Approval" footer should
+               ever get locked here, never the buyer's action UI, which a buyer (never isOwner)
+               always reaches since canEdit() is false for them. */
             document.querySelectorAll('.vr-tab-pane input, .vr-tab-pane select, .vr-tab-pane textarea')
-                .forEach(function (el) { el.disabled = true; });
-            /* Only the vendor's own "Submit for Approval" footer (inside tab5) gets locked here -
-               the buyer's review-action footer (.vr-review-footer: Back to List / Show Approval
-               Hierarchy / Audit Trail / Submit to Workflow / Query / Send Back / Reject / Forward)
-               must stay clickable for a buyer, who is never isOwner and so always hits this branch;
-               it was previously matched by the shared .vr-card-footer class and force-disabled/greyed
-               out regardless of the buyer's actual permissions. */
+                .forEach(function (el) { if (!el.closest('.vr-body, .vr-review-footer')) { el.disabled = true; } });
             document.querySelectorAll('#tab5 .vr-card-footer button, .vr-upload-btn')
-                .forEach(function (el) { el.disabled = true; el.style.pointerEvents = 'none'; el.style.opacity = '.5'; });
+                .forEach(function (el) {
+                    if (el.closest('.vr-review-footer')) { return; }
+                    el.disabled = true; el.style.pointerEvents = 'none'; el.style.opacity = '.5';
+                });
             $('.select2').prop('disabled', true);
         }
 
@@ -883,7 +893,7 @@
 
             problems.forEach(markInvalid);
             if (problems.length > 0) {
-                showAlert(false, 'Please fill all mandatory fields (marked *) before continuing.');
+                swalWarning('Please fill all mandatory fields (marked *) before continuing.');
                 problems[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return false;
             }
@@ -1098,17 +1108,16 @@
             const payload = payloadBuilder();
             if (!validateTab(currentTabId, payload)) { return; }
 
-            hideAlerts();
             const original = btn.innerHTML;
             btn.disabled = true; btn.innerHTML = 'Saving...';
             const headers = { 'Content-Type': 'application/json' }; headers[csrfHeader] = csrfToken;
             fetch('/vendorReg/register/' + docId + '/' + tabName, { method: 'POST', headers: headers, body: JSON.stringify(payload) })
                 .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
                 .then(result => {
-                    if (!result.ok) { showAlert(false, result.body.message); return; }
+                    if (!result.ok) { swalError(result.body.message); return; }
                     activateTab(nextTabId);
                 })
-                .catch(() => showAlert(false, 'Unexpected error while saving.'))
+                .catch(() => swalError('Unexpected error while saving.'))
                 .finally(() => { btn.disabled = false; btn.innerHTML = original; });
         }
 
@@ -1118,21 +1127,24 @@
             if (!validateTab('tab5', bankPayload)) { return; }
             if (!confirm('Submit this vendor registration for approval?')) return;
 
-            hideAlerts();
             const original = btn.innerHTML;
             btn.disabled = true; btn.innerHTML = 'Saving...';
             const headers = { 'Content-Type': 'application/json' }; headers[csrfHeader] = csrfToken;
             fetch('/vendorReg/register/' + docId + '/bank', { method: 'POST', headers: headers, body: JSON.stringify(bankPayload) })
                 .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
                 .then(result => {
-                    if (!result.ok) { showAlert(false, result.body.message); return; }
+                    if (!result.ok) { swalError(result.body.message); return; }
                     btn.innerHTML = 'Submitting...';
                     const submitHeaders = {}; submitHeaders[csrfHeader] = csrfToken;
                     return fetch('/vendorReg/register/' + docId + '/submit', { method: 'POST', headers: submitHeaders })
                         .then(res2 => res2.json().then(body2 => ({ ok: res2.ok, body: body2 })))
-                        .then(result2 => showAlert(result2.ok, result2.body.message));
+                        .then(result2 => {
+                            if (!result2.ok) { swalError(result2.body.message); return; }
+                            // Vendor's initial submit (or resubmit) - see IVendorRegistrationService.submitVendorRegistration.
+                            swalSuccess(result2.body.message, function () { window.location.href = '/dashboard/index'; });
+                        });
                 })
-                .catch(() => showAlert(false, 'Unexpected error while submitting.'))
+                .catch(() => swalError('Unexpected error while submitting.'))
                 .finally(() => { btn.disabled = false; btn.innerHTML = original; });
         }
 
@@ -1143,11 +1155,10 @@
             fetch('/vendorReg/register/' + docId + '/query-reply', { method: 'POST', headers: headers, body: JSON.stringify({ replyText: replyText }) })
                 .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
                 .then(result => {
-                    if (!result.ok) { showAlert(false, result.body.message); return; }
-                    showAlert(true, result.body.message);
-                    setTimeout(() => { window.location.reload(); }, 1000);
+                    if (!result.ok) { swalError(result.body.message); return; }
+                    swalSuccess(result.body.message, function () { window.location.reload(); });
                 })
-                .catch(() => showAlert(false, 'Unexpected error while sending reply.'));
+                .catch(() => swalError('Unexpected error while sending reply.'));
         }
 
         /* ============ Buyer review/action functions (see IVendorRegistrationService actOnVendorRegistration/submitToWorkflow/raiseQuery). ============ */
@@ -1164,11 +1175,10 @@
             fetch('/vendorReg/approve/' + docId + '/query', { method: 'POST', headers: headers, body: JSON.stringify({ queryText: queryText }) })
                 .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
                 .then(result => {
-                    if (!result.ok) { showAlert(false, result.body.message || 'Could not send query'); return; }
-                    showAlert(true, result.body.message || 'Query sent');
-                    setTimeout(() => { window.location.reload(); }, 1000);
+                    if (!result.ok) { swalError(result.body.message || 'Could not send query'); return; }
+                    swalSuccess(result.body.message || 'Query sent', function () { window.location.reload(); });
                 })
-                .catch(() => showAlert(false, 'Could not send query - please try again'));
+                .catch(() => swalError('Could not send query - please try again'));
         }
 
         function collectFinance() {
@@ -1196,11 +1206,10 @@
             fetch('/vendorReg/approve/' + docId + '/action', { method: 'POST', headers: headers, body: JSON.stringify(body) })
                 .then(res => res.json().then(data => ({ ok: res.ok, data: data })))
                 .then(({ ok, data }) => {
-                    if (!ok) { showAlert(false, data.message || 'Action failed'); return; }
-                    showAlert(true, data.message || 'Action recorded');
-                    setTimeout(() => { window.location.href = '/vendorReg/list'; }, 1200);
+                    if (!ok) { swalError(data.message || 'Action failed'); return; }
+                    swalSuccess(data.message || 'Action recorded', function () { window.location.href = '/vendorReg/list'; });
                 })
-                .catch(() => showAlert(false, 'Action failed - please try again'));
+                .catch(() => swalError('Action failed - please try again'));
         }
 
         function submitToWorkflow() {
@@ -1211,11 +1220,10 @@
             fetch('/vendorReg/approve/' + docId + '/submit-to-workflow', { method: 'POST', headers: headers })
                 .then(res => res.json().then(body => ({ ok: res.ok, body: body })))
                 .then(result => {
-                    if (!result.ok) { showAlert(false, result.body.message); btn.disabled = false; btn.innerHTML = original; return; }
-                    showAlert(true, result.body.message);
-                    setTimeout(() => { window.location.reload(); }, 1000);
+                    if (!result.ok) { swalError(result.body.message); btn.disabled = false; btn.innerHTML = original; return; }
+                    swalSuccess(result.body.message, function () { window.location.reload(); });
                 })
-                .catch(() => { showAlert(false, 'Unexpected error while submitting to workflow.'); btn.disabled = false; btn.innerHTML = original; });
+                .catch(() => { swalError('Unexpected error while submitting to workflow.'); btn.disabled = false; btn.innerHTML = original; });
         }
 
         function validateSap() {
@@ -1231,7 +1239,7 @@
                     const msgList = document.getElementById('sapMessages');
                     msgList.innerHTML = '';
                     if (result.ok) {
-                        showAlert(true, 'SAP validation passed. You may now post to SAP.');
+                        swalSuccess('SAP validation passed. You may now post to SAP.');
                         msgList.style.display = 'none';
                         document.getElementById('postBtn').disabled = false;
                     } else {
@@ -1241,11 +1249,11 @@
                             msgList.appendChild(li);
                         });
                         msgList.style.display = 'block';
-                        showAlert(false, 'SAP validation returned warnings/errors - see below.');
+                        swalWarning('SAP validation returned warnings/errors - see below.');
                         document.getElementById('postBtn').disabled = true;
                     }
                 })
-                .catch(() => { btn.disabled = false; btn.textContent = 'Validate with SAP'; showAlert(false, 'SAP validation call failed'); });
+                .catch(() => { btn.disabled = false; btn.textContent = 'Validate with SAP'; swalError('SAP validation call failed'); });
         }
 
         function postToSap() {
@@ -1260,11 +1268,10 @@
             })
                 .then(res => res.json().then(data => ({ ok: res.ok, data: data })))
                 .then(({ ok, data }) => {
-                    if (!ok) { btn.disabled = false; btn.textContent = 'Post to SAP'; showAlert(false, data.message || 'SAP posting failed'); return; }
-                    showAlert(true, data.message);
-                    setTimeout(() => { window.location.href = '/vendorReg/list'; }, 1500);
+                    if (!ok) { btn.disabled = false; btn.textContent = 'Post to SAP'; swalError(data.message || 'SAP posting failed'); return; }
+                    swalSuccess(data.message, function () { window.location.href = '/vendorReg/list'; });
                 })
-                .catch(() => { btn.disabled = false; btn.textContent = 'Post to SAP'; showAlert(false, 'SAP posting failed - please try again'); });
+                .catch(() => { btn.disabled = false; btn.textContent = 'Post to SAP'; swalError('SAP posting failed - please try again'); });
         }
 
         function openHierarchy() {
@@ -1284,7 +1291,7 @@
                     }
                     $('#hierarchyModal').modal('show');
                 })
-                .catch(() => showAlert(false, 'Could not load approval hierarchy'));
+                .catch(() => swalError('Could not load approval hierarchy'));
         }
 
         function openAuditTrail() {
@@ -1305,18 +1312,19 @@
                     }
                     $('#auditModal').modal('show');
                 })
-                .catch(() => showAlert(false, 'Could not load audit trail'));
+                .catch(() => swalError('Could not load audit trail'));
         }
 
-        function showAlert(ok, message) {
-            const el = document.getElementById(ok ? 'successAlert' : 'errorAlert');
-            el.querySelector('span').textContent = message;
-            el.style.display = 'flex';
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        /** onOk fires after the user dismisses the swal - used to chain a redirect/reload onto the confirmation, e.g. vendor submit -> dashboard, buyer forward -> reload to show the new level. */
+        function swalSuccess(message, onOk) {
+            Swal.fire({ icon: 'success', title: 'Success', text: message, confirmButtonText: 'OK' })
+                .then(function () { if (onOk) { onOk(); } });
         }
-        function hideAlerts() {
-            document.getElementById('successAlert').style.display = 'none';
-            document.getElementById('errorAlert').style.display = 'none';
+        function swalWarning(message) {
+            Swal.fire({ icon: 'warning', title: 'Please check', text: message, confirmButtonText: 'OK' });
+        }
+        function swalError(message) {
+            Swal.fire({ icon: 'error', title: 'Error', text: message || 'Something went wrong.', confirmButtonText: 'OK' });
         }
     </script>
 </div>

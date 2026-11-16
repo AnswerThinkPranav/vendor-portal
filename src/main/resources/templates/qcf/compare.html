@@ -7,6 +7,8 @@
     <title th:text="'QCF ' + ${form.qcfNo()}">Quotation Comparison Form</title>
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <meta name="_hasUnansweredQuery" th:content="${form.hasUnansweredQuery()}" />
+    <meta name="_isBuyer" th:content="${form.isBuyer()}" />
 
     <style>
         .vr-breadcrumb { font-size: 13px; color: #6c7a91; margin-bottom: 18px; letter-spacing: .2px; }
@@ -16,40 +18,38 @@
         .vr-card-header { padding: 16px 28px; border-bottom: 1px solid #eef1f6; background: #f5f7fb; }
         .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; color: #1c2733; font-size: 18px; }
 
-        .vr-grid-wrap { padding: 18px 28px 0 28px; overflow-x: auto; }
-        .vr-qcf-grid { border-collapse: separate; border-spacing: 0 3px; margin-bottom: 14px; min-width: 100%; }
-        .vr-qcf-grid td { padding: 11px 18px; font-size: 13.5px; white-space: nowrap; }
-        .vr-qcf-grid td.label {
-            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 700;
-            width: 220px; min-width: 220px;
-        }
-        .vr-qcf-grid td.value {
-            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 600;
-            min-width: 260px;
-        }
-        .vr-qcf-grid td.value.highlight {
-            background: linear-gradient(120deg, #6c3fd6 0%, #8a5cf0 100%); text-align: center; font-weight: 700; letter-spacing: .4px;
-        }
-        .vr-qcf-grid td.value label { display: flex; align-items: center; gap: 10px; font-weight: 700; margin: 0; white-space: normal; }
-        .vr-qcf-grid td.value input[type=checkbox] { width: 18px; height: 18px; flex: none; }
-
         .vr-table-wrap { overflow-x: auto; padding: 6px 28px 0 28px; }
+        /* Header rows (Name of the Party / Qtn Ref No / Payment Terms / Inco Terms) live inside
+           #qcfItemTable's own thead now, so their vendor-block columns are guaranteed to line up
+           with the Rate/Total/Qty Recommended columns below - see the "alignment bug" note in the
+           HTML above this table. */
+        #qcfItemTable thead th.label {
+            background: linear-gradient(120deg, var(--blue-color) 0%, #3b4a5e 100%); font-weight: 700;
+            padding: 11px 18px; font-size: 13.5px; white-space: nowrap;
+        }
+        #qcfItemTable thead th.value {
+            background: linear-gradient(120deg, var(--blue-color) 0%, #3b4a5e 100%); font-weight: 600;
+            padding: 11px 18px; font-size: 13.5px; white-space: normal;
+        }
+        #qcfItemTable thead th.value.highlight {
+            background: linear-gradient(120deg, #6c3fd6 0%, #8a5cf0 100%); font-weight: 700; letter-spacing: .4px;
+        }
         table.vr-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
         table.vr-table thead th {
-            background: #325786; color: #fff; font-weight: 700;
-            font-size: 11px; letter-spacing: .3px; padding: 9px 10px; text-align: center; border-bottom: 2px solid #274263; white-space: nowrap;
+            background: #2d3f55; color: #fff; font-weight: 700;
+            font-size: 11px; letter-spacing: .3px; padding: 9px 10px; text-align: center; border-bottom: 2px solid #1f2937; white-space: nowrap;
         }
         table.vr-table tbody td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #f0f2f7; white-space: nowrap; }
         table.vr-table tbody td input { width: 90px; border-radius: 7px; border: 1px solid #dde3ec; padding: 5px 8px; font-size: 12.5px; text-align: center; }
         .vr-rate-cell { background: #e3f9e0; border-radius: 7px; padding: 6px 10px; font-weight: 700; color: #1c7c4d; display: inline-block; }
-        .vr-vendor-divider { border-left: 2px solid #325786; }
+        .vr-vendor-divider { border-left: 2px solid #2d3f55; }
 
         table.vr-table tfoot td.summary-label {
-            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; font-weight: 700;
+            background: linear-gradient(120deg, var(--blue-color) 0%, #3b4a5e 100%); color: #fff; font-weight: 700;
             padding: 10px 18px; text-align: right; font-size: 12.5px;
         }
         table.vr-table tfoot td.summary-blank {
-            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%);
+            background: linear-gradient(120deg, var(--blue-color) 0%, #3b4a5e 100%);
         }
         table.vr-table tfoot td.summary-value { padding: 10px 14px; text-align: right; font-weight: 700; font-size: 13px; }
         table.vr-table tfoot td.summary-value input {
@@ -59,7 +59,7 @@
         .vr-total-row .summary-label { background: linear-gradient(120deg, #33415c, #1c2733); }
         .vr-total-row .summary-value { background: #fdf1b0; color: #6b5b00; }
 
-        .vr-comments-table thead th { background: #325786; }
+        .vr-comments-table thead th { background: #2d3f55; }
         .vr-comments-table tbody td { text-align: left; }
         .vr-empty-note { padding: 14px 0; color: #8b96ab; font-size: 12.5px; }
 
@@ -70,12 +70,42 @@
         .vr-attach-wrap h5 { font-size: 13px; font-weight: 700; color: #4b5876; margin: 0 0 8px 0; }
         .vr-attach-empty { padding: 10px 14px; background: #f5f7fb; border-radius: 8px; color: #8b96ab; font-size: 12.5px; }
 
-        .vr-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 20px 28px 24px 28px; }
+        .vr-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 20px 28px 24px 28px; flex-wrap: wrap; }
         .vr-btn { display: inline-block; border: none; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13.5px; cursor: pointer; text-decoration: none; }
-        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #3b4a5e); color: #fff; }
         .vr-btn-primary:hover { color: #fff; }
         .vr-btn-light { background: #eef1f6; color: #33415c; }
         .vr-btn-light:hover { color: #33415c; }
+        .vr-btn-reject { background: #fdecea; color: #c0392b; }
+        .vr-btn-reject:hover { color: #c0392b; }
+        .vr-btn-sendback { background: #fff2e0; color: #b5690a; }
+        .vr-btn-sendback:hover { color: #b5690a; }
+        .vr-btn-hierarchy { background: #e8eaed; color: #3b4a5e; }
+        .vr-btn-hierarchy:hover { color: #3b4a5e; }
+        .vr-btn-audit { background: #eef1f6; color: #4b5876; }
+        .vr-btn-audit:hover { color: #4b5876; }
+        .vr-btn-post { background: linear-gradient(120deg, #1c7c4d, #22a15f); color: #fff; }
+        .vr-btn-post:hover { color: #fff; }
+
+        .vr-wf-banner { margin: 0 28px 4px 28px; padding: 10px 16px; border-radius: 10px; background: #e8eaed; color: #1f2937; font-size: 13px; font-weight: 600; }
+
+        .vr-modal-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        .vr-modal-table th { background: #2d3f55; color: #fff; text-align: left; padding: 9px 12px; font-size: 11.5px; }
+        .vr-modal-table td { padding: 9px 12px; border-bottom: 1px solid #f0f2f7; }
+
+        .vr-po-result { margin: 0 28px 20px 28px; padding: 14px 18px; border-radius: 10px; background: #e7f7ee; border: 1px solid #bfe8cf; }
+        .vr-po-result h5 { margin: 0 0 8px 0; font-size: 13.5px; color: #1c7c4d; font-weight: 700; }
+
+        .vr-query-banner { margin: 0 28px 18px 28px; padding: 12px 18px; border-radius: 12px; background: #fdecea; border: 1px solid #f7c9c2; color: #c0392b; font-weight: 600; font-size: 13.5px; text-align: center; }
+        .vr-query-item { padding: 10px 0; border-bottom: 1px solid #f0f2f7; font-size: 12.5px; }
+        .vr-query-item .q-meta { color: #99a4b8; font-size: 11.5px; margin-bottom: 3px; }
+        .vr-query-item .q-text { color: #24314a; margin-bottom: 6px; }
+        .vr-query-item .r-text { background: #f5f7fb; border-radius: 8px; padding: 8px 10px; color: #33415c; }
+        .vr-query-item .r-meta { color: #99a4b8; font-size: 11px; margin-top: 3px; }
+        .vr-query-open { color: #c0392b; font-style: italic; }
+        .vr-comments-box { margin-top: 10px; }
+        .vr-comments-box textarea { width: 100%; min-height: 70px; border: 1px solid #dde3ec; border-radius: 9px; padding: 10px 12px; font-size: 13.5px; font-family: inherit; resize: vertical; }
+        .vr-comments-box textarea:focus { outline: none; border-color: var(--blue-color); box-shadow: 0 0 0 3px rgba(3, 56, 130, 0.12); }
     </style>
 </head>
 <body>
@@ -88,39 +118,45 @@
                 <h4>Quotation Comparision Form <span th:text="${form.qcfNo()}"></span></h4>
             </div>
 
-            <!-- Header grid: one label column, one value column per vendor -->
-            <div class="vr-grid-wrap">
-                <table class="vr-qcf-grid">
-                    <tr>
-                        <td class="label">Name of the Party</td>
-                        <td class="value" th:each="vendor : ${form.vendors()}">
-                            <label>
-                                <input type="checkbox" class="qcf-vendor-chk" th:attr="data-rfq=${vendor.rfqNo()}"
-                                       th:disabled="${vendor.alreadySubmitted()}">
-                                <span th:text="${vendor.vendorLabel()} + ' [' + ${vendor.vendorId()} + ']'"></span>
-                                <span th:if="${vendor.alreadySubmitted()}" style="font-weight:400;font-size:11.5px;opacity:.85">(Recommended)</span>
-                            </label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="label">Qtn Ref No.</td>
-                        <td class="value highlight" th:each="vendor : ${form.vendors()}" th:text="${vendor.rfqNo()}"></td>
-                    </tr>
-                    <tr>
-                        <td class="label">Payment Terms</td>
-                        <td class="value" th:each="vendor : ${form.vendors()}" th:text="${vendor.paymentTerms()}"></td>
-                    </tr>
-                    <tr>
-                        <td class="label">Inco Terms</td>
-                        <td class="value" th:each="vendor : ${form.vendors()}" th:text="${vendor.incoTerms1()}"></td>
-                    </tr>
-                </table>
+            <div class="vr-wf-banner" th:if="${form.workflow().wfStatus() != null}">
+                <span>Workflow Status: <b th:text="${form.workflow().wfStatus()}"></b></span>
+                <span th:if="${form.workflow().currentGroup() != null and !form.workflow().approved()}">
+                    &nbsp;- awaiting <b th:text="${form.workflow().currentGroup()}"></b>
+                </span>
             </div>
 
-            <!-- Item table: shared columns once, Rate/Total/Qty Recommended repeated per vendor -->
+            <!-- Item table: header rows (party/qtn-ref/payment/inco) live in the SAME table as the
+                 line items below, each vendor cell using colspan="3" to match its Rate/Total/Qty
+                 Recommended columns - this is what keeps the vendor blocks pixel-aligned with the
+                 data underneath them (a separate table for the header can never guarantee that). -->
             <div class="vr-table-wrap">
                 <table class="vr-table" id="qcfItemTable">
                     <thead>
+                    <tr>
+                        <th class="label" colspan="8" style="text-align:left">Name of the Party</th>
+                        <th class="value" th:each="vendor : ${form.vendors()}" colspan="3">
+                            <label style="display:flex; align-items:center; gap:8px; justify-content:center; font-weight:700; white-space:normal;">
+                                <input type="checkbox" class="qcf-vendor-chk" th:attr="data-rfq=${vendor.rfqNo()}"
+                                       th:checked="${vendor.alreadySubmitted()}"
+                                       th:disabled="${vendor.alreadySubmitted() or !form.workflow().canSubmitToWorkflow()}"
+                                       onchange="onVendorToggle(this)">
+                                <span th:text="${vendor.vendorLabel()} + ' [' + ${vendor.vendorId()} + ']'"></span>
+                                <span th:if="${vendor.alreadySubmitted()}" style="font-weight:400;font-size:11px;opacity:.85">(Recommended)</span>
+                            </label>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th class="label" colspan="8" style="text-align:left">Qtn Ref No.</th>
+                        <th class="value highlight" th:each="vendor : ${form.vendors()}" colspan="3" th:text="${vendor.rfqNo()}"></th>
+                    </tr>
+                    <tr>
+                        <th class="label" colspan="8" style="text-align:left">Payment Terms</th>
+                        <th class="value" th:each="vendor : ${form.vendors()}" colspan="3" th:text="${vendor.paymentTerms()}"></th>
+                    </tr>
+                    <tr>
+                        <th class="label" colspan="8" style="text-align:left">Inco Terms</th>
+                        <th class="value" th:each="vendor : ${form.vendors()}" colspan="3" th:text="${vendor.incoTerms1()}"></th>
+                    </tr>
                     <tr>
                         <th>SR No.</th><th>Material</th><th>Description</th><th>Qty</th><th>Per</th><th>UOM</th>
                         <th>Budget Price</th><th>Last PO Price</th>
@@ -130,7 +166,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="row : ${form.lineRows()}">
+                    <tr th:each="row : ${form.lineRows()}" th:attr="data-line-qty=${row.qty()}">
                         <td th:text="${row.lineNo()}"></td>
                         <td th:text="${row.material()}"></td>
                         <td th:text="${row.materialDesc()}" style="white-space:normal;min-width:160px;text-align:left"></td>
@@ -143,10 +179,12 @@
                             <td class="vr-vendor-divider"><span class="vr-rate-cell" th:text="${cell.rate()}"></span></td>
                             <td th:text="${cell.totalAmount()}"></td>
                             <td>
-                                <input type="number" min="0"
+                                <input type="number" min="0" class="qcf-qty-input"
                                        th:id="'qty_' + ${cell.rfqNo()} + '_' + ${row.lineNo()}"
+                                       th:attr="data-rfq=${cell.rfqNo()},data-line-qty=${row.qty()}"
                                        th:value="${cell.qtyRecommended()}"
-                                       th:disabled="${cell.alreadySubmitted()}">
+                                       th:disabled="${cell.alreadySubmitted() or !form.workflow().canSubmitToWorkflow()}"
+                                       onchange="validateLineQty(this)">
                             </td>
                         </th:block>
                     </tr>
@@ -171,6 +209,38 @@
                 </table>
             </div>
 
+            <div class="vr-query-banner" th:if="${form.hasUnansweredQuery()}">
+                <i class="fa fa-question-circle"></i> A query has not been replied to on this QCF - workflow actions are blocked until the buyer answers it.
+            </div>
+
+            <div class="vr-attach-wrap" style="padding-top:20px;">
+                <h5>Query</h5>
+                <div id="queryList">
+                    <p class="vr-empty-note" th:if="${#lists.isEmpty(form.queries())}">No queries raised on this QCF.</p>
+                    <div class="vr-query-item" th:each="q : ${form.queries()}">
+                        <div class="q-meta">Raised by <b th:text="${q.raisedBy()}"></b> on <span th:text="${#temporals.format(q.raisedOn(), 'dd/MM/yyyy HH:mm')}"></span></div>
+                        <div class="q-text" th:text="${q.queryText()}"></div>
+                        <div th:if="${q.repliedOn() != null}">
+                            <div class="r-text" th:text="${q.replyText()}"></div>
+                            <div class="r-meta">Replied by <b th:text="${q.repliedBy()}"></b> on <span th:text="${#temporals.format(q.repliedOn(), 'dd/MM/yyyy HH:mm')}"></span></div>
+                        </div>
+                        <div th:if="${q.repliedOn() == null}" class="vr-query-open">Awaiting reply...</div>
+                    </div>
+                </div>
+                <div class="vr-comments-box" id="queryReplyBox" th:style="${form.isBuyer() and form.hasUnansweredQuery()} ? 'display:block' : 'display:none'">
+                    <textarea id="queryReplyText" placeholder="Type your reply to the approver's query" rows="2"></textarea>
+                    <div style="text-align:right; margin-top:8px;">
+                        <button type="button" class="vr-btn vr-btn-primary" onclick="sendQueryReply()">Send Reply</button>
+                    </div>
+                </div>
+                <div class="vr-comments-box" id="queryRaiseBox" style="display:none;">
+                    <textarea id="queryText" placeholder="Enter your query for the buyer" rows="2"></textarea>
+                    <div style="text-align:right; margin-top:8px;">
+                        <button type="button" class="vr-btn vr-btn-sendback" onclick="sendQuery()">Send Query</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="vr-attach-wrap" style="padding-top:20px;">
                 <h5>Users / Date / Comments</h5>
                 <div class="vr-table-wrap" style="padding:0;">
@@ -192,7 +262,8 @@
 
             <div class="vr-comments-wrap">
                 <label style="font-weight:700;font-size:13px;color:#4b5876">Comments</label>
-                <textarea id="comments" rows="2" placeholder="Enter Comments" th:disabled="${!form.showSubmit()}"></textarea>
+                <textarea id="comments" rows="2" placeholder="Enter Comments"
+                          th:disabled="${!form.workflow().canSubmitToWorkflow() and !form.workflow().canAct()}"></textarea>
             </div>
 
             <div class="vr-attach-wrap">
@@ -200,11 +271,74 @@
                 <div class="vr-attach-empty">No files attached</div>
             </div>
 
+            <div class="vr-po-result" id="poResult" style="display:none;">
+                <h5><i class="fa fa-check-circle"></i> Purchase Order(s) Created</h5>
+                <div id="poResultBody"></div>
+            </div>
+
             <div class="vr-actions">
                 <a class="vr-btn vr-btn-light" href="/qcf/list"><i class="fa fa-arrow-left"></i> Go Back</a>
-                <button type="button" class="vr-btn vr-btn-primary" th:if="${form.showSubmit()}" onclick="submitQcf()">
+                <a class="vr-btn vr-btn-light" th:href="@{'/qcf/' + ${form.qcfNo()} + '/export'}"><i class="fa fa-file-excel-o"></i> Export to Excel</a>
+                <button type="button" class="vr-btn vr-btn-hierarchy" onclick="openHierarchy()"><i class="fa fa-users"></i> Show Approval Hierarchy</button>
+                <button type="button" class="vr-btn vr-btn-audit" onclick="openAuditTrail()"><i class="fa fa-list"></i> Audit Trail</button>
+
+                <button type="button" class="vr-btn vr-btn-primary" th:if="${form.workflow().canSubmitToWorkflow()}" onclick="submitQcf()">
                     <i class="fa fa-check"></i> Submit
                 </button>
+
+                <button type="button" class="vr-btn vr-btn-sendback" id="queryToggleBtn" th:if="${form.workflow().canAct()}" onclick="toggleQueryBox()">
+                    <i class="fa fa-question-circle"></i> Query
+                </button>
+                <button type="button" class="vr-btn vr-btn-sendback" id="sendBackBtn" th:if="${form.workflow().canAct()}" onclick="actOnQcf('SEND_BACK')">
+                    <i class="fa fa-undo"></i> Send Back to Buyer
+                </button>
+                <button type="button" class="vr-btn vr-btn-reject" id="rejectBtn" th:if="${form.workflow().canAct()}" onclick="actOnQcf('REJECT')">
+                    <i class="fa fa-remove"></i> Reject
+                </button>
+                <button type="button" class="vr-btn vr-btn-primary" id="forwardBtn" th:if="${form.workflow().canAct() and !form.workflow().isFinalLevel()}" onclick="actOnQcf('FORWARD')">
+                    <i class="fa fa-arrow-right"></i> Forward
+                </button>
+                <button type="button" class="vr-btn vr-btn-primary" id="approveBtn" th:if="${form.workflow().canAct() and form.workflow().isFinalLevel()}" onclick="actOnQcf('FORWARD')">
+                    <i class="fa fa-check"></i> Approve
+                </button>
+
+                <button type="button" class="vr-btn vr-btn-post" id="createPoBtn" th:if="${form.workflow().approved()}" onclick="createPo()">
+                    <i class="fa fa-file-text"></i> Create PO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="hierarchyModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Approval Hierarchy</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-x:auto;">
+                    <table class="vr-modal-table" id="hierarchyTable">
+                        <thead><tr><th>Level</th><th>Role</th><th>User</th><th>Type</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="auditModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Audit Trail</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-x:auto;">
+                    <table class="vr-modal-table" id="auditTable">
+                        <thead><tr><th>Audit</th><th>Action</th><th>Date</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -212,6 +346,11 @@
 
 <div layout:fragment="scriptContent">
     <script th:inline="javascript">
+        const qcfNo = /*[[${form.qcfNo()}]]*/ '';
+        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+        const hasUnansweredQuery = document.querySelector('meta[name="_hasUnansweredQuery"]').content === 'true';
+
         function recalcGrandTotal() {
             var grand = 0;
             /*[# th:each="vendor : ${form.vendors()}"]*/
@@ -221,7 +360,95 @@
         }
         $(function () {
             recalcGrandTotal();
+            // Belt-and-suspenders: the server already blocks Forward/Reject/Send Back while a
+            // query is open (see QcfServiceImpl.actOnQcf), disable them client-side too.
+            if (hasUnansweredQuery) {
+                ['sendBackBtn', 'rejectBtn', 'forwardBtn', 'approveBtn'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) { el.disabled = true; }
+                });
+            }
         });
+
+        // --- Query mechanism (an approver questioning the buyer's recommendation) ---
+
+        function toggleQueryBox() {
+            var box = document.getElementById('queryRaiseBox');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function sendQuery() {
+            var queryText = document.getElementById('queryText').value;
+            if (!queryText.trim()) { alert('Please enter the query'); return; }
+            $.ajax({
+                url: '/qcf/api/' + qcfNo + '/query',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: JSON.stringify({ queryText: queryText }),
+                success: function (resp) { alert(resp.message || 'Query sent'); window.location.reload(); },
+                error: function (xhr) {
+                    var msg = 'Could not send query.';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+                    alert(msg);
+                }
+            });
+        }
+
+        function sendQueryReply() {
+            var replyText = document.getElementById('queryReplyText').value;
+            if (!replyText.trim()) { alert('Please enter your reply'); return; }
+            $.ajax({
+                url: '/qcf/api/' + qcfNo + '/query-reply',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: JSON.stringify({ replyText: replyText }),
+                success: function (resp) { alert(resp.message || 'Reply sent'); window.location.reload(); },
+                error: function (xhr) {
+                    var msg = 'Could not send reply.';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+                    alert(msg);
+                }
+            });
+        }
+
+        // --- Recommended-quantity UX: checking a vendor auto-fills that vendor's recommended
+        // qty for every line with the line's full PR quantity (still editable afterwards so it
+        // can be split with another vendor); unchecking clears it back to 0. ---
+        function onVendorToggle(checkbox) {
+            var rfqNo = $(checkbox).attr('data-rfq');
+            var checked = checkbox.checked;
+            $('.qcf-qty-input[data-rfq="' + rfqNo + '"]').each(function () {
+                var lineQty = parseFloat($(this).attr('data-line-qty')) || 0;
+                $(this).val(checked ? lineQty : 0);
+                validateLineQty(this);
+            });
+        }
+
+        // Highlights (and on submit, blocks) a line where the recommended quantity summed across
+        // every vendor it's split between exceeds the line's original PR quantity.
+        function validateLineQty(input) {
+            var row = $(input).closest('tr');
+            var lineQty = parseFloat(row.attr('data-line-qty')) || 0;
+            var total = 0;
+            row.find('.qcf-qty-input').each(function () { total += parseFloat($(this).val()) || 0; });
+
+            var overAllocated = total > lineQty + 0.0001;
+            row.find('.qcf-qty-input').css('border-color', overAllocated ? '#e74c3c' : '');
+            return !overAllocated;
+        }
+
+        function allLinesValid() {
+            var ok = true;
+            $('#qcfItemTable tbody tr').each(function () {
+                var lineQty = parseFloat($(this).attr('data-line-qty')) || 0;
+                var total = 0;
+                $(this).find('.qcf-qty-input').each(function () { total += parseFloat($(this).val()) || 0; });
+                if (total > lineQty + 0.0001) { ok = false; }
+            });
+            return ok;
+        }
 
         function submitQcf() {
             var vendorRfqNos = [ /*[# th:each="vendor : ${form.vendors()}"]*/ [[${vendor.rfqNo()}]], /*[/]*/ ];
@@ -235,7 +462,7 @@
                 var items = [];
                 $('input[id^="qty_' + rfqNo + '_"]').each(function () {
                     var lineNo = $(this).attr('id').replace('qty_' + rfqNo + '_', '');
-                    items.push({ lineNo: lineNo, qtyRecommended: parseFloat($(this).val()) || 0 });
+                    items.push({ lineNo: lineNo, qtyRecommended: checked ? (parseFloat($(this).val()) || 0) : 0 });
                 });
 
                 selections.push({ rfqNo: rfqNo, selected: checked, items: items });
@@ -245,6 +472,10 @@
                 alert('Please select atleast one vendor.');
                 return;
             }
+            if (!allLinesValid()) {
+                alert('One or more lines have a recommended quantity (summed across vendors) greater than the PR quantity. Please fix the highlighted line(s).');
+                return;
+            }
             if (!confirm('Are you sure you want to submit this QCF for approval?')) {
                 return;
             }
@@ -252,14 +483,14 @@
             var payload = { comments: $('#comments').val(), selections: selections };
 
             $.ajax({
-                url: '/qcf/api/' + /*[[${form.qcfNo()}]]*/ '' + '/submit',
+                url: '/qcf/api/' + qcfNo + '/submit',
                 type: 'POST',
                 contentType: 'application/json',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content') },
+                headers: { 'X-CSRF-TOKEN': csrfToken },
                 data: JSON.stringify(payload),
                 success: function (resp) {
                     alert(resp.message || 'QCF submitted successfully.');
-                    window.location.href = '/qcf/list?type=Sub';
+                    window.location.reload();
                 },
                 error: function (xhr) {
                     var msg = 'Failed to submit QCF.';
@@ -267,6 +498,114 @@
                     alert(msg);
                 }
             });
+        }
+
+        // --- Approval workflow actions (see ezViewDOMQCF.jsp) ---
+
+        function actOnQcf(action) {
+            if ((action === 'REJECT' || action === 'SEND_BACK') && !$('#comments').val()) {
+                alert('Please Enter Comments');
+                return;
+            }
+            var verb = action === 'REJECT' ? 'reject' : (action === 'SEND_BACK' ? 'send back to the buyer' : 'forward');
+            if (!confirm('Are you sure you want to ' + verb + ' this QCF?')) { return; }
+
+            $.ajax({
+                url: '/qcf/api/' + qcfNo + '/action',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: JSON.stringify({ action: action, comments: $('#comments').val() }),
+                success: function (resp) {
+                    alert(resp.message || 'Done.');
+                    window.location.reload();
+                },
+                error: function (xhr) {
+                    var msg = 'Action failed.';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+                    alert(msg);
+                }
+            });
+        }
+
+        function openHierarchy() {
+            fetch('/qcf/' + qcfNo + '/hierarchy')
+                .then(r => r.json())
+                .then(levels => {
+                    const tbody = document.querySelector('#hierarchyTable tbody');
+                    tbody.innerHTML = '';
+                    if (!levels.length) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#a7b0c0;">No workflow template configured for this QCF\'s company code / plant / category.</td></tr>';
+                    } else {
+                        levels.forEach(l => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = '<td>' + l.level + '</td><td>' + (l.role || '') + '</td><td>' + (l.user || '-') + '</td><td>' + (l.type || '') + '</td>';
+                            tbody.appendChild(tr);
+                        });
+                    }
+                    $('#hierarchyModal').modal('show');
+                })
+                .catch(() => alert('Could not load approval hierarchy'));
+        }
+
+        function openAuditTrail() {
+            fetch('/qcf/' + qcfNo + '/audit-trail')
+                .then(r => r.json())
+                .then(entries => {
+                    const tbody = document.querySelector('#auditTable tbody');
+                    tbody.innerHTML = '';
+                    if (!entries.length) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#a7b0c0;">No audit trail entries yet.</td></tr>';
+                    } else {
+                        entries.forEach(e => {
+                            const tr = document.createElement('tr');
+                            const date = e.date ? new Date(e.date).toLocaleString() : '';
+                            tr.innerHTML = '<td>' + (e.auditNo || '-') + '</td><td>' + (e.action || '') + '</td><td>' + date + '</td>';
+                            tbody.appendChild(tr);
+                        });
+                    }
+                    $('#auditModal').modal('show');
+                })
+                .catch(() => alert('Could not load audit trail'));
+        }
+
+        // --- Create PO (see ezViewDOMQCF.jsp's Create PO button) ---
+
+        function createPo() {
+            if (!confirm('Are you sure you want to create the Purchase Order(s) for this QCF?')) { return; }
+            var btn = document.getElementById('createPoBtn');
+            btn.disabled = true;
+
+            $.ajax({
+                url: '/po/api/' + qcfNo + '/create',
+                type: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                success: function (resp) {
+                    btn.disabled = false;
+                    renderPoResult(resp.pos || []);
+                },
+                error: function (xhr) {
+                    btn.disabled = false;
+                    var msg = 'Failed to create Purchase Order.';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+                    alert(msg);
+                }
+            });
+        }
+
+        function renderPoResult(pos) {
+            var html = '';
+            pos.forEach(function (po) {
+                html += '<div style="margin-bottom:10px;"><b>' + po.poNo + '</b> - ' + po.vendorLabel
+                    + ' (Plant ' + po.plant + ') - Total: ' + po.currency + ' ' + po.totalValue + '<ul style="margin:6px 0 0 18px;padding:0;">';
+                (po.items || []).forEach(function (i) {
+                    html += '<li>Line ' + i.lineNo + ': ' + i.materialDesc + ' - Qty ' + i.qty + ' ' + i.uom
+                        + ' @ ' + i.rate + ' = ' + i.lineValue + '</li>';
+                });
+                html += '</ul></div>';
+            });
+            $('#poResultBody').html(html || '<p>No Purchase Orders were created.</p>');
+            $('#poResult').show();
         }
     </script>
 </div>

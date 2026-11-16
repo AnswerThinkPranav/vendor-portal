@@ -75,7 +75,7 @@
         }
 
         /* Table & Buttons */
-        .custom-table-header { background-color: #033882; color: #fff; }
+        .custom-table-header { background-color: #1f2937; color: #fff; }
         table th, table td { vertical-align: middle; padding: 6px; }
         .btn-sm { font-size: 12px; padding: 3px 8px; }
 
@@ -85,7 +85,7 @@
         /* Create Reservation Button */
         .bottom-actions { text-align: center; margin-top: 30px; }
         .btn-create {
-            background-color: #033882;
+            background-color: #1f2937;
             color: white;
             font-size: 16px;
             padding: 10px 25px;
@@ -241,7 +241,7 @@
             position: sticky;
             top: 0;
             z-index: 3;
-            background-color: #033882;
+            background-color: #1f2937;
             color: white;
         }
 
@@ -250,7 +250,7 @@
         #itemTable thead th:nth-child(2),
         #itemTable thead th:nth-child(3) {
             z-index: 4;
-            background-color: #033882 !important;
+            background-color: #1f2937 !important;
             color: white !important;
         }
 
@@ -548,7 +548,7 @@ $.ajax({
                 icon: 'warning',
                 title: 'Movement Type Required',
                 text: 'Please select a Movement Type first!',
-                confirmButtonColor: '#033882'
+                confirmButtonColor: '#1f2937'
               });
               $(this).blur();
               return;
@@ -561,7 +561,7 @@ $.ajax({
                 icon: 'warning',
                 title: 'Plant Required',
                 text: 'Please select a plant first!',
-                confirmButtonColor: '#033882'
+                confirmButtonColor: '#1f2937'
               });
               $(this).blur();
               return;
@@ -582,7 +582,7 @@ $.ajax({
                 icon: 'warning',
                 title: 'Cost Center Required',
                 text: 'Cost Center is mandatory for Movement Type 201. Please fill it before selecting material!',
-                confirmButtonColor: '#033882'
+                confirmButtonColor: '#1f2937'
               });
               $(this).blur();
               return;
@@ -594,7 +594,7 @@ $.ajax({
                 icon: 'warning',
                 title: 'WBS Element Required',
                 text: 'WBS Element is mandatory for Movement Type 221. Please fill it before selecting material!',
-                confirmButtonColor: '#033882'
+                confirmButtonColor: '#1f2937'
               });
               $(this).blur();
               return;
@@ -606,7 +606,7 @@ $.ajax({
                 icon: 'warning',
                 title: 'Internal Order Required',
                 text: 'Internal Order is mandatory for Movement Type 261. Please fill it before selecting material!',
-                confirmButtonColor: '#033882'
+                confirmButtonColor: '#1f2937'
               });
               $(this).blur();
               return;
@@ -691,7 +691,7 @@ $.ajax({
                         icon: 'warning',
                         title: 'Plant Required',
                         text: 'Please select a plant first!',
-                        confirmButtonColor: '#033882'
+                        confirmButtonColor: '#1f2937'
                     });
                     $(this).blur();
                     return;
@@ -785,7 +785,7 @@ $.ajax({
                         icon: 'warning',
                         title: 'Movement Type Required',
                         text: 'Please select a Movement Type before adding items!',
-                        confirmButtonColor: '#033882'
+                        confirmButtonColor: '#1f2937'
                     });
                     return;
                 }
@@ -796,7 +796,7 @@ $.ajax({
                         icon: 'warning',
                         title: 'Missing Header Fields',
                         text: 'Please fill in Base Date, Plant before adding items!',
-                        confirmButtonColor: '#033882'
+                        confirmButtonColor: '#1f2937'
                     });
                     return;
                 }
@@ -910,7 +910,7 @@ $.ajax({
                     icon: 'warning',
                     title: 'Plant Required',
                     text: 'Please select a Plant first!',
-                    confirmButtonColor: '#033882'
+                    confirmButtonColor: '#1f2937'
                 });
                 $(this).val('');
                 return;
@@ -931,7 +931,7 @@ $.ajax({
                             icon: 'warning',
                             title: 'Material Not Found',
                             text: 'Material not found in selected Plant!',
-                            confirmButtonColor: '#033882'
+                            confirmButtonColor: '#1f2937'
                         });
                         const desc = row.querySelector('[name="shortText"]'); if (desc) desc.value = '';
                         const uom = row.querySelector('[name="uom"]'); if (uom) uom.value = '';
@@ -949,7 +949,7 @@ $.ajax({
                         icon: 'error',
                         title: 'Error',
                         text: 'Error fetching material details. Please try again.',
-                        confirmButtonColor: '#033882'
+                        confirmButtonColor: '#1f2937'
                     });
                 });
         });
@@ -1033,7 +1033,7 @@ $.ajax({
                     icon: 'warning',
                     title: 'WBS Element Required',
                     text: 'WBS Element is mandatory for Movement Type 221!',
-                    confirmButtonColor: '#033882'
+                    confirmButtonColor: '#1f2937'
                 });
                 return;
             }
@@ -1043,7 +1043,7 @@ $.ajax({
                         icon: 'warning',
                         title: 'Cost Center Required',
                         text: 'Cost Center is mandatory for Movement Type 201!',
-                        confirmButtonColor: '#033882'
+                        confirmButtonColor: '#1f2937'
                     });
                     return;
                 }
@@ -1053,7 +1053,7 @@ $.ajax({
                         icon: 'warning',
                         title: 'Internal Order Required',
                         text: 'Internal Order is mandatory for Movement Type 261!',
-                        confirmButtonColor: '#033882'
+                        confirmButtonColor: '#1f2937'
                     });
                     return;
                 }

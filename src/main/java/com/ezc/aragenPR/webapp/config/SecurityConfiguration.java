@@ -23,6 +23,7 @@ import org.springframework.security.web.authentication.rememberme.JdbcTokenRepos
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.ezc.aragenPR.webapp.security.CustomAuthenticationProvider;
 import com.ezc.aragenPR.webapp.security.CustomRememberMeServices;
@@ -65,7 +66,11 @@ public class SecurityConfiguration {
         // @formatter:off
         http
             .csrf()
+                // /mock-sap/** implements SAP Gateway's OWN unrelated X-CSRF-Token handshake
+                // (see MockSapODataController/SapODataClient) - this app's own Spring Security
+                // CSRF check must stay out of its way, same as the OTP endpoints below.
                 .ignoringRequestMatchers("/user/sendOtp", "/user/verifyOtp", "/user/resetPasswordWithOtp")
+                .ignoringRequestMatchers(new AntPathRequestMatcher("/mock-sap/**"))
             .and()
         .headers()
         //.contentSecurityPolicy("script-src 'self'  https://stackpath.bootstrapcdn.com https://code.jquery.com https://cdnjs.cloudflare.com 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://stackpath.bootstrapcdn.com https://code.jquery.com https://cdnjs.cloudflare.com")
@@ -75,6 +80,15 @@ public class SecurityConfiguration {
 		.and()
         	     .authorizeRequests()
         	     .requestMatchers("/bootstrap/**", "/dist/**", "/plugins/**").permitAll()
+                // Fake-SAP test double for SapODataClient (see MockSapODataController) - off by
+                // default (sap.odata.mock.enabled), so this permit is inert unless a dev box
+                // explicitly turns it on. Server-to-server loopback call, no session to carry.
+                // Uses AntPathRequestMatcher explicitly (not the String-pattern overload) because
+                // Spring Security 6's MVC-aware matcher only matches paths that resolve to a real
+                // Spring MVC handler mapping - a conditionally-registered controller like this one
+                // can appear "unmapped" to that matcher depending on bean registration timing, so
+                // plain Ant-path comparison is the reliable choice here.
+                .requestMatchers(new AntPathRequestMatcher("/mock-sap/**")).permitAll()
                 .requestMatchers("/login*","/login*","/favicon.ico" ,"/offline/*",
                 		//"/logout*",
                 		"/signin/**", "/signup/**", "/customLogin",

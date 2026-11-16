@@ -158,12 +158,18 @@ public class SapPrFetchServiceImpl implements ISapPrFetchService {
     }
 
     /**
-     * One realistic example PR line per selected plant (or a single default plant if
-     * none was selected), for local development/testing without a live SAP connection -
-     * lets a buyer exercise the "from PRs" flow against whichever plant(s) they filtered
-     * on, rather than always seeing the same single hardcoded plant.
+     * Local dev/test PR lines for exercising the "from PRs" -> RFQ -> QCF flow without a live
+     * SAP connection - real-looking data (14 lines across 6 PR numbers) supplied for testing,
+     * filtered by whichever plant/purGrp/PR-number-range criteria the buyer actually searched
+     * on, same as a real SAP search would narrow results. Falls back to one synthetic line if
+     * every seeded row gets filtered out, so the flow is never a dead end.
      */
     private List<PrLineItem> mockPrs(PrSearchCriteria criteria, String buyerUserId) {
+        List<PrLineItem> all = seedPrLines();
+        List<PrLineItem> filtered = all.stream().filter(pr -> matchesCriteria(pr, criteria)).toList();
+        if (!filtered.isEmpty()) {
+            return filtered;
+        }
         List<String> plants = (criteria.getPlant() != null && !criteria.getPlant().isEmpty())
                 ? criteria.getPlant() : List.of("1002");
         List<PrLineItem> result = new ArrayList<>();
@@ -172,6 +178,98 @@ public class SapPrFetchServiceImpl implements ISapPrFetchService {
             result.add(mockPr(criteria, buyerUserId, plant, seq++));
         }
         return result;
+    }
+
+    private boolean matchesCriteria(PrLineItem pr, PrSearchCriteria criteria) {
+        if (criteria.getPlant() != null && !criteria.getPlant().isEmpty() && !criteria.getPlant().contains(pr.getPlant())) {
+            return false;
+        }
+        if (criteria.getPurGrp() != null && !criteria.getPurGrp().isEmpty() && !criteria.getPurGrp().contains(pr.getPurGrp())) {
+            return false;
+        }
+        if (criteria.getPrLow() != null && !criteria.getPrLow().isBlank()) {
+            long low = Long.parseLong(criteria.getPrLow());
+            long high = (criteria.getPrHigh() != null && !criteria.getPrHigh().isBlank())
+                    ? Long.parseLong(criteria.getPrHigh()) : low;
+            try {
+                long reqNo = Long.parseLong(pr.getReqNo());
+                if (reqNo < low || reqNo > high) {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Real-looking test PR lines supplied for local RFQ/QCF end-to-end testing (all plant 2001). */
+    private List<PrLineItem> seedPrLines() {
+        List<PrLineItem> lines = new ArrayList<>();
+        lines.add(seedLine("120155977", "10", "Engineering items", "76000032105", "TISSUE PAPER ROLL",
+                "1500.000", "NOS", "30.37", "45555.00", "2001", "215", "14.10.2026", "RMANJU", "RMANJU"));
+        lines.add(seedLine("120155949", "10", "Filter bags-Cen&VTD", "96000019287", "PP ANTISTATIC CLOTH CF-1009",
+                "10.000", "NOS", "1929.04", "19290.40", "2001", "216", "24.10.2026", "DSAVIO", "DSAVIO"));
+        lines.add(seedLine("120155948", "10", "WIRE MESH", "76000021136", "MESH VIBRO SIFTER SS316,16MESH",
+                "1.000", "NOS", "3418.87", "3418.87", "2001", "216", "25.09.2026", "DSAVIO", "DSAVIO"));
+        lines.add(seedLine("120155947", "10", "PRODUCTION CONSUMABE", "75000031949", "MESH VIBRO SIFTER SS316,18MESH",
+                "1.000", "NOS", "2875.17", "2875.17", "2001", "216", "24.10.2026", "DSAVIO", "DSAVIO"));
+
+        lines.add(seedLine("12407949", "10", "Solvents", "10000001926", "Methanol",
+                "300000.000", "KG", "58.94", "17682000.00", "2001", "230", "24.09.2026", "PRABUK", "PRABUK"));
+        lines.add(seedLine("12407949", "20", "Solvents", "10000001932", "Methylene Dichloride",
+                "300000.000", "KG", "57.19", "17157000.00", "2001", "230", "24.09.2026", "PRABUK", "PRABUK"));
+        lines.add(seedLine("12407949", "30", "Solvents", "10000001836", "Acetone",
+                "36000.000", "KG", "134.19", "4830840.00", "2001", "230", "24.09.2026", "PRABUK", "PRABUK"));
+        lines.add(seedLine("12407949", "40", "Solvents", "10000001905", "Isopropyl Alcohol",
+                "30000.000", "KG", "138.92", "4167600.00", "2001", "230", "24.09.2026", "PRABUK", "PRABUK"));
+        lines.add(seedLine("12407949", "50", "Solvents", "10000001857", "n-Butanol",
+                "15000.000", "KG", "145.88", "2188200.00", "2001", "230", "24.10.2026", "PRABUK", "PRABUK"));
+
+        lines.add(seedLine("150037387", "20", "CHEMICALS", "66000006558", "Compressor Gas R134A",
+                "40.000", "KG", "1600.00", "64000.00", "2001", "217", "23.10.2026", "Santosh K", "MKKUMAR"));
+        lines.add(seedLine("150037387", "30", "Mechanical/Utilities", "96000020986", "CHILLER COMPRESSOR (G 50 ASF-Z )",
+                "1.000", "NOS", "764788.10", "764788.10", "2001", "217", "23.10.2026", "Santosh K", "MKKUMAR"));
+        lines.add(seedLine("150037386", "10", "MATRL HANDLING SYSTM", "96000014571", "PALLET TROLLEY",
+                "10.000", "NOS", "22000.00", "220000.00", "2001", "217", "23.10.2026", "Santosh K", "MKKUMAR"));
+
+        lines.add(seedLine("140042184", "10", "bearings", "76000008835", "BALL BEARING 3305 ATN9,SKF",
+                "8.000", "NOS", "4223.00", "33784.00", "2001", "214", "23.10.2026", "SALEEM", "SALEEMG"));
+        lines.add(seedLine("140042184", "20", "Oil seals", "76000022809", "OIL SEAL 22 x 32 x 7",
+                "15.000", "NOS", "120.00", "1800.00", "2001", "214", "23.10.2026", "SALEEM", "SALEEMG"));
+        return lines;
+    }
+
+    private static final DateTimeFormatter SOURCE_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    private PrLineItem seedLine(String reqNo, String item, String matGrp, String material, String description,
+            String qty, String uom, String unitPrice, String totalValue, String plant, String purGrp,
+            String deliveryDate, String requestedBy, String createdBy) {
+        PrLineItem pr = new PrLineItem();
+        pr.setReqNo(reqNo);
+        pr.setItem(item);
+        pr.setMatGrp(matGrp);
+        pr.setCreatedDate(LocalDate.now().minusDays(1));
+        pr.setChangedDate(LocalDate.now());
+        pr.setAccAssgnCat("");
+        pr.setItemCat("");
+        pr.setMaterial(material);
+        pr.setDescription(description);
+        pr.setQty(new BigDecimal(qty));
+        pr.setUom(uom);
+        pr.setUnitPrice(new BigDecimal(unitPrice));
+        pr.setTotalValue(new BigDecimal(totalValue));
+        pr.setCurrency("INR");
+        pr.setDeliveryDate(LocalDate.parse(deliveryDate, SOURCE_DATE));
+        pr.setPlant(plant);
+        pr.setPurGrp(purGrp);
+        pr.setItemText("");
+        pr.setPoText("");
+        pr.setRequestedBy(requestedBy);
+        pr.setCreatedBy(createdBy);
+        pr.setAmendedVersion("0");
+        pr.setDocType("NB");
+        return pr;
     }
 
     private PrLineItem mockPr(PrSearchCriteria criteria, String buyerUserId, String plant, int seq) {

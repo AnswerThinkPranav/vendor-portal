@@ -1,10 +1,21 @@
 package com.ezc.aragenPR.webapp.controller.rfq;
 
+import java.io.IOException;
 import java.util.Map;
+
+import java.util.List;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.apache.poi.ss.usermodel.Workbook;
 
 import com.ezc.aragenPR.webapp.dto.rfq.QcfCompareForm;
 import com.ezc.aragenPR.webapp.dto.rfq.QcfListDataTablePage;
+import com.ezc.aragenPR.webapp.dto.rfq.QcfWorkflowActionRequest;
+import com.ezc.aragenPR.webapp.dto.rfq.QcfWorkflowStatus;
 import com.ezc.aragenPR.webapp.dto.rfq.SubmitQcfRequest;
+import com.ezc.aragenPR.webapp.dto.vendorreg.ApprovalHierarchyLevel;
+import com.ezc.aragenPR.webapp.dto.vendorreg.AuditTrailEntry;
 import com.ezc.aragenPR.webapp.model.user.Users;
 import com.ezc.aragenPR.webapp.service.rfq.IQcfService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +34,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * QCF ("Collective RFQ") flow - see Vendor Portal/JSP/RFQ (ezListQcfs / ezQCSList /
- * ezQuotationComparisionForm). Create-PO / ezViewDOMQCF is a later phase (see IQcfService javadoc).
+ * ezQuotationComparisionForm / ezViewDOMQCF). Create PO lives in {@link PoController}.
  */
 @Controller
 @RequestMapping("/qcf")
@@ -82,10 +93,68 @@ public class QcfController {
     public ResponseEntity<Map<String, Object>> submitQcf(@PathVariable String qcfNo, @RequestBody SubmitQcfRequest request) {
         try {
             qcfService.submitQcf(qcfNo, request, currentUser());
-        } catch (IllegalArgumentException e) {
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "QCF " + qcfNo + " submitted for approval."));
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
-        return ResponseEntity.ok(Map.of("status", "OK", "message", "QCF " + qcfNo + " submitted for approval."));
+    }
+
+    // --- Approval workflow (ezViewDOMQCF.jsp) ---
+
+    @PostMapping("/api/{qcfNo}/action")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> actOnQcf(@PathVariable String qcfNo, @RequestBody QcfWorkflowActionRequest request) {
+        try {
+            qcfService.actOnQcf(qcfNo, currentUser().getUserId(), request);
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "Action completed."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{qcfNo}/hierarchy")
+    @ResponseBody
+    public ResponseEntity<List<ApprovalHierarchyLevel>> hierarchy(@PathVariable String qcfNo) {
+        return ResponseEntity.ok(qcfService.getApprovalHierarchy(qcfNo));
+    }
+
+    @GetMapping("/{qcfNo}/audit-trail")
+    @ResponseBody
+    public ResponseEntity<List<AuditTrailEntry>> auditTrail(@PathVariable String qcfNo) {
+        return ResponseEntity.ok(qcfService.getAuditTrail(qcfNo));
+    }
+
+    @GetMapping("/{qcfNo}/export")
+    public void exportCompareForm(@PathVariable String qcfNo, HttpServletResponse response) throws IOException {
+        Workbook wb = qcfService.exportCompareForm(qcfNo, currentUser());
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=QCF_" + qcfNo + ".xlsx");
+        wb.write(response.getOutputStream());
+        wb.close();
+    }
+
+    // --- Query mechanism (an approver questioning the buyer's recommendation) ---
+
+    @PostMapping("/api/{qcfNo}/query")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> raiseQuery(@PathVariable String qcfNo, @RequestBody Map<String, String> body) {
+        try {
+            qcfService.raiseQuery(qcfNo, currentUser().getUserId(), body.get("queryText"));
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "Query raised."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/api/{qcfNo}/query-reply")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> replyToQuery(@PathVariable String qcfNo, @RequestBody Map<String, String> body) {
+        try {
+            qcfService.replyToQuery(qcfNo, currentUser().getUserId(), body.get("replyText"));
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "Reply sent."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
     }
 
     private Users currentUser() {

@@ -160,6 +160,41 @@ public class RfqController {
         return u.getUserType() != null && (u.getUserType() == 3 || u.getUserType() == 4);
     }
 
+    // --- Buyer decision on a vendor's quote (ezViewQuoteDetails.jsp) ---
+
+    @PostMapping("/api/{rfqNo}/approve")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> approveQuote(@PathVariable String rfqNo, @RequestBody Map<String, String> body) {
+        try {
+            rfqService.approveQuote(rfqNo, currentUser(), body.get("comments"));
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "Quotation approved."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/api/{rfqNo}/reject")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> rejectQuote(@PathVariable String rfqNo, @RequestBody Map<String, String> body) {
+        try {
+            rfqService.rejectQuote(rfqNo, currentUser(), body.get("comments"));
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "Quotation rejected."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/api/{rfqNo}/requote")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> requoteQuote(@PathVariable String rfqNo, @RequestBody Map<String, String> body) {
+        try {
+            rfqService.requoteQuote(rfqNo, currentUser(), body.get("comments"));
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "Sent back to vendor for requote."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+
     @PostMapping("/api/create")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> createRfq(@RequestBody CreateRfqRequest request) {

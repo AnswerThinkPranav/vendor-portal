@@ -15,5 +15,12 @@ public record QuoteLineItemView(
         String currency,
         String remarks,
         String deliveryDate,
-        String warranty) {
+        String warranty,
+        /** Previously saved condition values (RfqItemCondition), so re-opening the quote form -
+         * whether the vendor editing again or a buyer reviewing - shows what was actually quoted
+         * instead of resetting to blank. Type is P/Q/V (percent/per-qty/value), or "" if unset. */
+        String discType, String discValue,
+        String pkfwType, String pkfwValue,
+        String frtType, String frtValue,
+        String gstPercent) {
 }

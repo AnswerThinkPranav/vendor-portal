@@ -26,22 +26,22 @@
             grid-template-columns:repeat(2,1fr);
             gap:12px;
         }
-        label { font-weight:bold; color:#033882; display:block; margin-top:6px; }
+        label { font-weight:bold; color:#1f2937; display:block; margin-top:6px; }
         span.field-value { display:inline-block; color:#222; }
 
         /* Tabs */
-        .tabs { display:flex; border-bottom:2px solid #033882; margin-top:10px; }
+        .tabs { display:flex; border-bottom:2px solid #1f2937; margin-top:10px; }
         .tab {
             padding:10px 20px;
             cursor:pointer;
             background:#eaeaea;
-            color:#033882;
+            color:#1f2937;
             border-top-left-radius:8px;
             border-top-right-radius:8px;
             margin-right:4px;
         }
         .tab.active {
-            background:#033882;
+            background:#1f2937;
             color:white;
             font-weight:bold;
         }
@@ -57,11 +57,11 @@
         .tab-content.active { display:block; }
 
         /* Table */
-        table.dataTable thead { background:#033882; color:white; }
+        table.dataTable thead { background:#1f2937; color:white; }
         table { width:100%; border-collapse:collapse; }
 
         .btn-back {
-            background:#033882; color:white;
+            background:#1f2937; color:white;
             border:none; padding:6px 12px;
             border-radius:4px; cursor:pointer;
         }
@@ -76,7 +76,7 @@
 
     <!-- Entry Sheet Header -->
     <div class="header-card">
-        <h3 style="color:#033882; border-bottom:2px solid #033882; padding-bottom:4px;">Entry Sheet Basic Data</h3>
+        <h3 style="color:#1f2937; border-bottom:2px solid #1f2937; padding-bottom:4px;">Entry Sheet Basic Data</h3>
         <div class="header-grid">
             <div>
                 <label>SES Number:</label>
@@ -126,7 +126,7 @@
 
     <!-- Tab 1 -->
     <div id="tab-basic" class="tab-content active">
-        <h4 style="color:#033882;">General Information</h4>
+        <h4 style="color:#1f2937;">General Information</h4>
         <p><strong>Entry Sheet Type:</strong> Standard Service Sheet</p>
         <p><strong>Created By:</strong> <span th:text="${ses.vendorName}"></span></p>
         <p><strong>Document Date:</strong> <span th:text="${#temporals.format(ses.entryDate,'dd-MMM-yyyy')}"></span></p>
@@ -134,19 +134,19 @@
 
     <!-- Tab 2 -->
     <div id="tab-accepted" class="tab-content">
-        <h4 style="color:#033882;">Accepted Data</h4>
+        <h4 style="color:#1f2937;">Accepted Data</h4>
         <p>All service line items that have been accepted for this entry sheet are shown below.</p>
     </div>
 
     <!-- Tab 3 -->
     <div id="tab-remarks" class="tab-content">
-        <h4 style="color:#033882;">Texts / Remarks</h4>
+        <h4 style="color:#1f2937;">Texts / Remarks</h4>
         <p>Any additional remarks or notes from SAP can be displayed here.</p>
     </div>
 
     <!-- Service Line Items Table -->
     <div class="card">
-        <h3 style="color:#033882;">Service Line Items</h3>
+        <h3 style="color:#1f2937;">Service Line Items</h3>
         <table id="itemTable" class="display">
             <thead>
             <tr>

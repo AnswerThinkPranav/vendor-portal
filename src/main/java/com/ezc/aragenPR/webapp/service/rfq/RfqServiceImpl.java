@@ -228,6 +228,17 @@ public class RfqServiceImpl implements IRfqService {
                 .reduce((a, b) -> a + "," + b)
                 .orElse(null);
 
+        // ERH_CATEGORY was never populated by this method - meaning workflow routing by
+        // (compCode, plant, category), same scheme Vendor Registration already uses, could never
+        // resolve a template for any RFQ. There's no category field collected on this form, so
+        // derive one from the first line's material group (EWKM_CATEGORY is varchar(10)).
+        String category = items.isEmpty() || items.get(0).getMatGrp() == null ? null
+                : items.get(0).getMatGrp().trim().toUpperCase().replaceAll("[^A-Z0-9]", "_")
+                        .replaceAll("_+", "_").replaceAll("^_|_$", "");
+        if (category != null && category.length() > 10) {
+            category = category.substring(0, 10);
+        }
+
         boolean firstVendor = true;
         for (VendorOption vendor : request.getVendors()) {
             String rfqNo = nextRfqNo();
@@ -252,6 +263,7 @@ public class RfqServiceImpl implements IRfqService {
             header.setPrNo(prSummary);
             header.setPlant(request.getPlant());
             header.setCompCode(request.getCompCode());
+            header.setCategory(category);
             header.setRfqType(request.getRfqType());
             header.setQcfTitle(request.getQcfTitle());
             rfqHeaderRepository.save(header);
@@ -381,7 +393,7 @@ public class RfqServiceImpl implements IRfqService {
             predicates.add(statusPredicate(root, cb, safeType, isVendor));
 
             if (isVendor) {
-                predicates.add(cb.equal(root.get("soldTo"), zeroPadVendorId(currentUser)));
+                predicates.add(cb.equal(root.get("soldTo"), vendorIdentity(currentUser)));
             } else {
                 predicates.add(cb.equal(root.get("rfqType"), safeRfqType));
                 predicates.add(cb.equal(root.get("createdBy"), currentUser.getUserId()));
@@ -533,19 +545,16 @@ public class RfqServiceImpl implements IRfqService {
         return u.getUserType() != null && (u.getUserType() == 3 || u.getUserType() == 4);
     }
 
-    /** Ports iListRFQs.jsp's soldTo1 zero-padding: parses the vendor's numeric id and left-pads to 10 chars. */
-    private String zeroPadVendorId(Users u) {
-        String raw = u.getVendorCode();
-        if (raw == null || raw.isBlank()) {
-            raw = u.getUserId();
-        }
-        try {
-            raw = String.valueOf(Long.parseLong(raw.trim()));
-        } catch (NumberFormatException e) {
-            return raw;
-        }
-        String padded = "0000000000" + raw;
-        return padded.substring(padded.length() - 10);
+    /**
+     * The vendor identity to compare against RfqHeader.soldTo. This used to port
+     * iListRFQs.jsp's soldTo1 zero-padded-SAP-vendor-code scheme (preferring EU_BUSINESS_PARTNER),
+     * but createRfq (below) actually stores the vendor's raw login id (vendor.id(), sourced from
+     * EU_ID via RfqVendorLookupRepository/toVendorOption) as soldTo - not a zero-padded SAP vendor
+     * code. The old padding logic silently never matched, breaking a vendor's own "my RFQs" list
+     * filter and (before this fix) every ownership check added for quote accept/reject/requote.
+     */
+    private String vendorIdentity(Users u) {
+        return u.getUserId();
     }
 
     /**
@@ -660,7 +669,15 @@ public class RfqServiceImpl implements IRfqService {
         List<RfqDetail> details = new ArrayList<>(rfqDetailRepository.findByRfqNo(rfqNo));
         details.sort(Comparator.comparing(RfqDetail::getLineNo));
 
-        List<QuoteLineItemView> items = details.stream().map(d -> new QuoteLineItemView(
+        Map<String, Map<String, RfqItemCondition>> condByLine = groupConditionsByLine(rfqNo, header.getSoldTo());
+
+        List<QuoteLineItemView> items = details.stream().map(d -> {
+            Map<String, RfqItemCondition> lineConds = condByLine.getOrDefault(stripDecimal(d.getLineNo()), Map.of());
+            RfqItemCondition disc = lineConds.get("DISC");
+            RfqItemCondition pkfw = lineConds.get("PKFW");
+            RfqItemCondition frt = lineConds.get("FRT");
+            RfqItemCondition tax = lineConds.get("TAX");
+            return new QuoteLineItemView(
                 stripDecimal(d.getLineNo()),
                 normalizeMaterial(d.getMaterial()),
                 d.getMaterialDesc(),
@@ -674,7 +691,16 @@ public class RfqServiceImpl implements IRfqService {
                 (d.getCurrency() == null || d.getCurrency().isBlank()) ? "INR" : d.getCurrency(),
                 d.getRemarks(),
                 d.getDeliveryDate() == null ? "" : d.getDeliveryDate().format(DMY),
-                d.getWarranty())).toList();
+                d.getWarranty(),
+                condType(disc), condValue(disc),
+                condType(pkfw), condValue(pkfw),
+                condType(frt), condValue(frt),
+                condValue(tax));
+        }).toList();
+
+        boolean isOwner = isVendorUser(currentUser) && header.getSoldTo() != null
+                && header.getSoldTo().equals(vendorIdentity(currentUser));
+        boolean canAct = !isOwner && "P".equals(header.getStatus());
 
         return new RfqQuoteFormView(
                 header.getRfqNo(),
@@ -686,7 +712,26 @@ public class RfqServiceImpl implements IRfqService {
                 header.getLdStatus(), header.getLdClause(),
                 header.getPgStatus(), header.getPgClause(),
                 masterKeyValueOptions("PMNT_TERM"), masterKeyValueOptions("INCO_TERM"),
-                items);
+                items, isOwner, header.getStatus(), canAct);
+    }
+
+    private String condType(RfqItemCondition c) {
+        return (c == null || c.getTaxType() == null) ? "" : c.getTaxType();
+    }
+
+    private String condValue(RfqItemCondition c) {
+        if (c == null || c.getTaxValue() == null || c.getTaxValue().isBlank()) {
+            return "0";
+        }
+        return c.getTaxValue();
+    }
+
+    private Map<String, Map<String, RfqItemCondition>> groupConditionsByLine(String rfqNo, String vendor) {
+        Map<String, Map<String, RfqItemCondition>> byLine = new HashMap<>();
+        for (RfqItemCondition c : rfqItemConditionRepository.findByRfqNoAndVendor(rfqNo, vendor)) {
+            byLine.computeIfAbsent(stripDecimal(c.getLineNo()), k -> new HashMap<>()).put(c.getTaxCode(), c);
+        }
+        return byLine;
     }
 
     // --- Submit quote (ezQuotationSave.jsp) ---
@@ -704,6 +749,10 @@ public class RfqServiceImpl implements IRfqService {
         String vendorId = header.getSoldTo();
         String userType = currentUser.getUserType() == null ? "" : String.valueOf(currentUser.getUserType());
         boolean isImport = "IMP".equalsIgnoreCase(header.getRfqType());
+
+        if (!isVendorUser(currentUser) || vendorId == null || !vendorId.equals(vendorIdentity(currentUser))) {
+            throw new IllegalStateException("Only the vendor this RFQ was sent to can submit a quote.");
+        }
 
         header.setStatus("P");
         header.setPaymentTerms(request.paymentTerms());
@@ -770,6 +819,55 @@ public class RfqServiceImpl implements IRfqService {
             comment.setComments(request.comments());
             comment.setUserId(currentUser.getUserId());
             comment.setDate(now);
+            documentCommentRepository.save(comment);
+        }
+    }
+
+    // --- Buyer decision on a vendor's quote - see ezViewQuoteDetails.jsp ---
+
+    @Override
+    @Transactional
+    public void approveQuote(String rfqNo, Users buyer, String comments) {
+        transitionQuoteStatus(rfqNo, buyer, comments, "Y", false);
+    }
+
+    @Override
+    @Transactional
+    public void rejectQuote(String rfqNo, Users buyer, String comments) {
+        transitionQuoteStatus(rfqNo, buyer, comments, "X", true);
+    }
+
+    @Override
+    @Transactional
+    public void requoteQuote(String rfqNo, Users buyer, String comments) {
+        transitionQuoteStatus(rfqNo, buyer, comments, "R", true);
+    }
+
+    private void transitionQuoteStatus(String rfqNo, Users buyer, String comments, String newStatus, boolean commentsRequired) {
+        RfqHeader header = rfqHeaderRepository.findById(rfqNo)
+                .orElseThrow(() -> new IllegalArgumentException("RFQ not found: " + rfqNo));
+        if (isVendorUser(buyer)) {
+            throw new IllegalStateException("Only a buyer can act on a vendor's quote.");
+        }
+        if (!"P".equals(header.getStatus())) {
+            throw new IllegalStateException("This quote is not awaiting a decision.");
+        }
+        if (commentsRequired && (comments == null || comments.isBlank())) {
+            throw new IllegalStateException("Please enter comments.");
+        }
+
+        header.setStatus(newStatus);
+        header.setModifiedBy(buyer.getUserId());
+        header.setModifiedOn(LocalDateTime.now());
+        rfqHeaderRepository.save(header);
+
+        if (comments != null && !comments.isBlank()) {
+            DocumentComment comment = new DocumentComment();
+            comment.setDocId(rfqNo);
+            comment.setDocType("RFQ");
+            comment.setComments(comments);
+            comment.setUserId(buyer.getUserId());
+            comment.setDate(LocalDateTime.now());
             documentCommentRepository.save(comment);
         }
     }

@@ -30,6 +30,9 @@ public class SESService {
     RFCReadSAPService rfcReadSAPService;
 
     @Autowired
+    private com.ezc.aragenPR.webapp.sap.ses.ISesSapGateway sesSapGateway;
+
+    @Autowired
     SESRepo sesRepo;
 
     @Autowired
@@ -388,97 +391,12 @@ public class SESService {
         System.out.print("sesRepo Saved");
         return header;
     }
-    public String getRelCode(String userName)  throws JCoException
-    {
-    System.out.println("userName"+userName);
-
-        JCoDestination destination = rfcReadSAPService.getDestination();
-        JCoRepository repository = destination.getRepository();
-        JCoFunction function = repository.getFunction("ZEZ_PR_USER_DATA");
-
-        if (function == null) {
-            throw new RuntimeException("ZEZ_PR_USER_DATA not found in SAP.");
-        }
-
-        // INPUT
-        function.getImportParameterList().setValue("S_UNAME", userName);
-        function.getImportParameterList().setValue("PR_REL_STRATEGY", "");
-        function.getImportParameterList().setValue("PR_SE_REL_STRATEGY", "X");
-
-
-        JCoContext.begin(destination);
-        function.execute(destination);
-        JCoContext.end(destination);
-
-        JCoTable returnTable = function.getTableParameterList().getTable("PR_USER_DATA_SE");
-        String relCode = "";
-        for (int i = 0; i < returnTable.getNumRows(); i++)
-        {
-            returnTable.setRow(i);
-
-            relCode = returnTable.getString("FRGC1");
-            System.out.println("relCode"+relCode);
-        }
-
-
-
-
-        return relCode;
-    }
+    // getRelCode moved into sap.ses.SesSapGateway.fmGetReleaseCode - it was only ever called
+    // from releaseSES(), which now delegates to the gateway directly.
 
     public Map<String, Object> releaseSES(String sesNumber, String releaseCode) throws JCoException {
-
-        Map<String, Object> response = new HashMap<>();
-        JCoDestination destination = rfcReadSAPService.getDestination();
-        JCoRepository repository = destination.getRepository();
-        JCoFunction function = repository.getFunction("BAPI_ENTRYSHEET_RELEASE");
-
-        if (function == null) {
-            throw new RuntimeException("BAPI_ENTRYSHEET_RELEASE not found in SAP.");
-        }
-        String uName="";
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Users userObj = (Users)authentication.getPrincipal();
-            String loggedUser=(String)userObj.getUserId();
-            uName=loggedUser;
-        } catch (Exception e) {
-
-        }
-        System.out.print("uName"+uName);
-        function.getImportParameterList().setValue("ENTRYSHEET", sesNumber);
-        releaseCode=getRelCode(uName);
-        if (releaseCode != null && !releaseCode.isEmpty()) {
-            function.getImportParameterList().setValue("REL_CODE", releaseCode);
-        }
-
-
-        JCoContext.begin(destination);
-        function.execute(destination);
-        JCoContext.end(destination);
-
-        JCoTable returnTable = function.getTableParameterList().getTable("RETURN");
-        // Parse return messages
-        List<String> messages = new ArrayList<>();
-        String status = "SUCCESS";
-
-        for (int i = 0; i < returnTable.getNumRows(); i++) {
-            returnTable.setRow(i);
-
-            String type = returnTable.getString("TYPE");
-            String message = returnTable.getString("MESSAGE");
-
-            messages.add(type + " - " + message);
-
-            if ("E".equals(type) || "A".equals(type)) {
-                status = "FAILED";
-            }
-        }
-
-        response.put("status", status);
-        response.put("messages", messages);
-
-        return response;
+        // SAP call moved to sap.ses.SesSapGateway (see that package for the FM/OData switch).
+        return sesSapGateway.releaseServiceEntrySheet(sesNumber);
     }
 
 }

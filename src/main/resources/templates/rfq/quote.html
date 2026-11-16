@@ -13,11 +13,11 @@
         .vr-breadcrumb .current { color: var(--blue-color); font-weight: 600; }
 
         .vr-card { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(3, 56, 130, 0.08); overflow: hidden; width: 100%; margin: 0 0 24px 0; }
-        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%); color: #fff; padding: 18px 28px; }
+        .vr-card-header { background: linear-gradient(120deg, var(--blue-color) 0%, #3b4a5e 100%); color: #fff; padding: 18px 28px; }
         .vr-card-header h4 { margin: 0; font-weight: 700; letter-spacing: .3px; }
 
         .vr-grid { display: grid; grid-template-columns: 200px 1fr 200px 1fr; border-top: 1px solid #eef1f6; }
-        .vr-grid-label { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; font-weight: 700; font-size: 12.5px; padding: 12px 16px; display: flex; align-items: center; }
+        .vr-grid-label { background: linear-gradient(120deg, var(--blue-color), #3b4a5e); color: #fff; font-weight: 700; font-size: 12.5px; padding: 12px 16px; display: flex; align-items: center; }
         .vr-grid-value { padding: 10px 16px; display: flex; align-items: center; border-bottom: 1px solid #eef1f6; font-size: 13.5px; }
         .vr-grid-value select, .vr-grid-value textarea { width: 100%; border-radius: 8px; border: 1px solid #dde3ec; padding: 6px 10px; font-size: 13.5px; }
         .vr-radio-inline { display: flex; align-items: center; gap: 8px; margin-right: 18px; font-weight: 600; font-size: 13px; }
@@ -25,12 +25,12 @@
         .vr-table-wrap { padding: 24px 28px; overflow-x: auto; }
         table.vr-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
         table.vr-table thead th {
-            background: #325786; color: #fff; font-weight: 700;
-            font-size: 11px; letter-spacing: .3px; padding: 9px 10px; text-align: center; border-bottom: 2px solid #274263; white-space: nowrap;
+            background: #2d3f55; color: #fff; font-weight: 700;
+            font-size: 11px; letter-spacing: .3px; padding: 9px 10px; text-align: center; border-bottom: 2px solid #1f2937; white-space: nowrap;
         }
         table.vr-table tbody td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #f0f2f7; white-space: nowrap; }
         table.vr-table tbody td input, table.vr-table tbody td select { width: 100px; border-radius: 7px; border: 1px solid #dde3ec; padding: 5px 8px; font-size: 12.5px; }
-        .vr-cond-btn { border: none; background: #eaf1fd; color: #2054a6; border-radius: 7px; padding: 6px 10px; cursor: pointer; }
+        .vr-cond-btn { border: none; background: #e8eaed; color: #3b4a5e; border-radius: 7px; padding: 6px 10px; cursor: pointer; }
         .vr-cond-btn:hover { background: #d5e3fb; }
 
         .vr-comments-wrap { padding: 0 28px 24px 28px; }
@@ -38,13 +38,13 @@
 
         .vr-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 0 28px 24px 28px; }
         .vr-btn { display: inline-block; border: none; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13.5px; cursor: pointer; text-decoration: none; }
-        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #0a4fae); color: #fff; }
+        .vr-btn-primary { background: linear-gradient(120deg, var(--blue-color), #3b4a5e); color: #fff; }
         .vr-btn-primary:hover { color: #fff; }
         .vr-btn-light { background: #eef1f6; color: #33415c; }
         .vr-btn-light:hover { color: #33415c; }
 
         .vr-cond-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
-        .vr-cond-table th { background: #325786; color: #fff; text-align: left; padding: 9px 12px; font-size: 11.5px; }
+        .vr-cond-table th { background: #2d3f55; color: #fff; text-align: left; padding: 9px 12px; font-size: 11.5px; }
         .vr-cond-table td { padding: 9px 12px; background: #f4f7fc; }
         .vr-cond-table td select, .vr-cond-table td input { width: 100%; border-radius: 7px; border: 1px solid #dde3ec; padding: 6px 8px; }
         .vr-cond-total-row td { background: #00c0ef; color: #fff; font-weight: 700; }
@@ -56,8 +56,18 @@
         <div class="vr-breadcrumb">RFQs &nbsp;/&nbsp; <span class="current">Vendor Quotation</span></div>
 
         <form id="quoteForm" onsubmit="return false;">
+        <input type="hidden" id="isOwner" th:value="${form.isOwner()}">
+        <input type="hidden" id="canAct" th:value="${form.canAct()}">
+        <input type="hidden" id="quoteStatus" th:value="${form.status()}">
         <div class="vr-card">
-            <div class="vr-card-header"><h4>Vendor Quotation</h4></div>
+            <div class="vr-card-header">
+                <h4>Vendor Quotation
+                    <span th:if="${form.status() == 'Y'}" style="font-size:12.5px;font-weight:500;opacity:.85"> - Approved</span>
+                    <span th:if="${form.status() == 'X'}" style="font-size:12.5px;font-weight:500;opacity:.85"> - Rejected</span>
+                    <span th:if="${form.status() == 'R'}" style="font-size:12.5px;font-weight:500;opacity:.85"> - Sent back for requote</span>
+                    <span th:if="${form.status() == 'P' and !form.isOwner()}" style="font-size:12.5px;font-weight:500;opacity:.85"> - Awaiting your decision</span>
+                </h4>
+            </div>
 
             <div class="vr-grid">
                 <div class="vr-grid-label">RFQ Ref No</div>
@@ -72,7 +82,7 @@
 
                 <div class="vr-grid-label">Payment Terms</div>
                 <div class="vr-grid-value">
-                    <select id="paymentTerms">
+                    <select id="paymentTerms" th:disabled="${!form.isOwner()}">
                         <option value="">Select Payment Terms</option>
                         <option th:each="o : ${form.paymentTermsOptions()}" th:value="${o.value()}" th:text="${o.label()}"
                                 th:selected="${o.value() == form.paymentTerms()}"></option>
@@ -80,7 +90,7 @@
                 </div>
                 <div class="vr-grid-label">Inco Terms</div>
                 <div class="vr-grid-value">
-                    <select id="incoTerms1">
+                    <select id="incoTerms1" th:disabled="${!form.isOwner()}">
                         <option value="">Select Inco Terms</option>
                         <option th:each="o : ${form.incoTermsOptions()}" th:value="${o.value()}" th:text="${o.label()}"
                                 th:selected="${o.value() == form.incoTerms1()}"></option>
@@ -89,22 +99,22 @@
 
                 <div class="vr-grid-label">LD Clause Applicable</div>
                 <div class="vr-grid-value">
-                    <label class="vr-radio-inline"><input type="radio" name="ldApp" value="Y" onchange="toggleClause('ld')" th:checked="${form.ldStatus() == 'Y'}"> Yes</label>
-                    <label class="vr-radio-inline"><input type="radio" name="ldApp" value="N" onchange="toggleClause('ld')" th:checked="${form.ldStatus() != 'Y'}"> No</label>
+                    <label class="vr-radio-inline"><input type="radio" name="ldApp" value="Y" onchange="toggleClause('ld')" th:checked="${form.ldStatus() == 'Y'}" th:disabled="${!form.isOwner()}"> Yes</label>
+                    <label class="vr-radio-inline"><input type="radio" name="ldApp" value="N" onchange="toggleClause('ld')" th:checked="${form.ldStatus() != 'Y'}" th:disabled="${!form.isOwner()}"> No</label>
                 </div>
                 <div class="vr-grid-label" id="ldClauseLabel" style="display:none">LD Clause</div>
                 <div class="vr-grid-value" id="ldClauseValue" style="display:none">
-                    <textarea id="ldTxt" rows="2" maxlength="500" th:text="${form.ldClause()}"></textarea>
+                    <textarea id="ldTxt" rows="2" maxlength="500" th:text="${form.ldClause()}" th:disabled="${!form.isOwner()}"></textarea>
                 </div>
 
                 <div class="vr-grid-label">Performance Guarantee</div>
                 <div class="vr-grid-value">
-                    <label class="vr-radio-inline"><input type="radio" name="pgApp" value="Y" onchange="toggleClause('pg')" th:checked="${form.pgStatus() == 'Y'}"> Yes</label>
-                    <label class="vr-radio-inline"><input type="radio" name="pgApp" value="N" onchange="toggleClause('pg')" th:checked="${form.pgStatus() != 'Y'}"> No</label>
+                    <label class="vr-radio-inline"><input type="radio" name="pgApp" value="Y" onchange="toggleClause('pg')" th:checked="${form.pgStatus() == 'Y'}" th:disabled="${!form.isOwner()}"> Yes</label>
+                    <label class="vr-radio-inline"><input type="radio" name="pgApp" value="N" onchange="toggleClause('pg')" th:checked="${form.pgStatus() != 'Y'}" th:disabled="${!form.isOwner()}"> No</label>
                 </div>
                 <div class="vr-grid-label" id="pgClauseLabel" style="display:none">Remarks</div>
                 <div class="vr-grid-value" id="pgClauseValue" style="display:none">
-                    <textarea id="pgTxt" rows="2" maxlength="500" th:text="${form.pgClause()}"></textarea>
+                    <textarea id="pgTxt" rows="2" maxlength="500" th:text="${form.pgClause()}" th:disabled="${!form.isOwner()}"></textarea>
                 </div>
             </div>
 
@@ -118,19 +128,23 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="item : ${form.items()}" th:attr="data-line=${item.lineNo()}">
+                    <tr th:each="item : ${form.items()}" th:attr="data-line=${item.lineNo()},
+                            data-disc-type=${item.discType()}, data-disc-value=${item.discValue()},
+                            data-pkfw-type=${item.pkfwType()}, data-pkfw-value=${item.pkfwValue()},
+                            data-frt-type=${item.frtType()}, data-frt-value=${item.frtValue()},
+                            data-gst=${item.gstPercent()}">
                         <td th:text="${item.lineNo()}"></td>
                         <td th:text="${item.material()}"></td>
                         <td th:text="${item.materialDesc()}" style="white-space:normal;min-width:180px;text-align:left"></td>
                         <td th:text="${item.matGroup()}"></td>
-                        <td><input type="text" th:id="'hsn' + ${item.lineNo()}" th:value="${item.hsnCode()}" maxlength="20"></td>
+                        <td><input type="text" th:id="'hsn' + ${item.lineNo()}" th:value="${item.hsnCode()}" maxlength="20" th:disabled="${!form.isOwner()}"></td>
                         <td th:text="${item.qty()}"></td>
-                        <td><input type="number" th:id="'perQty' + ${item.lineNo()}" th:value="${item.perQty()}" min="0" style="width:70px" th:attr="onchange='recalc(' + ${item.lineNo()} + ')'"></td>
+                        <td><input type="number" th:id="'perQty' + ${item.lineNo()}" th:value="${item.perQty()}" min="0" style="width:70px" th:attr="onchange='recalc(' + ${item.lineNo()} + ')'" th:disabled="${!form.isOwner()}"></td>
                         <td th:text="${item.uom()}"></td>
-                        <td><input type="number" th:id="'mrp' + ${item.lineNo()}" th:value="${item.mrpPrice()}" min="0" style="width:90px"></td>
-                        <td><input type="number" th:id="'price' + ${item.lineNo()}" th:value="${item.price()}" min="0" style="width:90px" th:attr="onchange='recalc(' + ${item.lineNo()} + ')'"></td>
+                        <td><input type="number" th:id="'mrp' + ${item.lineNo()}" th:value="${item.mrpPrice()}" min="0" style="width:90px" th:disabled="${!form.isOwner()}"></td>
+                        <td><input type="number" th:id="'price' + ${item.lineNo()}" th:value="${item.price()}" min="0" style="width:90px" th:attr="onchange='recalc(' + ${item.lineNo()} + ')'" th:disabled="${!form.isOwner()}"></td>
                         <td>
-                            <select th:id="'curr' + ${item.lineNo()}" style="width:80px">
+                            <select th:id="'curr' + ${item.lineNo()}" style="width:80px" th:disabled="${!form.isOwner()}">
                                 <option value="INR" th:selected="${item.currency() == 'INR' or item.currency() == null}">INR</option>
                                 <option value="USD" th:selected="${item.currency() == 'USD'}">USD</option>
                                 <option value="EUR" th:selected="${item.currency() == 'EUR'}">EUR</option>
@@ -138,7 +152,7 @@
                         </td>
                         <td><button type="button" class="vr-cond-btn" th:attr="onclick='openConditions(' + ${item.lineNo()} + ')'"><i class="fa fa-sliders"></i> Conditions</button></td>
                         <td><span th:id="'total' + ${item.lineNo()}">0.00</span></td>
-                        <td><input type="text" th:id="'remarks' + ${item.lineNo()}" th:value="${item.remarks()}" style="width:130px"></td>
+                        <td><input type="text" th:id="'remarks' + ${item.lineNo()}" th:value="${item.remarks()}" style="width:130px" th:disabled="${!form.isOwner()}"></td>
                     </tr>
                     </tbody>
                 </table>
@@ -151,7 +165,10 @@
 
             <div class="vr-actions">
                 <a class="vr-btn vr-btn-light" th:href="@{/rfq/view/{rfqNo}(rfqNo=${form.rfqNo()})}"><i class="fa fa-arrow-left"></i> Go Back</a>
-                <button type="button" class="vr-btn vr-btn-primary" onclick="submitQuote()"><i class="fa fa-check"></i> Submit Quote</button>
+                <button type="button" class="vr-btn vr-btn-primary" th:if="${form.isOwner()}" onclick="submitQuote()"><i class="fa fa-check"></i> Submit Quote</button>
+                <button type="button" class="vr-btn" style="background:#f9d949;color:#5c4d00" th:if="${form.canAct()}" onclick="requoteQuote()"><i class="fa fa-refresh"></i> Requote</button>
+                <button type="button" class="vr-btn" style="background:#e74c3c;color:#fff" th:if="${form.canAct()}" onclick="rejectQuote()"><i class="fa fa-remove"></i> Reject</button>
+                <button type="button" class="vr-btn vr-btn-primary" th:if="${form.canAct()}" onclick="approveQuote()"><i class="fa fa-check"></i> Approve</button>
             </div>
         </div>
         </form>
@@ -178,40 +195,40 @@
                         <tr>
                             <td>Discount</td>
                             <td>
-                                <select id="cDiscType">
+                                <select id="cDiscType" th:disabled="${!form.isOwner()}">
                                     <option value="">-- Select --</option>
                                     <option value="P">Discount % on Gross</option>
                                     <option value="Q">Discount/Quantity</option>
                                 </select>
                             </td>
-                            <td><input type="number" id="cDiscValue" value="0" min="0"></td>
+                            <td><input type="number" id="cDiscValue" value="0" min="0" th:disabled="${!form.isOwner()}"></td>
                             <td><span id="cCurr2"></span></td>
                             <td><span id="cDiscAmt">0.00</span></td>
                         </tr>
                         <tr>
                             <td>Pkg &amp; Fwd</td>
                             <td>
-                                <select id="cPkfwType">
+                                <select id="cPkfwType" th:disabled="${!form.isOwner()}">
                                     <option value="">-- Select --</option>
                                     <option value="P">P&amp;F% on Net</option>
                                     <option value="Q">P&amp;F QTY</option>
                                 </select>
                             </td>
-                            <td><input type="number" id="cPkfwValue" value="0" min="0"></td>
+                            <td><input type="number" id="cPkfwValue" value="0" min="0" th:disabled="${!form.isOwner()}"></td>
                             <td><span id="cCurr3"></span></td>
                             <td><span id="cPkfwAmt">0.00</span></td>
                         </tr>
                         <tr>
                             <td>Freight</td>
                             <td>
-                                <select id="cFrtType">
+                                <select id="cFrtType" th:disabled="${!form.isOwner()}">
                                     <option value="">-- Select --</option>
                                     <option value="P">Freight %</option>
                                     <option value="V">Freight (Value)</option>
                                     <option value="Q">Freight/Quantity</option>
                                 </select>
                             </td>
-                            <td><input type="number" id="cFrtValue" value="0" min="0"></td>
+                            <td><input type="number" id="cFrtValue" value="0" min="0" th:disabled="${!form.isOwner()}"></td>
                             <td><span id="cCurr4"></span></td>
                             <td><span id="cFrtAmt">0.00</span></td>
                         </tr>
@@ -220,7 +237,7 @@
                             <td>GST</td>
                             <td>Within State</td>
                             <td>
-                                <select id="cGst">
+                                <select id="cGst" th:disabled="${!form.isOwner()}">
                                     <option value="0">0</option>
                                     <option value="3">3</option>
                                     <option value="5">5</option>
@@ -236,7 +253,7 @@
                     </table>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="vr-btn vr-btn-primary" onclick="saveConditions()">Save</button>
+                    <button type="button" class="vr-btn vr-btn-primary" th:if="${form.isOwner()}" onclick="saveConditions()">Save</button>
                 </div>
             </div>
         </div>
@@ -249,11 +266,15 @@
         var currentLine = null;
 
         function initLine(lineNo) {
+            var row = $('tr[data-line="' + lineNo + '"]');
+            var alreadyQuoted = !!$('#price' + lineNo).val();
             lineState[lineNo] = {
-                disc: { type: '', value: 0 },
-                pkfw: { type: '', value: 0 },
-                frt: { type: '', value: 0 },
-                gst: 18
+                disc: { type: row.attr('data-disc-type') || '', value: parseFloat(row.attr('data-disc-value')) || 0 },
+                pkfw: { type: row.attr('data-pkfw-type') || '', value: parseFloat(row.attr('data-pkfw-value')) || 0 },
+                frt: { type: row.attr('data-frt-type') || '', value: parseFloat(row.attr('data-frt-value')) || 0 },
+                // Default GST to 18% for a brand-new (never-quoted) line, matching the modal's
+                // static default option; once a line has been quoted, always trust the saved value.
+                gst: alreadyQuoted ? (parseFloat(row.attr('data-gst')) || 0) : 18
             };
         }
         /*[# th:each="item : ${form.items()}"]*/
@@ -428,6 +449,35 @@
                 }
             });
         }
+
+        function postDecision(action, requireComments, confirmMsg) {
+            var comments = $('#comments').val();
+            if (requireComments && !comments) {
+                alert('Please Enter Comments');
+                return;
+            }
+            if (!confirm(confirmMsg)) { return; }
+
+            $.ajax({
+                url: '/rfq/api/' + /*[[${form.rfqNo()}]]*/ '' + '/' + action,
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content') },
+                data: JSON.stringify({ comments: comments }),
+                success: function (resp) {
+                    alert(resp.message || 'Done.');
+                    window.location.href = '/rfq/view/' + /*[[${form.rfqNo()}]]*/ '';
+                },
+                error: function (xhr) {
+                    var msg = 'Action failed.';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+                    alert(msg);
+                }
+            });
+        }
+        function approveQuote() { postDecision('approve', false, 'Are you sure you want to Approve the Quote?'); }
+        function rejectQuote() { postDecision('reject', true, 'Are you sure you want to Reject the Quote?'); }
+        function requoteQuote() { postDecision('requote', true, 'Are you sure you want to Submit for Requote?'); }
     </script>
 </div>
 </body>

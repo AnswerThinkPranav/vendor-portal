@@ -73,9 +73,67 @@ public class WorkflowEngineServiceImpl implements IWorkflowEngineService {
 
     @Override
     public boolean isFinalLevel(Integer template, Integer level) {
-        return wfPricingConditionRepository.findMaxLevel(template)
-                .map(max -> level != null && level.intValue() >= max.intValue())
-                .orElse(true);
+        return isFinalLevel(template, level, null);
+    }
+
+    @Override
+    public boolean isFinalLevel(Integer template, Integer level, BigDecimal docValue) {
+        return resolveFinalLevel(template, docValue).map(fl -> level != null && level.intValue() >= fl.intValue()).orElse(true);
+    }
+
+    /**
+     * Real shape of value-threshold routing (see EWPC_QCF_FLAG/EWPC_QCF_RELEASE): it's a single
+     * sequential ladder (level 1, 2, 3, ... in order - exactly one row per level, no branching
+     * within a level), where the escalation LENGTH depends on the document's value rather than
+     * the row chosen at any one level. A real example: levels 1-3 (PUR_PERSON/LEADBUYER/SITEFI)
+     * carry a dummy "LE 0" (never satisfied by a real positive amount, so never a stopping point -
+     * every document always climbs past them), then level 4 (BUHEAD) is "LE 500000", level 5
+     * (FIHEAD) is "LE 2499999", level 6 (CEO) is "GE 2500000". A ₹300,000 document's final level
+     * is 4 (BUHEAD) - it must never continue to level 5/6, even though those levels physically
+     * exist in the same template for larger documents. This resolves that stopping level: scan
+     * every level that has a real LE/GE condition, sorted by release value ascending, and return
+     * the first one the document value satisfies.
+     */
+    private Optional<Integer> resolveFinalLevel(Integer template, BigDecimal docValue) {
+        List<WfPricingCondition> rows = wfPricingConditionRepository.findByTemplateOrderByLevelAsc(template);
+        if (rows.isEmpty()) {
+            return Optional.empty();
+        }
+        if (docValue == null) {
+            // No value-based routing requested (e.g. Vendor Registration's templates, which don't
+            // use EWPC_QCF_FLAG at all) - preserve the old "final = max level" behavior exactly.
+            return Optional.of(rows.get(rows.size() - 1).getLevel());
+        }
+
+        List<WfPricingCondition> thresholdRows = rows.stream()
+                .filter(r -> r.getConditionFlag() != null && !r.getConditionFlag().isBlank() && r.getConditionValue() != null)
+                .sorted(java.util.Comparator.comparing(WfPricingCondition::getConditionValue))
+                .toList();
+        for (WfPricingCondition r : thresholdRows) {
+            if (matchesCondition(r, docValue)) {
+                return Optional.of(r.getLevel());
+            }
+        }
+        // No threshold matched - shouldn't happen with a well-formed template (the top GE level
+        // should catch every value above the highest LE), but fall back to the highest configured
+        // level rather than leaving the document stuck with no resolvable final level.
+        if (!thresholdRows.isEmpty()) {
+            return Optional.of(thresholdRows.get(thresholdRows.size() - 1).getLevel());
+        }
+        return Optional.of(rows.get(rows.size() - 1).getLevel());
+    }
+
+    private boolean matchesCondition(WfPricingCondition c, BigDecimal docValue) {
+        String flag = c.getConditionFlag();
+        if (flag == null || flag.isBlank() || c.getConditionValue() == null) {
+            return false;
+        }
+        BigDecimal release = BigDecimal.valueOf(c.getConditionValue());
+        return switch (flag) {
+            case "LE" -> docValue.compareTo(release) <= 0;
+            case "GE" -> docValue.compareTo(release) >= 0;
+            default -> false;
+        };
     }
 
     @Override
@@ -102,10 +160,20 @@ public class WorkflowEngineServiceImpl implements IWorkflowEngineService {
     @Transactional
     public Optional<WfPricingCondition> startWorkflow(String docType, String docId, String compCode, String plant,
             String category, String startedByUserId, String comments) {
+        return startWorkflow(docType, docId, compCode, plant, category, startedByUserId, comments, null);
+    }
+
+    @Override
+    @Transactional
+    public Optional<WfPricingCondition> startWorkflow(String docType, String docId, String compCode, String plant,
+            String category, String startedByUserId, String comments, BigDecimal docValue) {
         Integer template = resolveTemplate(docType, compCode, plant, category).orElse(null);
         if (template == null) {
             return Optional.empty();
         }
+        // Level 1 is always level 1 regardless of document value - value only decides how far up
+        // the ladder the document climbs before stopping (see resolveFinalLevel), never which row
+        // to start at.
         Optional<WfPricingCondition> level1 = getFirstLevel(template);
         if (level1.isEmpty()) {
             return Optional.empty();
@@ -140,16 +208,33 @@ public class WorkflowEngineServiceImpl implements IWorkflowEngineService {
     @Transactional
     public Optional<WfPricingCondition> forward(String docType, String docId, String plant, String category,
             String actorUserId, String comments) {
+        return forward(docType, docId, plant, category, actorUserId, comments, null);
+    }
+
+    @Override
+    @Transactional
+    public Optional<WfPricingCondition> forward(String docType, String docId, String plant, String category,
+            String actorUserId, String comments, BigDecimal docValue) {
         WfDocHistoryHeader header = requireHeader(docType, docId);
         requireAuthorized(header, plant, category, actorUserId);
 
         int template = header.getTemplateCode().intValue();
-        int nextLevelNo = header.getCurrentStep().intValue() + 1;
-        List<WfPricingCondition> nextLevels = wfPricingConditionRepository.findByTemplateAndLevel(template, nextLevelNo);
-
+        int currentLevelNo = header.getCurrentStep().intValue();
         LocalDateTime now = LocalDateTime.now();
+
+        // The current level may already be this document's resolved stopping point even though a
+        // higher-numbered level row physically exists in the template (it's there for documents
+        // with a bigger value that climb further) - never advance past it in that case.
+        if (isFinalLevel(template, currentLevelNo, docValue)) {
+            addAudit(docId, docType, actorUserId, "U", "Reviewed by " + actorUserId + " (final level)", now);
+            addComment(docType, docId, comments, actorUserId, now);
+            return Optional.empty();
+        }
+
+        int nextLevelNo = currentLevelNo + 1;
+        List<WfPricingCondition> nextLevels = wfPricingConditionRepository.findByTemplateAndLevel(template, nextLevelNo);
         if (nextLevels.isEmpty()) {
-            // No further level configured - caller should route to the terminal action instead.
+            // No further level configured at all - safety net for a malformed template.
             addAudit(docId, docType, actorUserId, "U", "Reviewed by " + actorUserId + " (final level)", now);
             addComment(docType, docId, comments, actorUserId, now);
             return Optional.empty();
@@ -183,23 +268,23 @@ public class WorkflowEngineServiceImpl implements IWorkflowEngineService {
         addComment(docType, docId, comments, actorUserId, now);
     }
 
+    /**
+     * Unlike the legacy JSP (which keeps the workflow row alive, resetting it to level 1 with
+     * wf_status='RESUBMITTED'), Send Back here hands the document fully back to the vendor: the
+     * workflow row is deleted outright and the vendor's doc reverts to INITIATED - the same state
+     * as a fresh invite, requiring a full re-submit (see VendorRegistrationServiceImpl's SEND_BACK
+     * case and submitVendorRegistration, which recreates this row from scratch on the next submit).
+     */
     @Override
     @Transactional
     public void sendBack(String docType, String docId, String actorUserId, String comments) {
         WfDocHistoryHeader header = requireHeader(docType, docId);
-        Optional<WfPricingCondition> level1 = header.getTemplateCode() == null
-                ? Optional.empty() : getFirstLevel(header.getTemplateCode().intValue());
-
         LocalDateTime now = LocalDateTime.now();
-        header.setWfStatus("RESUBMITTED");
-        header.setCurrentStep(BigDecimal.ZERO);
-        header.setNextParticipant(level1.map(WfPricingCondition::getGroup).orElse(""));
-        header.setModifiedBy(actorUserId);
-        header.setModifiedOn(now);
-        wfDocHistoryHeaderRepository.save(header);
 
         addAudit(docId, docType, actorUserId, "U", "Sent back to originator by " + actorUserId, now);
         addComment(docType, docId, comments, actorUserId, now);
+
+        wfDocHistoryHeaderRepository.delete(header);
     }
 
     @Override

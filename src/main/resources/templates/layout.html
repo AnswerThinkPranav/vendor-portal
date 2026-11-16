@@ -29,7 +29,7 @@
     <link rel="stylesheet" th:href="@{/resources/plugins/datepicker/datepicker3.css}"/>
     <style>
         th{
-             background-color: #007bff;
+             background-color: #3b4a5e;
            color: #fff;
        }
 
@@ -84,10 +84,19 @@
            z-index: -1;
        }
 
-       /* Define custom theme colors */
+       /* Define custom theme colors - site-wide "blue" is now the same deep charcoal-slate
+          family as the sidebar/login, so every page (RFQ, QCF, Vendor Registration, PR, SES,
+          Reservation...) reads as one consistent theme instead of two different color worlds. */
        :root {
-         --blue-color: #033882;
+         --blue-color: #1f2937;
+         --blue-color-light: #3b4a5e;
          --orange-color: #DC402B;
+         --sidebar-bg-1: #1f2937;
+         --sidebar-bg-2: #161d29;
+         --sidebar-bg-3: #0d1420;
+         --sidebar-accent: #3b4a5e;
+         /* Lighter slate for the dropdown-section pills (Purchase Requisition, RFQ, etc.). */
+         --sidebar-pill-bg: #2d3f55;
        }
 
        /* Page-specific overrides */
@@ -99,26 +108,78 @@
        /* Sidebar container */
        aside.main-sidebar {
          /* keep AdminLTE default width (no override here) */
-         background-color: var(--blue-color) !important;
+         background:
+           radial-gradient(900px 600px at 20% -10%, var(--sidebar-accent) 0%, transparent 60%),
+           linear-gradient(165deg, var(--sidebar-bg-1) 0%, var(--sidebar-bg-2) 55%, var(--sidebar-bg-3) 100%) !important;
          position: fixed;
          top: 0;
          left: 0;
          height: 100vh;
          color: white;
+         overflow: hidden;
        }
 
-       /* Brand link (logo area at top of sidebar) */
+       /* Brand link (logo area at top of sidebar) - transparent so the animated background
+          shows through uniformly behind the logo too, instead of a flat patch. */
        aside.main-sidebar .brand-link {
-         background-color: var(--blue-color) !important; /* same as sidebar */
+         background: transparent !important;
+         position: relative;
+         z-index: 2;
          color: #fff !important;
          border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* subtle line */
          text-align: center;
          padding: 15px;
        }
 
-       aside.main-sidebar .brand-link img {
-         max-height: 60px;
-         object-fit: contain;
+       /* ---- Sidebar animated background (mirrors the login page's treatment, scaled down for
+            a narrow fixed column, in the sidebar's own slate-charcoal palette) ---- */
+       .sidebar-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+       .sidebar-bg .grid {
+         position: absolute; inset: -44px; opacity: .06;
+         background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+         background-size: 36px 36px; animation: sbGridPan 20s linear infinite;
+         mask-image: radial-gradient(ellipse at 30% 30%, #000 0%, transparent 75%);
+       }
+       @keyframes sbGridPan { to { transform: translate(36px, 36px); } }
+       .sidebar-bg .blob { position: absolute; border-radius: 50%; filter: blur(50px); opacity: .5; mix-blend-mode: screen; }
+       .sidebar-bg .blob.b1 { width: 230px; height: 230px; background: #4a5568; left: -70px; top: -40px; animation: sbDrift1 24s ease-in-out infinite alternate; }
+       .sidebar-bg .blob.b2 { width: 200px; height: 200px; background: #3b4a5e; right: -80px; top: 42%; opacity: .4; animation: sbDrift2 28s ease-in-out infinite alternate; }
+       .sidebar-bg .blob.b3 { width: 190px; height: 190px; background: #2d3a4a; left: -50px; bottom: -60px; opacity: .45; animation: sbDrift3 32s ease-in-out infinite alternate; }
+       @keyframes sbDrift1 { to { transform: translate(60px, 80px) scale(1.15); } }
+       @keyframes sbDrift2 { to { transform: translate(-50px, -60px) scale(.9); } }
+       @keyframes sbDrift3 { to { transform: translate(40px, -70px) scale(1.2); } }
+       .sidebar-bg .ring { position: absolute; border-radius: 50%; border: 1px dashed rgba(255, 255, 255, .1); }
+       .sidebar-bg .ring.r1 { width: 320px; height: 320px; left: -40%; bottom: -18%; animation: sbSpin 100s linear infinite; }
+       .sidebar-bg .ring.r2 { width: 440px; height: 440px; left: -60%; bottom: -26%; border-style: solid; border-color: rgba(255, 255, 255, .04); animation: sbSpin 160s linear infinite reverse; }
+       @keyframes sbSpin { to { transform: rotate(360deg); } }
+       #sidebarNet { position: absolute; inset: 0; width: 100%; height: 100%; }
+       .sidebar-bg .sweep {
+         position: absolute; inset: 0;
+         background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, .05) 50%, transparent 60%);
+         background-size: 250% 100%; animation: sbSweep 11s ease-in-out infinite;
+       }
+       @keyframes sbSweep { 0% { background-position: 120% 0; } 60%, 100% { background-position: -120% 0; } }
+       @media (prefers-reduced-motion: reduce) {
+         .sidebar-bg .grid, .sidebar-bg .blob, .sidebar-bg .ring, .sidebar-bg .sweep { animation: none !important; }
+       }
+
+       /* Sidebar content (logo + nav) sits above the animated background layer. */
+       aside.main-sidebar > .sidebar { position: relative; z-index: 2; }
+
+       /* Text wordmark in the brand area, replacing the old logo image - same style as the
+          login page's wordmark. */
+       .sidebar-wordmark {
+         font-weight: 800;
+         font-size: 22px;
+         letter-spacing: .04em;
+       }
+       .sidebar-wordmark small {
+         display: block;
+         font-size: 9px;
+         font-weight: 600;
+         letter-spacing: .28em;
+         opacity: .75;
+         margin-top: 2px;
        }
 
        /* Sidebar nav links */
@@ -133,25 +194,175 @@
        .custom-sidebar .nav-link {
          position: relative;
          transition: all 0.3s ease;
-         border-radius: 50px; /* Rounded pill style */
+         border-radius: 0; /* square tiles, not pills */
          padding: 8px 16px;
        }
 
        .custom-sidebar .nav-link:hover {
-         background-color: var(--orange-color) !important;
+         background-color: #000 !important;
          color: #fff !important; /* White text */
          transition: all 0.3s ease;
        }
 
        .custom-sidebar .nav-link.active {
-         background-color: var(--orange-color) !important;
+         background-color: #000 !important;
          color: #fff !important; /* White text */
          transition: all 0.3s ease;
        }
 
-             :root {
-         --blue-color: #033882;
-         --orange-color: #DC402B;
+       /* Treeview parent links (the expandable "Vendor Registration", "Budget Price", etc.
+          sections) all use href="#" - their real leaf links use th:href, so this attribute
+          selector reliably targets only the dropdown toggles without touching plain items.
+          Transparent (not a solid pill) so the animated background shows through; a faint
+          border + separator still reads them as distinct tiles without going opaque. */
+       .custom-sidebar .nav-link[href="#"] {
+         background-color: transparent !important;
+         border: 1px solid rgba(255, 255, 255, 0.08);
+         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+       }
+
+       /* ---- Dashboard content area - same charcoal/slate color family as the sidebar and
+            login page, but LIGHT (the rest of the site stays light; only the sidebar/login are
+            dark). Replaces AdminLTE's default saturated bg-warning/bg-info/bg-aqua stat-card
+            colors with a consistent slate palette, differentiated by a left accent bar + icon
+            color instead of a solid loud background. ---- */
+       .content-wrapper {
+         background: linear-gradient(165deg, #f6f7f9 0%, #eef1f4 100%) !important;
+       }
+
+       .small-box {
+         position: relative;
+         background: #fff;
+         border: 1px solid #e3e7ec;
+         border-radius: 8px;
+         box-shadow: 0 1px 3px rgba(15, 23, 32, .06);
+         color: #1f2937;
+         overflow: hidden;
+         opacity: 0;
+         transform: translateY(14px);
+         animation: dashCardIn .5s cubic-bezier(.22, 1, .36, 1) forwards;
+         transition: box-shadow .25s ease, transform .25s ease;
+       }
+       .small-box:hover {
+         box-shadow: 0 10px 24px rgba(15, 23, 32, .14);
+         transform: translateY(-4px);
+       }
+       @keyframes dashCardIn {
+         to { opacity: 1; transform: translateY(0); }
+       }
+       /* Staggered reveal across each row's columns - gives the grid a wave-in effect on load. */
+       .row > div:nth-of-type(1) .small-box { animation-delay: .02s; }
+       .row > div:nth-of-type(2) .small-box { animation-delay: .09s; }
+       .row > div:nth-of-type(3) .small-box { animation-delay: .16s; }
+       .row > div:nth-of-type(4) .small-box { animation-delay: .23s; }
+
+       .small-box .inner { position: relative; z-index: 1; padding: 20px 20px 14px; }
+       .small-box .inner h3 {
+         color: #1f2937;
+         font-weight: 800;
+         font-variant-numeric: tabular-nums;
+         transition: color .2s ease;
+       }
+       .small-box .inner p { color: #5b6472; margin-bottom: 0; }
+
+       /* Turn AdminLTE's giant faded corner icon into a small circular badge, colored per
+          category and lifted slightly on hover for a bit of life. */
+       .small-box .icon {
+         position: absolute;
+         top: 16px; right: 16px;
+         width: 46px; height: 46px;
+         display: flex; align-items: center; justify-content: center;
+         border-radius: 50%;
+         background: rgba(59, 74, 94, .08);
+         color: #3b4a5e;
+         font-size: 18px !important;
+         opacity: 1;
+         transition: transform .3s ease, background .3s ease;
+       }
+       .small-box .icon > i { font-size: 18px; }
+       .small-box:hover .icon { transform: scale(1.12) rotate(6deg); }
+
+       .small-box-footer {
+         position: relative; z-index: 1;
+         background: #f3f5f8 !important;
+         color: #3b4a5e !important;
+         border-top: 1px solid #e3e7ec;
+         transition: background .2s ease, color .2s ease;
+       }
+       .small-box-footer:hover { background: #eceff3 !important; color: #1f2937 !important; }
+       .small-box-footer i { display: inline-block; transition: transform .2s ease; }
+       .small-box-footer:hover i { transform: translateX(4px); }
+
+       .small-box.bg-warning, .small-box.bg-info, .small-box.bg-aqua {
+         background: #fff !important;
+         color: #1f2937 !important;
+       }
+       .small-box.bg-warning { border-left: 4px solid #c8893a; }
+       .small-box.bg-info { border-left: 4px solid #3b4a5e; }
+       .small-box.bg-aqua { border-left: 4px solid #2d3f55; }
+       .small-box.bg-warning .icon { background: rgba(200, 137, 58, .12); color: #c8893a; }
+       .small-box.bg-info .icon { background: rgba(59, 74, 94, .12); color: #3b4a5e; }
+       .small-box.bg-aqua .icon { background: rgba(45, 63, 85, .12); color: #2d3f55; }
+       .small-box.bg-warning .inner h3 { color: #c8893a; }
+       .small-box.bg-info .inner h3 { color: #3b4a5e; }
+       .small-box.bg-aqua .inner h3 { color: #2d3f55; }
+
+       .content-wrapper .card {
+         border: 1px solid #e3e7ec;
+         border-radius: 8px;
+         box-shadow: 0 1px 3px rgba(15, 23, 32, .05);
+         opacity: 0;
+         transform: translateY(14px);
+         animation: dashCardIn .55s cubic-bezier(.22, 1, .36, 1) .3s forwards;
+         transition: box-shadow .25s ease;
+       }
+       .content-wrapper .card:hover {
+         box-shadow: 0 10px 26px rgba(15, 23, 32, .1);
+       }
+       .content-wrapper .card-header {
+         background: #fff;
+         border-bottom: 1px solid #e3e7ec;
+       }
+       .content-wrapper .card-header h5 {
+         color: #1f2937;
+         font-weight: 700;
+       }
+
+       @media (prefers-reduced-motion: reduce) {
+         .small-box, .content-wrapper .card {
+           animation: none !important;
+           opacity: 1 !important;
+           transform: none !important;
+         }
+       }
+
+       /* Site-wide charcoal theme polish: every "vr-" page (RFQ/QCF/Vendor Registration/PR/SES/
+          Reservation...) already sets its own hover end-states (transform/background/color) per
+          page, but without a transition those snap instantly. Adding the transition here, once,
+          turns all of them into smooth animations without having to touch every page's own
+          <style> block - and keeps the whole site feeling uniform. */
+       .vr-card-header, .vr-crit-label, .vr-step, .vr-vendor-tab,
+       .vr-btn-primary, .vr-btn-light, .vr-btn-reject, .vr-btn-sendback,
+       .vr-btn-hierarchy, .vr-btn-audit, .vr-btn-post {
+         transition: transform .2s ease, box-shadow .2s ease, background .25s ease,
+                     color .2s ease, border-color .2s ease, opacity .2s ease;
+       }
+       .vr-btn-primary:hover, .vr-btn-post:hover {
+         box-shadow: 0 8px 20px rgba(31, 41, 55, .25);
+       }
+       .vr-btn-light:hover, .vr-btn-reject:hover, .vr-btn-sendback:hover,
+       .vr-btn-hierarchy:hover, .vr-btn-audit:hover {
+         transform: translateY(-1px);
+         box-shadow: 0 4px 12px rgba(31, 41, 55, .12);
+       }
+       .vr-vendor-tab:hover { background: #e3e7ec; }
+       .vr-card-header {
+         opacity: 0;
+         transform: translateY(-8px);
+         animation: dashCardIn .45s cubic-bezier(.22, 1, .36, 1) forwards;
+       }
+       @media (prefers-reduced-motion: reduce) {
+         .vr-card-header { animation: none !important; opacity: 1 !important; transform: none !important; }
        }
 
        .loader {
@@ -354,6 +565,30 @@
 <div th:replace="~{/fragments/scripts}" ></div>
 
 <div layout:fragment="scriptContent" ></div>
+
+<!-- Count-up animation for any dashboard stat tile (.small-box h3 with a plain integer) - purely
+     cosmetic, degrades silently to the static number for non-numeric content (e.g. currency
+     strings) since it bails out when parseInt fails. -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        document.querySelectorAll('.small-box .inner h3').forEach(function (el) {
+            var target = parseInt((el.textContent || '').replace(/[^0-9-]/g, ''), 10);
+            if (isNaN(target)) { return; }
+            if (reduce) { el.textContent = target; return; }
+            var start = null;
+            var duration = 700 + Math.min(target, 40) * 10;
+            function step(ts) {
+                if (!start) { start = ts; }
+                var p = Math.min((ts - start) / duration, 1);
+                var eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.round(eased * target);
+                if (p < 1) { requestAnimationFrame(step); }
+            }
+            requestAnimationFrame(step);
+        });
+    });
+</script>
 
 
 

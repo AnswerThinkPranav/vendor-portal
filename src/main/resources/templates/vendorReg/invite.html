@@ -27,7 +27,7 @@
             margin: 0 0 24px 0;
         }
         .vr-card-header {
-            background: linear-gradient(120deg, var(--blue-color) 0%, #0a4fae 100%);
+            background: linear-gradient(120deg, var(--blue-color) 0%, #3b4a5e 100%);
             color: #fff;
             padding: 18px 28px;
             position: relative;
@@ -123,7 +123,7 @@
             margin-top: 14px;
         }
         .vr-btn-primary {
-            background: linear-gradient(120deg, var(--blue-color), #0a4fae);
+            background: linear-gradient(120deg, var(--blue-color), #3b4a5e);
             border: none;
             border-radius: 10px;
             padding: 11px 30px;
@@ -135,17 +135,6 @@
         .vr-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(3,56,130,.25); color: #fff; }
         .vr-btn-primary:disabled { opacity: .65; transform: none; box-shadow: none; }
 
-        .vr-alert {
-            display: none;
-            border-radius: 12px;
-            padding: 14px 18px;
-            font-size: 14px;
-            margin-bottom: 22px;
-            align-items: center; gap: 10px;
-        }
-        .vr-alert.success { background: #e7f7ee; color: #1c7c4d; border: 1px solid #b9ecce; }
-        .vr-alert.error { background: #fdecea; color: #c0392b; border: 1px solid #f7c9c2; }
-        .vr-alert i { font-size: 18px; }
     </style>
 </head>
 <body>
@@ -165,9 +154,6 @@
             </div>
 
             <div class="vr-card-body">
-                <div class="vr-alert success" id="successAlert"><i class="fas fa-check-circle"></i> <span></span></div>
-                <div class="vr-alert error" id="errorAlert"><i class="fas fa-exclamation-circle"></i> <span></span></div>
-
                 <form id="inviteVendorForm" autocomplete="off">
 
                     <div class="vr-section-title"><i class="fas fa-user"></i> Vendor Details</div>
@@ -286,6 +272,7 @@
 </div>
 
 <div layout:fragment="scriptContent">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(function () {
             $('.select2').select2({ theme: 'bootstrap4' });
@@ -299,7 +286,6 @@
             $('.vr-error-text').hide();
             $('.form-control').removeClass('is-invalid');
             $('.select2-container').removeClass('select2-container--invalid');
-            $('#successAlert, #errorAlert').hide();
         }
 
         function showFieldError(fieldId) {
@@ -362,17 +348,14 @@
                 .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
                 .then(function (result) {
                     if (result.ok) {
-                        $('#successAlert span').text(result.body.message);
-                        $('#successAlert').css('display', 'flex');
                         $('#tempIdBadge').text('Temp Vendor ID: ' + result.body.docId);
+                        Swal.fire({ icon: 'success', title: 'Success', text: result.body.message, confirmButtonText: 'OK' });
                     } else {
-                        $('#errorAlert span').text(result.body.message || 'Failed to invite vendor.');
-                        $('#errorAlert').css('display', 'flex');
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.body.message || 'Failed to invite vendor.', confirmButtonText: 'OK' });
                     }
                 })
                 .catch(function () {
-                    $('#errorAlert span').text('Unexpected error while saving. Please try again.');
-                    $('#errorAlert').css('display', 'flex');
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Unexpected error while saving. Please try again.', confirmButtonText: 'OK' });
                 })
                 .finally(function () {
                     $btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i>&nbsp; Create User');

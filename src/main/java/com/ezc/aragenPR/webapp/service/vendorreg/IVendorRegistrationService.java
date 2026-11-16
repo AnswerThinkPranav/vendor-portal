@@ -92,20 +92,22 @@ public interface IVendorRegistrationService {
 
     /**
      * Vendor's own submit (ezSubmitVendRegOthMat.jsp, userType=4/actionSts=V or U path) - marks
-     * the registration SUBMITTED and ready for buyer review. Does NOT start approval routing;
-     * that's a separate, explicit buyer action (see {@link #submitToWorkflow}), matching the
-     * legacy vendSubmit/vendReSubmit (vendor) vs. showSubmit (buyer) distinction.
+     * the registration SUBMITTED and routes it straight into the approval workflow at level 1
+     * (see {@link com.ezc.aragenPR.webapp.service.workflow.IWorkflowEngineService#startWorkflow}).
+     * Returns a display message naming the level-1 role the registration was submitted to (e.g.
+     * "Details have been submitted to PP").
      */
-    void submitVendorRegistration(String docId, String submittedByUserId);
+    String submitVendorRegistration(String docId, String submittedByUserId);
 
     /**
      * Buyer pushes an already-submitted registration into the approval workflow (see
      * ezSubmitVendRegOthMat.jsp actionSts='S', legacy's showSubmit): resolves the
      * EZC_WF_KEY_MAP template for (VNR, compCode, plant, category) and starts routing at level
      * 1. Throws if the registration isn't in SUBMITTED status, or if no workflow template is
-     * configured for its company code/plant/category.
+     * configured for its company code/plant/category. Returns a display message naming the
+     * level-1 role (e.g. "Approval sent to next level : PP").
      */
-    void submitToWorkflow(String docId, String buyerUserId);
+    String submitToWorkflow(String docId, String buyerUserId);
 
     /** The current approval-workflow state for this registration, as seen by the given user (level, group, whether they can act, finance-field editability). */
     VendorWorkflowStatus getVendorWorkflowStatus(String docId, String currentUserId);
@@ -114,9 +116,10 @@ public interface IVendorRegistrationService {
      * A buyer's action on a registration already in the approval workflow - forward to the
      * next level, reject, or send back to the vendor for correction (see
      * ezSubmitVendRegOthMat.jsp actionSts S/R/B). Finance fields are only persisted if the
-     * actor's USERROLE is VAR/LB/SCA (see ezPrePostVendorToSAP.jsp).
+     * actor's USERROLE is VAR/LB/SCA (see ezPrePostVendorToSAP.jsp). Returns a display message -
+     * for FORWARD, names the next level's role (e.g. "Approval sent to next level : LEADBUYER").
      */
-    void actOnVendorRegistration(String docId, String actorUserId, WorkflowActionRequest request);
+    String actOnVendorRegistration(String docId, String actorUserId, WorkflowActionRequest request);
 
     /** The buyer-entered finance fields currently saved for this registration (see FinanceReviewFields) - used by the SAP posting service. */
     com.ezc.aragenPR.webapp.dto.vendorreg.FinanceReviewFields getFinanceFields(String docId);

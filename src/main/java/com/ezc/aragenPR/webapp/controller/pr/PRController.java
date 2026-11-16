@@ -58,6 +58,12 @@ public class PRController {
     RFCReadSAPService rfcReadSAPService;
 
     @Autowired
+    private com.ezc.aragenPR.webapp.sap.material.IMaterialSapGateway materialSapGateway;
+
+    @Autowired
+    private com.ezc.aragenPR.webapp.sap.pr.IPrSapGateway prSapGateway;
+
+    @Autowired
     private EzcPRHeaderRepository headerRepo;
 
 
@@ -184,109 +190,10 @@ public class PRController {
     @ResponseBody
     public List<MaterialDto>getMaterials(@RequestParam("plant") String plant,@RequestParam("query") String query,@RequestParam("searchType") String searchType)
     {
-        List<MaterialDto> materials = new ArrayList<>();
         log.debug("IN getMaterials"+plant+"query"+query+"searchType"+searchType);
-        try {
-
-            JCoDestination destination = rfcReadSAPService.getDestination();
-            JCoRepository repository = destination.getRepository();
-            JCoFunction poFunction = repository.getFunction("BAPI_MATERIAL_GETLIST");
-            //JCoFunction commitFunction = repository.getFunction("BAPI_TRANSACTION_COMMIT");
-
-            log.debug("SAP Connection established successfully!");
-            // System.out.println("Connected User: " + destination.getUser());
-
-            try
-            {
-
-                if("shortText".equals(searchType))
-                {
-
-                    JCoTable matShortDescSel = poFunction.getTableParameterList().getTable("MATERIALSHORTDESCSEL");
-
-                    matShortDescSel.appendRow();
-
-                    matShortDescSel.setValue("SIGN","I");
-
-                    matShortDescSel.setValue("OPTION","CP");
-
-                    matShortDescSel.setValue("DESCR_LOW",query + "*");
-
-                }
-
-                if("matNumber".equals(searchType))
-                {
-
-                    JCoTable matnrSel = poFunction.getTableParameterList().getTable("MATNRSELECTION");
-
-                    matnrSel.appendRow();
-
-                    matnrSel.setValue("SIGN","I");
-
-                    matnrSel.setValue("OPTION","CP");
-
-                    matnrSel.setValue("MATNR_LOW","*" + query);
-
-                }
-
-            }
-
-            catch (Exception execEx)
-            {
-
-                log.debug("start 123: " + execEx.getMessage());
-
-            }
-
-            JCoTable plantSel = poFunction.getTableParameterList().getTable("PLANTSELECTION");
-
-            plantSel.appendRow();
-
-            plantSel.setValue("SIGN","I");
-
-            plantSel.setValue("OPTION","EQ");
-
-            plantSel.setValue("PLANT_LOW",plant);
-
-
-            log.debug("Executing BAPI_MATERIAL_GETLIST");
-            try {
-                JCoContext.begin(destination);
-                poFunction.execute(destination);
-                //commitFunction.execute(destination);
-                JCoContext.end(destination);
-            }catch(Exception e){}
-
-            JCoTable matListTable = poFunction.getTableParameterList().getTable("MATNRLIST");
-
-            try
-            {
-                if(matListTable != null && matListTable.getNumRows() > 0)
-                {
-                    log.debug("Material num of Rows"+matListTable.getNumRows());
-                    do
-                    {
-                        MaterialDto m1=new MaterialDto();
-                        String rawCode = (String) matListTable.getValue("MATERIAL");
-
-                        String trimmedCode = rawCode != null ? rawCode.replaceFirst("^0+(?!$)", "") : "";
-
-                        m1.setMaterialCode(trimmedCode);
-                        m1.setDescription((String)matListTable.getValue("MATL_DESC"));
-                        materials.add(m1);
-
-                    }
-                    while(matListTable.nextRow());
-                }
-            }catch(Exception e){log.debug("Exception in output " +e);}
-
-
-        } catch (JCoException e) {
-            log.debug("Error connecting to SAP: " + e.getMessage());
-            e.printStackTrace();
-        }
-        //System.out.println("materials"+materials);
-        return materials;
+        // SAP call moved to sap.material.MaterialSapGateway (see that package for the FM/OData
+        // switch) - this controller only builds the HTTP request/response now.
+        return materialSapGateway.searchMaterials(plant, query, searchType);
     }
     @GetMapping(value="/getWBSElements")
     @ResponseBody
@@ -698,105 +605,10 @@ public class PRController {
     @ResponseBody
     public List<MaterialDto>getMaterialDetails(@RequestParam("plant") String plant,@RequestParam("materialCode") String materialCode)
     {
-        List<MaterialDto> materials = new ArrayList<>();
         log.debug("IN getMaterial details"+plant+"matCode"+materialCode);
-        try {
-
-            JCoDestination destination = rfcReadSAPService.getDestination();
-            JCoRepository repository = destination.getRepository();
-            JCoFunction poFunction = repository.getFunction("BAPI_MATERIAL_GET_DETAIL");
-            //JCoFunction commitFunction = repository.getFunction("BAPI_TRANSACTION_COMMIT");
-
-            System.out.println("SAP Connection established successfully!");
-            System.out.println("Connected User: " + destination.getUser());
-            JCoParameterList importParams = poFunction.getImportParameterList();
-            importParams.setValue("MATERIAL", String.format("%018d", Long.parseLong(materialCode)));
-            importParams.setValue("PLANT", plant);
-            importParams.setValue("VALUATIONAREA", plant);
-
-
-
-
-            System.out.println("Executing BAPI_MATERIAL_GET_DETAIL");
-            try {
-                JCoContext.begin(destination);
-                poFunction.execute(destination);
-                //commitFunction.execute(destination);
-                JCoContext.end(destination);
-            }catch(Exception e){}
-
-            JCoStructure returnStruct = poFunction.getExportParameterList().getStructure("RETURN");
-            if (returnStruct != null && !"".equals(returnStruct.getString("MESSAGE"))) {
-                String returnType = returnStruct.getString("TYPE");
-                String returnMsg = returnStruct.getString("MESSAGE");
-                System.out.println("SAP RETURN Message [" + returnType + "]: " + returnMsg);
-
-                if ("E".equals(returnType) || "A".equals(returnType)) {
-                    System.out.println("Error returned by BAPI: " + returnMsg);
-
-                }
-            }
-
-            JCoParameterList exportParams = poFunction.getExportParameterList();
-            JCoStructure generalData = exportParams.getStructure("MATERIAL_GENERAL_DATA");
-            JCoStructure valuationData = exportParams.getStructure("MATERIALVALUATIONDATA");
-
-            String matDesc = generalData.getString("MATL_DESC");
-            String matGrp = generalData.getString("MATL_GROUP");
-            String matUom = generalData.getString("BASE_UOM");
-            String valPrice="0";
-            try {
-                Object valObj = valuationData.getValue("MOVING_PR");
-                if (valObj instanceof BigDecimal) {
-                    valPrice = ((BigDecimal) valObj).setScale(2, java.math.RoundingMode.HALF_UP).toString();
-                } else if (valObj != null) {
-                    valPrice = new BigDecimal(valObj.toString()).setScale(2, java.math.RoundingMode.HALF_UP).toString();
-                } else {
-                    System.out.println("MOVING_PR is null");
-                }
-            } catch (Exception ex) {
-                System.out.println("Error processing MOVING_PR: " + ex.getMessage());
-            }
-//***************GET CASNO********************************
-
-            String[] outputFields =null;
-            String[] queryValues=null;
-            String tabName="";
-            String casNO="";
-            String catlogNO="";
-            String materialPass=String.format("%018d", Long.parseLong(materialCode));
-            try {
-
-                outputFields = new String[]{"ZZCAS_NO", "ZCATNO", "ZMAN", "ZZBRAND"};
-                queryValues = new String[]{"MATNR EQ '" + materialPass + "'"};
-                tabName = "MARA";
-                List<String[]> dataList = rfcReadSAPService.readRFCTable(tabName, outputFields, queryValues);
-                if (dataList != null) {
-                    for (String row[] : dataList) {
-                        casNO = row[0];
-                        catlogNO= row[1];
-                    }
-                }
-            }catch(Exception e){}
-            log.debug("getCasNo"+casNO+"materialPass"+materialPass+"catlogNO"+catlogNO);
-//**************************************************
-
-            MaterialDto m1=new MaterialDto();
-            m1.setMaterialCode(materialCode);
-            m1.setDescription(matDesc);
-            m1.setMaterialGroup(matGrp);
-            m1.setUom(matUom);
-            m1.setUnitPrice(valPrice);
-            m1.setCasNo(casNO);
-            m1.setCatalog(catlogNO);
-            materials.add(m1);
-
-        } catch (Exception e1) {
-            System.out.println("Exception while preparing or executing BAPI_MATERIAL_GET_DETAIL: " + e1.getMessage());
-        }
-
-        //System.out.println("materials"+materials);
-        return materials;
+        // SAP call moved to sap.material.MaterialSapGateway (see that package for the FM/OData
+        // switch) - this controller only builds the HTTP request/response now.
+        return materialSapGateway.getMaterialDetails(plant, materialCode);
     }
     @GetMapping("/checkReleaseStrategy")
     @ResponseBody
@@ -1475,127 +1287,10 @@ public class PRController {
             }
         }
         //***************SAP CALL *****************************
+        // Moved to sap.pr.PrSapGateway (see that package for the FM/OData switch) - mutates
+        // header exactly as the original inline code did.
         try {
-            JCoDestination destination = rfcReadSAPService.getDestination();
-            JCoRepository repository = destination.getRepository();
-            JCoFunction poFunction = repository.getFunction("ZEZ_BAPI_PR_GETDETAIL");
-
-            if (poFunction == null) throw new RuntimeException("ZEZ_BAPI_PR_GETDETAIL not found");
-            System.out.println("ZEZ_BAPI_PR_GETDETAIL started"+reqNumber);
-            JCoParameterList imports = poFunction.getImportParameterList();
-            imports.setValue("NUMBER", reqNumber);
-            imports.setValue("ACCOUNT_ASSIGNMENT","X");
-
-            try {
-                JCoContext.begin(destination);
-                poFunction.execute(destination);
-                JCoContext.end(destination);
-            }catch(Exception e){}
-
-            JCoStructure headerRet = poFunction.getExportParameterList().getStructure("PRHEADER");
-
-            JCoTable prItems   = poFunction.getTableParameterList().getTable("PRITEM");
-            JCoTable prAcc   = poFunction.getTableParameterList().getTable("PRACCOUNT");
-            JCoTable prAddData   = poFunction.getTableParameterList().getTable("ADDITIONAL_DATA");
-
-            if (headerRet != null) {
-
-                header.setReqNumber(reqNumber);
-                header.setDocType(headerRet.getString("PR_TYPE"));
-
-            }
-
-            System.out.println("SAP ITESM SIZE"+prItems.getNumRows()+"docType"+headerRet.getString("PR_TYPE"));
-            System.out.println("SAP prAcc SIZE"+prAcc.getNumRows()+"SAP prAddData SIZE"+prAddData.getNumRows());
-            List<EzPurchaseRequisitionItems> sapItems = new ArrayList<>();
-
-            for (int i = 0; i < prItems.getNumRows(); i++) {
-                prItems.setRow(i);
-
-                EzPurchaseRequisitionItems item = new EzPurchaseRequisitionItems();
-                String itemNo = prItems.getString("PREQ_ITEM");
-
-                /* -------- ITEM BASIC DATA -------- */
-                item.setItemNO(itemNo);
-                item.setMatNumber(prItems.getString("MATERIAL"));
-                item.setShortText(prItems.getString("SHORT_TEXT"));
-                item.setQuantity(prItems.getBigDecimal("QUANTITY"));
-                item.setUom(prItems.getString("UNIT"));
-                item.setValPrice(prItems.getBigDecimal("PREQ_PRICE"));
-                //item.setTotal(prItems.getString("TARGET_VAL"));
-                item.setMaterialGroup(prItems.getString("MATL_GROUP"));
-                item.setDelInd(prItems.getString("DELETE_IND"));
-                item.setRelStatus(prItems.getString("PROC_STAT"));
-                System.out.println("aggrement"+prItems.getString("AGREEMENT")+"#"+prItems.getString("FIXED_VEND")+"#"+prItems.getString("AGMT_ITEM"));
-                item.setAgreement(prItems.getString("AGREEMENT")+"#"+prItems.getString("FIXED_VEND")+"#"+prItems.getString("AGMT_ITEM"));
-                item.setAggrItem(prItems.getString("AGMT_ITEM"));
-                item.setFixVendor(prItems.getString("FIXED_VEND"));
-                String delivStr = prItems.getString("DELIV_DATE");   // Example: "20250112"
-
-                if (delivStr != null && !delivStr.isBlank()) {
-                    try {
-                        SimpleDateFormat sapFmt = new SimpleDateFormat("yyyy-MM-dd");
-                        Date delivDate = sapFmt.parse(delivStr.trim());
-                        item.setDeliveryDate(delivDate);
-                    } catch (Exception e) {
-                        System.out.println("❌ Failed to parse delivery date: " + delivStr);
-                    }
-                }
-                //item.setDeliveryDate((java.util.Date)prItems.getString("DELIV_DATE"));
-                item.setPlant(prItems.getString("PLANT"));
-                // item.setPurGrp(prItems.getString("PUR_GROUP"));
-                item.setStorageLoc(prItems.getString("STORE_LOC"));
-                item.setTrackNo(prItems.getString("TRACKINGNO"));
-                item.setItemCat(prItems.getString("ITEM_CAT"));
-
-                prAcc.firstRow();
-                for (int j = 0; j < prAcc.getNumRows(); j++, prAcc.nextRow()) {
-                    if (prAcc.getString("PREQ_ITEM").equals(itemNo)) {
-                        item.setWbsElement(prAcc.getString("WBS_ELEMENT"));
-                        item.setCostCenter(prAcc.getString("COSTCENTER"));
-                        item.setInternalOrder(prAcc.getString("ORDERID"));
-                        // item.setGlAccount(prAcc.getString("G_L_ACCT"));
-                        break;
-                    }
-                }
-                prAddData.firstRow();
-                for (int j = 0; j < prAddData.getNumRows(); j++, prAddData.nextRow()) {
-                    if (prAddData.getString("PREQ_ITEM").equals(itemNo)) {
-                        //item.set(prAddData.getString("ZZCASNR"));
-                        item.setCoa(prAddData.getString("ZZCOA"));
-                        item.setMsds(prAddData.getString("ZZMSDS"));
-                        item.setPackSize(removeLeadingZeros(prAddData.getString("ZZPACK")));
-                        item.setPassThrough(prAddData.getString("ZZPASS"));
-                        if (header.getDept() == null || header.getDept().isEmpty())
-                            header.setDept(prAddData.getString("ZZDEPT"));
-                        if (header.getDivision() == null || header.getDivision().isEmpty())
-                            header.setDivision(prAddData.getString("ZZBU"));
-
-
-                        break;
-                    }
-                }
-
-                if (header.getPurGrp() == null || header.getPurGrp().isEmpty())
-                    header.setPurGrp(prItems.getString("PUR_GROUP"));
-
-                if (header.getPlant() == null || header.getPlant().isEmpty())
-                    header.setPlant(item.getPlant());
-
-                if (header.getAccAsmt() == null || header.getAccAsmt().isEmpty())
-                    header.setAccAsmt(prItems.getString("ACCTASSCAT"));
-
-                if (header.getItemCat() == null || header.getItemCat().isEmpty())
-                    header.setItemCat(prItems.getString("ITEM_CAT"));
-                item.setHeader(header);
-
-                sapItems.add(item);
-            }
-            System.out.print("SAP sapItems"+sapItems);
-            if (!sapItems.isEmpty()) {
-                header.setItems(sapItems);
-            }
-
+            prSapGateway.getPrDetail(reqNumber, header);
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "SAP Error while reading PR: " + e.getMessage());
@@ -2476,150 +2171,10 @@ public class PRController {
 
 
         //***************SAP CALL FOR SERVICE PR*****************************
+        // Moved to sap.pr.PrSapGateway (see that package for the FM/OData switch) - mutates
+        // header exactly as the original inline code did.
         try {
-            JCoDestination destination = rfcReadSAPService.getDestination();
-            JCoRepository repository = destination.getRepository();
-            JCoFunction poFunction = repository.getFunction("ZEZ_BAPI_PR_GETDETAIL");
-
-            if (poFunction == null) throw new RuntimeException("ZEZ_BAPI_PR_GETDETAIL not found");
-
-            JCoParameterList imports = poFunction.getImportParameterList();
-            imports.setValue("NUMBER", reqNumber);
-            imports.setValue("ACCOUNT_ASSIGNMENT", "X");
-            imports.setValue("SERVICES", "X");
-
-            try {
-                JCoContext.begin(destination);
-                poFunction.execute(destination);
-                JCoContext.end(destination);
-            } catch (Exception e) {}
-
-            JCoStructure headerRet = poFunction.getExportParameterList().getStructure("PRHEADER");
-            JCoTable prItems = poFunction.getTableParameterList().getTable("PRITEM");
-            JCoTable prAcc = poFunction.getTableParameterList().getTable("PRACCOUNT");
-            JCoTable prAddData   = poFunction.getTableParameterList().getTable("ADDITIONAL_DATA");
-            JCoTable prServiceLines = poFunction.getTableParameterList().getTable("SERVICELINES");
-
-            if (headerRet != null) {
-                header.setReqNumber(reqNumber);
-                header.setDocType(headerRet.getString("PR_TYPE"));
-            }
-
-            System.out.println("SAP ITEMS SIZE: " + prItems.getNumRows());
-            System.out.println("SAP SERVICE LINES SIZE: " + prServiceLines.getNumRows());
-            System.out.println("SAP ADDITIONAL LINES SIZE: " + prAddData.getNumRows());
-
-
-            List<EzPurchaseRequisitionItems> sapItems = new ArrayList<>();
-
-            for (int i = 0; i < prItems.getNumRows(); i++) {
-                prItems.setRow(i);
-
-                EzPurchaseRequisitionItems item = new EzPurchaseRequisitionItems();
-                String itemNo = prItems.getString("PREQ_ITEM");
-
-                /* -------- ITEM BASIC DATA -------- */
-                item.setItemNO(itemNo);
-                item.setMatNumber(prItems.getString("MATERIAL"));
-                item.setShortText(prItems.getString("SHORT_TEXT"));
-                item.setQuantity(prItems.getBigDecimal("QUANTITY"));
-                item.setUom(prItems.getString("UNIT"));
-                item.setValPrice(prItems.getBigDecimal("PREQ_PRICE"));
-                // item.setTotal(prItems.getString("TARGET_VAL"));
-                item.setMaterialGroup(prItems.getString("MATL_GROUP"));
-
-                String delivStr = prItems.getString("DELIV_DATE");
-                if (delivStr != null && !delivStr.isBlank()) {
-                    try {
-                        SimpleDateFormat sapFmt = new SimpleDateFormat("yyyy-MM-dd");
-                        Date delivDate = sapFmt.parse(delivStr.trim());
-                        item.setDeliveryDate(delivDate);
-                    } catch (Exception e) {
-                        System.out.println("❌ Failed to parse delivery date: " + delivStr);
-                    }
-                }
-
-                item.setPlant(prItems.getString("PLANT"));
-                item.setStorageLoc(prItems.getString("STORE_LOC"));
-                item.setTrackNo(prItems.getString("TRACKINGNO"));
-                item.setItemCat(prItems.getString("ITEM_CAT"));
-
-                // Account assignment
-                prAcc.firstRow();
-                for (int j = 0; j < prAcc.getNumRows(); j++, prAcc.nextRow()) {
-                    if (prAcc.getString("PREQ_ITEM").equals(itemNo)) {
-                        item.setWbsElement(prAcc.getString("WBS_ELEMENT"));
-                        item.setCostCenter(prAcc.getString("COSTCENTER"));
-                        item.setInternalOrder(prAcc.getString("ORDERID"));
-                        break;
-                    }
-                }
-
-//LOAD additional data
-                prAddData.firstRow();
-                for (int j = 0; j < prAddData.getNumRows(); j++, prAddData.nextRow()) {
-                    if (prAddData.getString("PREQ_ITEM").equals(itemNo)) {
-                        //item.set(prAddData.getString("ZZCASNR"));
-                        item.setCoa(prAddData.getString("ZZCOA"));
-                        item.setMsds(prAddData.getString("ZZMSDS"));
-                        //  item.setPackSize(removeLeadingZeros(prAddData.getString("ZZPACK")));
-                        item.setPassThrough(prAddData.getString("ZZPASS"));
-                        if (header.getDept() == null || header.getDept().isEmpty())
-                            header.setDept(prAddData.getString("ZZDEPT"));
-                        if (header.getDivision() == null || header.getDivision().isEmpty())
-                            header.setDivision(prAddData.getString("ZZBU"));
-
-
-                        break;
-                    }
-                }
-
-                // Load service lines for this item
-                List<EzPurchaseRequisitionServices> serviceList = new ArrayList<>();
-                prServiceLines.firstRow();
-                for (int k = 0; k < prServiceLines.getNumRows(); k++, prServiceLines.nextRow()) {
-                    String serviceItemNo = prServiceLines.getString("DOC_ITEM");
-                    if (serviceItemNo.equals(itemNo)) {
-                        EzPurchaseRequisitionServices service = new EzPurchaseRequisitionServices();
-                        service.setReqNumber(reqNumber);
-                        service.setItemNo(itemNo);
-                        service.setServLine(prServiceLines.getString("SRV_LINE"));
-                        service.setServNo(prServiceLines.getString("SERVICE"));
-                        service.setServDesc(prServiceLines.getString("SHORT_TEXT"));
-                        service.setServQty(prServiceLines.getBigDecimal("QUANTITY"));
-                        service.setServUnit(prServiceLines.getString("UOM"));
-                        service.setServPrice(prServiceLines.getBigDecimal("GROSS_PRICE"));
-                        service.setServNetPrice(prServiceLines.getBigDecimal("NET_PRICE"));
-                        service.setItem(item);
-
-                        serviceList.add(service);
-                        System.out.println("  Service Line: " + service.getServLine() + " - " + service.getServDesc());
-                    }
-                }
-                item.setServices(serviceList);
-                System.out.println("Item " + itemNo + " loaded with " + serviceList.size() + " service lines");
-
-                // Set header-level fields from first item
-                if (header.getPurGrp() == null || header.getPurGrp().isEmpty())
-                    header.setPurGrp(prItems.getString("PUR_GROUP"));
-
-                if (header.getPlant() == null || header.getPlant().isEmpty())
-                    header.setPlant(prItems.getString("PLANT"));
-
-                if (header.getAccAsmt() == null || header.getAccAsmt().isEmpty())
-                    header.setAccAsmt(prItems.getString("ACCTASSCAT"));
-
-                if (header.getItemCat() == null || header.getItemCat().isEmpty())
-                    header.setItemCat(prItems.getString("ITEM_CAT"));
-
-                item.setHeader(header);
-                sapItems.add(item);
-            }
-            System.out.print("SAP sap serviceItems"+sapItems);
-            if (!sapItems.isEmpty()) {
-                header.setItems(sapItems);
-            }
-
+            prSapGateway.getServicePrDetail(reqNumber, header);
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "SAP Error while reading Service PR: " + e.getMessage());

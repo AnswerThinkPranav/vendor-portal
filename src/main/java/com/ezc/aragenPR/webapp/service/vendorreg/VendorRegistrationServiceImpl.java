@@ -14,6 +14,7 @@ import com.ezc.aragenPR.webapp.dto.vendorreg.ConstitutionDetailsRequest;
 import com.ezc.aragenPR.webapp.dto.vendorreg.ContactDetailsRequest;
 import com.ezc.aragenPR.webapp.dto.vendorreg.DocumentDetailsRequest;
 import com.ezc.aragenPR.webapp.dto.vendorreg.FinanceReviewFields;
+import com.ezc.aragenPR.webapp.dto.vendorreg.SapValidationResult;
 import com.ezc.aragenPR.webapp.dto.vendorreg.InviteVendorRequest;
 import com.ezc.aragenPR.webapp.dto.vendorreg.MsmeDetailsRequest;
 import com.ezc.aragenPR.webapp.dto.vendorreg.OptionItem;
@@ -105,6 +106,15 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
 
     @Autowired
     private MailService mailService;
+
+    /**
+     * @Lazy breaks the circular dependency: VendorSapPostingServiceImpl already depends on
+     * IVendorRegistrationService, so an eager injection here would fail to start. Only
+     * actOnVendorRegistration's VENDAPR-level Forward gate uses this, at request time.
+     */
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private IVendorSapPostingService vendorSapPostingService;
 
     @Autowired
     private VendorQueryRepository vendorQueryRepository;
@@ -313,8 +323,22 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
     @Override
     public List<VendorListRow> getVendorRegistrationList(String buyerUserId, String venType, String statusFilter,
                                                            LocalDate fromDate, LocalDate toDate) {
+        // "Act" ("To Act", see the dashboard's Domestic/Import Vendor(s) Pending For Approval
+        // tiles - ezBuyerWelcome.jsp -> ezVNRList.jsp?type=Act) is narrower than a plain status
+        // filter: it's not "every SUBMITTED doc in my territory", it's "every SUBMITTED doc
+        // currently sitting at a workflow step *this* buyer can act on" - resolved via
+        // findToActDocIds below rather than the statuses switch, matching legacy's
+        // EWDHH_NEXT_PARTICIPANT IN (gv_WorkGrpForQry) join.
+        if ("Act".equals(statusFilter)) {
+            Set<String> toActDocIds = new LinkedHashSet<>(
+                    customerFormHeaderRepository.findToActDocIds(buyerUserId, venType));
+            return customerFormHeaderRepository.findForVnrList(venType, List.of("SUBMITTED"), fromDate, toDate).stream()
+                    .filter(h -> toActDocIds.contains(h.getDocId()))
+                    .map(this::toRow)
+                    .toList();
+        }
+
         List<String> statuses = switch (statusFilter == null ? "ALL" : statusFilter) {
-            case "Act" -> List.of("INITIATED");
             case "Sub" -> List.of("SUBMITTED");
             case "Apr" -> List.of("APPROVED");
             case "Rej" -> List.of("REJECTED");
@@ -332,6 +356,12 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
 
         return customerFormHeaderRepository.findForVnrList(venType, statuses, fromDate, toDate).stream()
                 .filter(h -> allowedPlantCategoryCombos.contains(h.getPlant() + "#" + h.getCategory()))
+                // INITIATED means the vendor hasn't submitted (or the buyer just Sent Back to
+                // them) - there's nothing for a buyer to act on, so it never belongs in this
+                // review list regardless of the selected filter; it only ever shows up in
+                // getMyInvitedVendors ("New"), and the registration page itself refuses to open
+                // it for anyone but the owning vendor (see VendorRegistrationController).
+                .filter(h -> !"INITIATED".equals(h.getStatus()))
                 .map(this::toRow)
                 .toList();
     }
@@ -671,20 +701,36 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
 
     @Override
     @Transactional
-    public void submitVendorRegistration(String docId, String submittedByUserId) {
+    public String submitVendorRegistration(String docId, String submittedByUserId) {
         CustomerFormHeader header = customerFormHeaderRepository.findById(docId)
                 .orElseThrow(() -> new IllegalArgumentException("Vendor registration not found: " + docId));
 
+        // Mirrors ezSubmitVendRegOthMat.jsp's actionSts='V'/'U' handling: the vendor's submit
+        // (first-time or a resubmit after Send Back) routes the doc straight into the approval
+        // workflow and writes EZC_WF_DOC_HISTORY_HEADER there - it doesn't wait for a separate
+        // buyer action. startWorkflow() upserts that row (INSERT the first time, UPDATE on a
+        // resubmit) with the same fields the legacy INSERT/UPDATE statements set: auth key, doc id,
+        // sys key, template code, wf status, current step and next participant resolved to level 1,
+        // plus created/modified by/on.
+        var level1 = workflowEngineService.startWorkflow(WF_DOC_TYPE, docId, header.getExt1(), header.getPlant(),
+                header.getCategory(), submittedByUserId, null);
+        if (level1.isEmpty()) {
+            throw new IllegalStateException("No approval workflow is configured for company code " + header.getExt1()
+                    + ", plant " + header.getPlant() + ", category " + header.getCategory() + ".");
+        }
+
         header.setStatus("SUBMITTED");
+        header.setNextParticipant(level1.get().getGroup());
         header.setModifiedBy(submittedByUserId);
         header.setModifiedOn(LocalDate.now());
-        header.setNextParticipant("");
         customerFormHeaderRepository.save(header);
+
+        return "Details have been submitted to " + level1.get().getRole();
     }
 
     @Override
     @Transactional
-    public void submitToWorkflow(String docId, String buyerUserId) {
+    public String submitToWorkflow(String docId, String buyerUserId) {
         CustomerFormHeader header = customerFormHeaderRepository.findById(docId)
                 .orElseThrow(() -> new IllegalArgumentException("Vendor registration not found: " + docId));
         if (!"SUBMITTED".equals(header.getStatus())) {
@@ -702,6 +748,8 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
         header.setModifiedBy(buyerUserId);
         header.setModifiedOn(LocalDate.now());
         customerFormHeaderRepository.save(header);
+
+        return "Approval sent to next level : " + level1.get().getRole();
     }
 
     @Override
@@ -710,18 +758,21 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
                 .orElseThrow(() -> new IllegalArgumentException("Vendor registration not found: " + docId));
 
         String role = workflowEngineService.getUserRole(currentUserId);
+        // Matches ezVendReg.jsp's userRole checks exactly: PP (Purchase Person, the level-1 buyer)
+        // is the only role that can Send Back or Reply to a query, and the only role excluded from
+        // Query/Reject; VIW (viewer) is likewise excluded from Query.
+        boolean isPp = "PP".equals(role);
+        boolean isViewer = "VIW".equals(role);
 
         WfDocHistoryHeader wf = workflowEngineService.getDocHistory(WF_DOC_TYPE, docId);
         boolean routed = wf != null && wf.getNextParticipant() != null && !wf.getNextParticipant().isBlank();
 
         if (!routed) {
-            // Mirrors the JSP's showSubmit block, which renders Send Back alongside Submit/Upload
-            // Attachments for a PP-role buyer reviewing a just-submitted registration - Send Back
-            // isn't limited to once the doc has actually entered the approval workflow.
+            // No one has an actual "turn" yet before the doc is routed into the workflow - Send
+            // Back and Query are both turn-gated now (see canAct below), so neither can be true here.
             boolean canSubmitToWorkflow = "SUBMITTED".equals(header.getStatus());
-            boolean canSendBack = "SUBMITTED".equals(header.getStatus());
-            return new VendorWorkflowStatus(header.getStatus(), null, null, true, false, canSendBack, canSubmitToWorkflow,
-                    false, false, financeFieldsOf(docId));
+            return new VendorWorkflowStatus(header.getStatus(), null, null, true, false, false, false,
+                    false, isPp, canSubmitToWorkflow, false, false, financeFieldsOf(docId));
         }
 
         int currentLevel = wf.getCurrentStep() == null ? 0 : wf.getCurrentStep().intValue();
@@ -730,9 +781,13 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
 
         boolean canAct = workflowEngineService.resolveGroupUsers(wf.getNextParticipant(), header.getPlant(), header.getCategory())
                 .stream().anyMatch(u -> currentUserId.equals(u.getUserId()));
-        // Any buyer can send a submitted registration back to the vendor while it's active -
-        // unlike Forward/Approve (canAct), this isn't limited to the exact current-level actor.
-        boolean canSendBack = !"REJECTED".equals(wf.getWfStatus()) && !"APPROVED".equals(wf.getWfStatus());
+        boolean canReject = canAct && !isPp;
+        // Send Back and Query are both now turn-restricted, same as Forward/Reject (canAct) - only
+        // whoever's actual turn it is at the current level can act, not any PP/non-PP buyer at any
+        // point. Once PP forwards the doc past their own level, canAct goes false for PP and Send
+        // Back disappears; likewise Query only shows for whichever non-PP/non-VIW group currently holds it.
+        boolean canSendBack = canAct && isPp;
+        boolean canQuery = canAct && !isPp && !isViewer;
 
         // Finance Review fields are only ever shown once the workflow has reached (or passed) the
         // template's finance level - hidden from the buyer and every approver before that, and from
@@ -745,13 +800,13 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
         }
         boolean financeEditable = financeVisible && canAct && FINANCE_ROLES.contains(role);
 
-        return new VendorWorkflowStatus(wf.getWfStatus(), currentLevel, wf.getNextParticipant(), isFinal, canAct, canSendBack,
-                false, financeVisible, financeEditable, financeFieldsOf(docId));
+        return new VendorWorkflowStatus(wf.getWfStatus(), currentLevel, wf.getNextParticipant(), isFinal, canAct, canReject,
+                canSendBack, canQuery, isPp, false, financeVisible, financeEditable, financeFieldsOf(docId));
     }
 
     @Override
     @Transactional
-    public void actOnVendorRegistration(String docId, String actorUserId, WorkflowActionRequest request) {
+    public String actOnVendorRegistration(String docId, String actorUserId, WorkflowActionRequest request) {
         CustomerFormHeader header = customerFormHeaderRepository.findById(docId)
                 .orElseThrow(() -> new IllegalArgumentException("Vendor registration not found: " + docId));
 
@@ -768,22 +823,43 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
 
         String newStatus;
         String newNextParticipant;
+        String message;
         switch (request.action()) {
             case WorkflowActionRequest.REJECT -> {
                 workflowEngineService.reject(WF_DOC_TYPE, docId, actorUserId, request.comments());
                 newStatus = "REJECTED";
                 newNextParticipant = "";
+                message = "Registration rejected.";
             }
             case WorkflowActionRequest.SEND_BACK -> {
+                // Send Back deletes the workflow row entirely (see WorkflowEngineServiceImpl.sendBack)
+                // and hands the doc fully back to the vendor as a fresh draft - INITIATED, same as a
+                // brand-new invite - rather than RESUBMITTED/still-in-workflow.
                 workflowEngineService.sendBack(WF_DOC_TYPE, docId, actorUserId, request.comments());
-                newStatus = "RESUBMITTED";
+                newStatus = "INITIATED";
                 newNextParticipant = "";
+                message = "Registration sent back to the vendor.";
             }
             case WorkflowActionRequest.FORWARD -> {
+                // VENDAPR (Vendor Approver) is the SAP data-quality checkpoint: before this
+                // level's Forward is allowed to move the doc on, it must pass the same SAP
+                // vendor-master validation (Z_RFC_VENDOR_VALIDATE) run at final-level Validate
+                // with SAP. If SAP flags anything, this throws before workflowEngineService.forward()
+                // is ever called, so nothing below runs - the doc stays at VENDAPR, unchanged, for
+                // the approver to fix and retry, exactly like a failed final-level validation.
+                if ("VENDAPR".equals(role)) {
+                    SapValidationResult validation = vendorSapPostingService.validateVendor(docId);
+                    if (!validation.ok()) {
+                        throw new IllegalStateException("SAP validation failed: " + String.join("; ", validation.messages()));
+                    }
+                }
+
                 var next = workflowEngineService.forward(WF_DOC_TYPE, docId, header.getPlant(), header.getCategory(),
                         actorUserId, request.comments());
                 newStatus = "SUBMITTED";
                 newNextParticipant = next.map(WfPricingCondition::getGroup).orElse("");
+                message = next.map(n -> "Approval sent to next level : " + n.getRole())
+                        .orElse("Registration reviewed at the final level.");
             }
             default -> throw new IllegalArgumentException("Unknown workflow action: " + request.action());
         }
@@ -793,6 +869,8 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
         header.setModifiedBy(actorUserId);
         header.setModifiedOn(LocalDate.now());
         customerFormHeaderRepository.save(header);
+
+        return message;
     }
 
     private void saveFinanceFields(String docId, FinanceReviewFields f) {
@@ -821,6 +899,12 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
     @Override
     @Transactional
     public void raiseQuery(String docId, String raisedByUserId, String queryText) {
+        // Server-side mirror of canQuery in getVendorWorkflowStatus - PP and VIW can't raise a
+        // query (see ezVendReg.jsp's !"PP".equals(userRole) && !"VIW".equals(userRole) gate).
+        String role = workflowEngineService.getUserRole(raisedByUserId);
+        if ("PP".equals(role) || "VIW".equals(role)) {
+            throw new IllegalStateException("Your role is not permitted to raise a query on this registration.");
+        }
         VendorQuery query = new VendorQuery();
         query.setDocId(docId);
         query.setRaisedBy(raisedByUserId);
@@ -832,6 +916,11 @@ public class VendorRegistrationServiceImpl implements IVendorRegistrationService
     @Override
     @Transactional
     public void replyToQuery(String docId, String repliedByUserId, String replyText) {
+        // Server-side mirror of canReplyToQuery - only PP (the level-1 buyer) answers a query
+        // raised by a higher-level approver; the vendor is never involved once it's past PP.
+        if (!"PP".equals(workflowEngineService.getUserRole(repliedByUserId))) {
+            throw new IllegalStateException("Only the PP role can reply to a query on this registration.");
+        }
         VendorQuery query = vendorQueryRepository.findFirstByDocIdAndRepliedOnIsNullOrderByRaisedOnDesc(docId)
                 .orElseThrow(() -> new IllegalStateException("There is no open query on this registration to reply to."));
         query.setRepliedBy(repliedByUserId);
